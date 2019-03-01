@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration monitorinterval="60" status="info" strict="true">
+	<Properties>
+		<Property name="logpath">./logs/</Property>
+	</Properties>
+	<Appenders>
+		<RollingFile name="eSysAdmServer" fileName="${logpath}eSysAdmServer.log" filePattern="${logpath}eSysAdmServer-%i.log.zip">
+			<PatternLayout pattern="%d %p [%t] %C{1.} %m%n" />
+			<Policies>
+				<SizeBasedTriggeringPolicy size="100MB" />
+			</Policies>
+			<DefaultRolloverStrategy max="20" />
+		</RollingFile>
+	</Appenders>
+	<Loggers>
+		<Root level="debug">
+			<AppenderRef ref="eSysAdmServer" />
+		</Root>
+	</Loggers>
+</Configuration>
