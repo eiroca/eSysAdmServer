@@ -16,13 +16,10 @@
  **/
 package net.eiroca.sysadm.tools.sysadmserver.action;
 
-import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
 import java.text.MessageFormat;
-import java.util.ArrayList;
-import java.util.HashMap;
 import org.slf4j.Logger;
-import net.eiroca.library.data.Pair;
+import net.eiroca.library.core.LibFormat;
+import net.eiroca.library.core.LibStr;
 import net.eiroca.library.metrics.Statistic;
 import net.eiroca.library.server.ServerResponse;
 import net.eiroca.library.system.Logs;
@@ -34,7 +31,7 @@ import spark.Route;
 
 public class FeedAction implements Route {
 
-  private static Logger logger = Logs.getLogger();
+  public static Logger logger = Logs.getLogger();
 
   private static final String REGEX_NL = "(\n|\r)+";
 
@@ -78,12 +75,10 @@ public class FeedAction implements Route {
    * </ul>
    *
    *
-   * /rest/feed?Gugol:Time.Response=100,Time.Connect=10,Status=200&eppol:Time.Response=100,Time.
-   * Connect=10,Status=200
-   * /rest/feed?ResponseTime.Site:Gugol=100,Time.Connect=10,Status=200&eppol:Time
-   * .Response=100,Time.Connect=10,Status=200
+   * /rest/feed?Metrics.server:cpu=100%,ram=10;Alerts.my_app:webserver=false,tomcat=true
+   * /rest/feed?Check.Gugol:time=100ms,connect=10ms,Status=200;Check.eppol:time=100ms,connect=10ms,Status=200
    *
-   * /rest/feed?Timer1:Response Time=123,Bytes=234,Latency=332;
+   * /rest/feed?Timer1:Response+Time=123,Bytes=234,Latency=332
    *
    * /rest/feed?ResponseTime=1s;Latency=2ms
    *
@@ -92,27 +87,6 @@ public class FeedAction implements Route {
    * @param request
    * @return
    */
-
-  static ArrayList<Pair<String, Double>> MODIFIERSTR = new ArrayList<>();
-  static {
-    FeedAction.MODIFIERSTR.add(new Pair<>("%", 1.0 / 100.0));
-    FeedAction.MODIFIERSTR.add(new Pair<>("ns", 1 / 1000.0));
-    FeedAction.MODIFIERSTR.add(new Pair<>("ms", 1.0));
-    FeedAction.MODIFIERSTR.add(new Pair<>("s", 1000.0));
-    FeedAction.MODIFIERSTR.add(new Pair<>("\"", 1000.0));
-    FeedAction.MODIFIERSTR.add(new Pair<>("'", 60000.0));
-    FeedAction.MODIFIERSTR.add(new Pair<>("m", 60000.0));
-    FeedAction.MODIFIERSTR.add(new Pair<>("h", 3600000.0));
-  }
-  static HashMap<String, Double> STRVALUE = new HashMap<>();
-  static {
-    FeedAction.STRVALUE.put("true", 1.0);
-    FeedAction.STRVALUE.put("false", 0.0);
-    FeedAction.STRVALUE.put("ok", 0.0);
-    FeedAction.STRVALUE.put("ko", 1.0);
-    FeedAction.STRVALUE.put("on", 1.0);
-    FeedAction.STRVALUE.put("off", 0.0);
-  }
 
   @Override
   public Object handle(final Request request, final Response response) throws Exception {
@@ -135,21 +109,9 @@ public class FeedAction implements Route {
         data = queryParams.split(";");
       }
     }
-
     // process the request string
     final int rows = processRequestParameter(namespace, data);
     result.message = MessageFormat.format("Namespace: {0} processed: {1} measure(s).", namespace, rows);
-    return result;
-  }
-
-  private String decodeString(final String s) {
-    String result;
-    try {
-      result = URLDecoder.decode(s, "UTF-8");
-    }
-    catch (final UnsupportedEncodingException e) {
-      result = s;
-    }
     return result;
   }
 
@@ -168,12 +130,12 @@ public class FeedAction implements Route {
       if (colonIx > 0) {
         final int mtrcIx = valuePair.indexOf(".");
         if (mtrcIx > 0) {
-          metricName = decodeString(valuePair.substring(0, mtrcIx));
-          splitName = decodeString(valuePair.substring(mtrcIx + 1, colonIx));
+          metricName = LibStr.urlDecode(valuePair.substring(0, mtrcIx));
+          splitName = LibStr.urlDecode(valuePair.substring(mtrcIx + 1, colonIx));
         }
         else {
           splitName = null;
-          metricName = decodeString(valuePair.substring(0, colonIx));
+          metricName = LibStr.urlDecode(valuePair.substring(0, colonIx));
         }
         valuePair = valuePair.substring(colonIx + 1);
       }
@@ -186,9 +148,9 @@ public class FeedAction implements Route {
         if (measureNameAndValue.length != 2) {
           continue;
         }
-        final String subMeasureName = decodeString(measureNameAndValue[0]);
+        final String subMeasureName = LibStr.urlDecode(measureNameAndValue[0]);
         final String measureValue = measureNameAndValue[1];
-        final Double doubleValue = getValue(measureValue);
+        final Double doubleValue = LibFormat.getValue(measureValue);
         if (doubleValue == null) {
           continue;
         }
@@ -209,49 +171,5 @@ public class FeedAction implements Route {
       }
     }
     return rows;
-  }
-
-  public Double getValue(String value) {
-    final String oldVal = value;
-    if (value == null) { return null; }
-    value = value.trim().toLowerCase();
-    boolean negated = false;
-    double modifier = 1.0;
-    Double val = null;
-    if (value.endsWith("!")) {
-      negated = true;
-      value = value.substring(0, value.length() - 1);
-    }
-    for (final String strVal : FeedAction.STRVALUE.keySet()) {
-      if (value.startsWith(strVal)) {
-        val = FeedAction.STRVALUE.get(strVal);
-        value = value.substring(strVal.length());
-        break;
-      }
-    }
-    for (final Pair<String, Double> strVal : FeedAction.MODIFIERSTR) {
-      if (value.endsWith(strVal.getLeft())) {
-        modifier = strVal.getRight().doubleValue();
-        value = value.substring(0, value.length() - strVal.getLeft().length());
-        break;
-      }
-    }
-    if (val == null) {
-      try {
-        val = new Double(Double.parseDouble(value) * modifier);
-      }
-      catch (final NumberFormatException e) {
-      }
-    }
-    if (negated) {
-      if (Math.abs(val) < 0.000001) {
-        val = 1.0;
-      }
-      else {
-        val = 0.0;
-      }
-    }
-    FeedAction.logger.trace(MessageFormat.format("original={4} value={0} multiplier={1} negated={2} result={3}", value, modifier, negated, val, oldVal));
-    return val;
   }
 }

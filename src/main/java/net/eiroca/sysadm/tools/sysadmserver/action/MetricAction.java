@@ -22,6 +22,7 @@ import net.eiroca.library.server.ResultResponse;
 import net.eiroca.library.system.Logs;
 import net.eiroca.sysadm.tools.sysadmserver.LicenseCheck;
 import net.eiroca.sysadm.tools.sysadmserver.MeasureCollector;
+import net.eiroca.sysadm.tools.sysadmserver.Utils;
 import spark.Request;
 import spark.Response;
 import spark.Route;
@@ -37,7 +38,11 @@ public class MetricAction implements Route {
     MetricAction.logger.info(MessageFormat.format("handle({0})", namespace));
     final ResultResponse result = new ResultResponse(0);
     result.message = MessageFormat.format("Namespace: {0}", namespace);
-    result.setResult(MeasureCollector.getCollector().getMetrics(namespace));
+    final StringBuilder sb = new StringBuilder(1024);
+    sb.append('{');
+    Utils.measures2json(sb, MeasureCollector.getCollector().getMetrics(namespace));
+    sb.append('}');
+    result.setResult(sb.toString());
     return result;
   }
 }
