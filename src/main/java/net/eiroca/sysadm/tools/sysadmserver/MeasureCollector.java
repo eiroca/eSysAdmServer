@@ -18,7 +18,7 @@ package net.eiroca.sysadm.tools.sysadmserver;
 
 import java.util.concurrent.ConcurrentHashMap;
 import net.eiroca.library.core.Helper;
-import net.eiroca.library.measure.GenericAggregatedMeasure;
+import net.eiroca.library.metrics.Statistic;
 import spark.Request;
 
 public class MeasureCollector {
@@ -49,14 +49,14 @@ public class MeasureCollector {
     return MeasureCollector.collector;
   }
 
-  private ConcurrentHashMap<String, ConcurrentHashMap<String, GenericAggregatedMeasure>> measures;
+  private ConcurrentHashMap<String, ConcurrentHashMap<String, Statistic>> measures;
 
   private MeasureCollector() {
     measures = new ConcurrentHashMap<>();
   }
 
-  public synchronized ConcurrentHashMap<String, GenericAggregatedMeasure> getMetrics(final String namespace) {
-    ConcurrentHashMap<String, GenericAggregatedMeasure> space = measures.get(namespace);
+  public synchronized ConcurrentHashMap<String, Statistic> getMetrics(final String namespace) {
+    ConcurrentHashMap<String, Statistic> space = measures.get(namespace);
     if (space == null) {
       space = new ConcurrentHashMap<>();
       measures.put(namespace, space);
@@ -64,24 +64,24 @@ public class MeasureCollector {
     return space;
   }
 
-  public synchronized GenericAggregatedMeasure getMetric(final String namespace, final String metric) {
-    final ConcurrentHashMap<String, GenericAggregatedMeasure> space = getMetrics(namespace);
-    GenericAggregatedMeasure measure = space.get(metric);
+  public synchronized Statistic getMetric(final String namespace, final String metric) {
+    final ConcurrentHashMap<String, Statistic> space = getMetrics(namespace);
+    Statistic measure = space.get(metric);
     if (measure == null) {
-      measure = new GenericAggregatedMeasure(metric);
+      measure = new Statistic(metric);
       space.put(metric, measure);
     }
     return measure;
   }
 
-  public synchronized ConcurrentHashMap<String, GenericAggregatedMeasure> exportMeasures(final String namespace) {
-    final ConcurrentHashMap<String, GenericAggregatedMeasure> result = getMetrics(namespace);
+  public synchronized ConcurrentHashMap<String, Statistic> exportMeasures(final String namespace) {
+    final ConcurrentHashMap<String, Statistic> result = getMetrics(namespace);
     measures.put(namespace, new ConcurrentHashMap<>());
     return result;
   }
 
-  public synchronized ConcurrentHashMap<String, ConcurrentHashMap<String, GenericAggregatedMeasure>> exportMeasures() {
-    final ConcurrentHashMap<String, ConcurrentHashMap<String, GenericAggregatedMeasure>> result = measures;
+  public synchronized ConcurrentHashMap<String, ConcurrentHashMap<String, Statistic>> exportMeasures() {
+    final ConcurrentHashMap<String, ConcurrentHashMap<String, Statistic>> result = measures;
     measures = new ConcurrentHashMap<>();
     return result;
   }

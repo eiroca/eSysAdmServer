@@ -23,7 +23,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import org.slf4j.Logger;
 import net.eiroca.library.data.Pair;
-import net.eiroca.library.measure.GenericAggregatedMeasure;
+import net.eiroca.library.metrics.Statistic;
 import net.eiroca.library.server.ServerResponse;
 import net.eiroca.library.system.Logs;
 import net.eiroca.sysadm.tools.sysadmserver.LicenseCheck;
@@ -199,12 +199,12 @@ public class FeedAction implements Route {
         else {
           metric = subMeasureName;
         }
-        GenericAggregatedMeasure m = collector.getMetric(namespace, metric);
+        Statistic m = collector.getMetric(namespace, metric);
+        m.addValue(doubleValue);
         if (splitName != null) {
-          m.addValue(doubleValue);
           m = m.getSplitting(splitName);
+          m.addValue(split, doubleValue);
         }
-        m.addValue(doubleValue, split);
         rows++;
       }
     }
