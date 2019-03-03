@@ -14,24 +14,21 @@
  * If not, see <http://www.gnu.org/licenses/>.
  *
  **/
-package net.eiroca.sysadm.tools.sysadmserver.action;
+package net.eiroca.sysadm.tools.sysadmserver.collector.action;
 
 import java.text.MessageFormat;
-import org.slf4j.Logger;
 import net.eiroca.library.core.LibFormat;
 import net.eiroca.library.core.LibStr;
 import net.eiroca.library.metrics.Statistic;
+import net.eiroca.library.metrics.datum.Datum;
 import net.eiroca.library.server.ServerResponse;
-import net.eiroca.library.system.Logs;
-import net.eiroca.sysadm.tools.sysadmserver.LicenseCheck;
-import net.eiroca.sysadm.tools.sysadmserver.MeasureCollector;
+import net.eiroca.sysadm.tools.sysadmserver.SystemContext;
+import net.eiroca.sysadm.tools.sysadmserver.collector.MeasureCollector;
 import spark.Request;
 import spark.Response;
 import spark.Route;
 
 public class FeedAction implements Route {
-
-  public static Logger logger = Logs.getLogger();
 
   private static final String REGEX_NL = "(\n|\r)+";
 
@@ -90,21 +87,21 @@ public class FeedAction implements Route {
 
   @Override
   public Object handle(final Request request, final Response response) throws Exception {
-    if (!LicenseCheck.isValid()) { return LicenseCheck.LICENCE_ERROR; }
+    if (!SystemContext.isLicenseValid()) { return SystemContext.LICENCE_ERROR; }
     final String namespace = MeasureCollector.getNamespace(request);
-    FeedAction.logger.info(MessageFormat.format("handle({0})", namespace));
+    SystemContext.logger.info(MessageFormat.format("handle({0})", namespace));
     final ServerResponse result = new ServerResponse(0);
     String[] data = null;
     if (FeedAction.POST.equalsIgnoreCase(request.requestMethod())) {
       final String body = request.body();
-      FeedAction.logger.trace("Body: " + body);
+      SystemContext.logger.trace("Body: " + body);
       if (body != null) {
         data = body.split(FeedAction.REGEX_NL);
       }
     }
     else {
       final String queryParams = request.queryString();
-      FeedAction.logger.trace("Query: " + queryParams);
+      SystemContext.logger.trace("Query: " + queryParams);
       if (queryParams != null) {
         data = queryParams.split(";");
       }
@@ -123,7 +120,7 @@ public class FeedAction implements Route {
       if (valuePair == null) {
         continue;
       }
-      FeedAction.logger.debug("Processing " + valuePair);
+      SystemContext.logger.debug("Processing " + valuePair);
       String metricName = null;
       String splitName = null;
       final int colonIx = valuePair.indexOf(":");
@@ -166,6 +163,10 @@ public class FeedAction implements Route {
         if (splitName != null) {
           m = m.getSplitting(splitName);
           m.addValue(split, doubleValue);
+        }
+        if (SystemContext.consumer != null) {
+          final Datum d = new Datum(doubleValue);
+          SystemContext.consumer.exportData(namespace, metric, splitName, split, d, null);
         }
         rows++;
       }

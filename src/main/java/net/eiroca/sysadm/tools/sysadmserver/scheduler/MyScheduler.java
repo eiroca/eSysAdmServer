@@ -14,28 +14,22 @@
  * If not, see <http://www.gnu.org/licenses/>.
  *
  **/
-package net.eiroca.sysadm.tools.sysadmserver;
+package net.eiroca.sysadm.tools.sysadmserver.scheduler;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import spark.ResponseTransformer;
+import net.eiroca.library.scheduler.Scheduler;
+import net.eiroca.library.scheduler.Task;
+import net.eiroca.sysadm.tools.sysadmserver.SystemContext;
 
-public class JsonTransformer implements ResponseTransformer {
+final public class MyScheduler extends Scheduler {
 
-  private static final boolean PRETTY = true;
-  private final Gson gson;
-
-  public JsonTransformer() {
-    final GsonBuilder builder = new GsonBuilder();
-    if (JsonTransformer.PRETTY) {
-      builder.setPrettyPrinting();
-    }
-    gson = builder.create();
+  @Override
+  public void onTaskStart(final Task task) {
+    SystemContext.logger.info("START of " + task.getId());
   }
 
   @Override
-  public String render(final Object model) {
-    return gson.toJson(model);
+  public void onTaskEnd(final Task task) {
+    SystemContext.logger.info("END of " + task.getId());
   }
 
 }

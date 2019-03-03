@@ -16,48 +16,53 @@
  **/
 package net.eiroca.sysadm.tools;
 
-import org.slf4j.Logger;
-import net.eiroca.library.system.Logs;
-import net.eiroca.sysadm.tools.sysadmserver.JsonTransformer;
-import net.eiroca.sysadm.tools.sysadmserver.LicenseCheck;
-import net.eiroca.sysadm.tools.sysadmserver.MeasureCollector;
-import net.eiroca.sysadm.tools.sysadmserver.ResultTransformer;
-import net.eiroca.sysadm.tools.sysadmserver.action.AboutAction;
-import net.eiroca.sysadm.tools.sysadmserver.action.ExportAction;
-import net.eiroca.sysadm.tools.sysadmserver.action.FeedAction;
-import net.eiroca.sysadm.tools.sysadmserver.action.MetricAction;
-import spark.ResponseTransformer;
-import spark.Spark;
+import java.nio.file.Files;
+import net.eiroca.library.core.Helper;
+import net.eiroca.sysadm.tools.sysadmserver.CollectorManager;
+import net.eiroca.sysadm.tools.sysadmserver.MonitorManager;
+import net.eiroca.sysadm.tools.sysadmserver.SystemContext;
 
 public class eSysAdmServer {
 
-  private static final Logger logger = Logs.getLogger();
+  private static final int SLEEPTIME = 15 * 1000;
 
   public static void main(final String[] args) {
-    LicenseCheck.init();
-    if (!LicenseCheck.isValid()) {
-      eSysAdmServer.logger.error("Invalid license");
-      System.exit(1);
+    final String confPath = eSysAdmServer.getConfigPath(args);
+    try {
+      SystemContext.init(confPath);
+      MonitorManager.start();
+      CollectorManager.start();
+      while (true) {
+        Helper.sleep(eSysAdmServer.SLEEPTIME);
+        if (!Files.exists(SystemContext.lockFile)) {
+          break;
+        }
+        if (!SystemContext.isLicenseValid()) {
+          break;
+        }
+      }
     }
-    eSysAdmServer.logger.info(LicenseCheck.ME + " licensed to " + LicenseCheck.license.getHolder());
-    Spark.port(MeasureCollector.getServerPort());
-    final ResponseTransformer jSonRender = new JsonTransformer();
-    final ResponseTransformer resultRender = new ResultTransformer(false);
-    Spark.get("/about", new AboutAction(), jSonRender);
-    Spark.get("/rest/feed", new FeedAction(), jSonRender);
-    Spark.get("/rest/feed/" + MeasureCollector.PARAM_NAMESPACE, new FeedAction(), jSonRender);
-    Spark.get("/rest/metric", new MetricAction(), resultRender);
-    Spark.get("/rest/metric/" + MeasureCollector.PARAM_NAMESPACE, new MetricAction(), resultRender);
-    Spark.get("/rest/export", new ExportAction(), resultRender);
-    Spark.get("/rest/export/" + MeasureCollector.PARAM_NAMESPACE, new ExportAction(), resultRender);
+    catch (final Exception e) {
+      SystemContext.logger.error("Fatal error: " + e.getMessage(), e);
+    }
+    finally {
+      CollectorManager.stop();
+      MonitorManager.stop();
+      SystemContext.done();
+    }
+  }
 
-    Spark.get("/api/v1/feed/" + MeasureCollector.PARAM_NAMESPACE, new FeedAction(), jSonRender);
-    Spark.get("/api/v1/metric/" + MeasureCollector.PARAM_NAMESPACE, new MetricAction(), resultRender);
-    Spark.get("/api/v1/export/" + MeasureCollector.PARAM_NAMESPACE, new ExportAction(), resultRender);
-
-    Spark.exception(Exception.class, (e, request, response) -> {
-      e.printStackTrace();
-    });
-
+  private static String getConfigPath(final String[] args) {
+    String confPath;
+    if (args.length > 0) {
+      confPath = args[0];
+      if (!confPath.endsWith("\\")) {
+        confPath = confPath + "\\";
+      }
+    }
+    else {
+      confPath = "";
+    }
+    return confPath;
   }
 }

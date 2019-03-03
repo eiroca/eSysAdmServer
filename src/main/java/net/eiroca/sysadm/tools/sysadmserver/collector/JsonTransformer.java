@@ -14,24 +14,28 @@
  * If not, see <http://www.gnu.org/licenses/>.
  *
  **/
-package net.eiroca.sysadm.tools.sysadmserver;
+package net.eiroca.sysadm.tools.sysadmserver.collector;
 
-import net.eiroca.library.license.api.License;
-import net.eiroca.library.license.api.LicenseManager;
-import net.eiroca.library.server.ServerResponse;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import spark.ResponseTransformer;
 
-public class LicenseCheck {
+public class JsonTransformer implements ResponseTransformer {
 
-  public static final String ME = "eSysAdmServer";
-  public static License license;
-  public static ServerResponse LICENCE_ERROR = new ServerResponse(-9999, "License is expired, no action is taken");
+  private static final boolean PRETTY = true;
+  private final Gson gson;
 
-  public static void init() {
-    LicenseCheck.license = LicenseManager.getInstance().getLicense(LicenseCheck.ME, true);
+  public JsonTransformer() {
+    final GsonBuilder builder = new GsonBuilder();
+    if (JsonTransformer.PRETTY) {
+      builder.setPrettyPrinting();
+    }
+    gson = builder.create();
   }
 
-  public static boolean isValid() {
-    return LicenseManager.isValidLicense(LicenseCheck.license);
+  @Override
+  public String render(final Object model) {
+    return gson.toJson(model);
   }
 
 }

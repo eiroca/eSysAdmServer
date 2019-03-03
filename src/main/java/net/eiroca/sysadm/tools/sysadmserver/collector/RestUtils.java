@@ -14,13 +14,13 @@
  * If not, see <http://www.gnu.org/licenses/>.
  *
  **/
-package net.eiroca.sysadm.tools.sysadmserver;
+package net.eiroca.sysadm.tools.sysadmserver.collector;
 
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import net.eiroca.library.metrics.Statistic;
 
-public class Utils {
+public class RestUtils {
 
   public static void measures2json(final StringBuilder sb, final ConcurrentHashMap<String, Statistic> measures) {
     boolean first = true;
@@ -50,7 +50,7 @@ public class Utils {
       final String name = n.getKey();
       final ConcurrentHashMap<String, Statistic> s = n.getValue();
       sb.append('\"').append(name).append("\":{");
-      Utils.measures2json(sb, s);
+      RestUtils.measures2json(sb, s);
       sb.append('}');
     }
   }
