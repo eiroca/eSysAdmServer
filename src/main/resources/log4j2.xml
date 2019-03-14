@@ -1,50 +1,47 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Configuration monitorinterval="60" status="info" strict="true">
-	<Properties>
-		<Property name="logpath">./logs/</Property>
-	</Properties>
-	<Appenders>
-		<appender name="console" class="org.apache.log4j.ConsoleAppender">
-			<layout class="org.apache.log4j.PatternLayout">
-				<param name="ConversionPattern" value="%d %p [%t] %c %m%n" />
-			</layout>
-		</appender>
-		<RollingFile name="System" fileName="${logpath}System.log" filePattern="${logpath}System-%i.log.zip">
-			<PatternLayout pattern="%d %p [%t] %C{1.} %m%n" />
-			<Policies>
-				<OnStartupTriggeringPolicy />
-				<SizeBasedTriggeringPolicy size="200MB" />
-			</Policies>
-			<DefaultRolloverStrategy max="20" />
-		</RollingFile>
-		<RollingFile name="Monitoring" fileName="${logpath}Monitoring.log"
-			filePattern="${logpath}Monitoring-%i.log.zip">
-			<PatternLayout pattern="%d %p [%t] %c %m%n" />
-			<Policies>
-				<SizeBasedTriggeringPolicy size="100MB" />
-			</Policies>
-			<DefaultRolloverStrategy max="20" />
-		</RollingFile>
-		<RollingFile name="Metrics" fileName="${logpath}Metrics.log" filePattern="${logpath}Metrics-%i.log.zip">
-			<PatternLayout pattern="%m%n" />
-			<Policies>
-				<SizeBasedTriggeringPolicy size="100MB" />
-			</Policies>
-			<DefaultRolloverStrategy max="20" />
-		</RollingFile>
-	</Appenders>
-	<Loggers>
-		<logger name="Monitoring" additivity="false" level="info">
-			<appender-ref ref="Monitoring" />
-		</logger>
-		<logger name="Metrics" additivity="false" level="info">
-			<appender-ref ref="Metrics" />
-		</logger>
-		<logger name="net.eiroca" additivity="false" level="info">
-			<appender-ref ref="System" />
-		</logger>
-		<Root level="info">
-			<appender-ref ref="System" />
-		</Root>
-	</Loggers>
+   <Properties>
+      <Property name="logpath">./logs/</Property>
+   </Properties>
+   <Appenders>
+      <Console name="console" target="SYSTEM_OUT">
+         <PatternLayout pattern="%d %p [%t] %c %m%n" />
+      </Console>
+      <RollingFile name="System" fileName="${logpath}System.log" filePattern="${logpath}System-%i.log.zip">
+         <PatternLayout pattern="%d %p [%t] %C{1.} %m%n" />
+         <Policies>
+            <OnStartupTriggeringPolicy />
+            <SizeBasedTriggeringPolicy size="200MB" />
+         </Policies>
+         <DefaultRolloverStrategy max="20" />
+      </RollingFile>
+      <RollingFile name="Monitoring" fileName="${logpath}Monitoring.log" filePattern="${logpath}Monitoring-%i.log.zip">
+         <PatternLayout pattern="%d %p [%t] %c %m%n" />
+         <Policies>
+            <SizeBasedTriggeringPolicy size="100MB" />
+         </Policies>
+         <DefaultRolloverStrategy max="20" />
+      </RollingFile>
+      <RollingFile name="Metrics" fileName="${logpath}Metrics.log" filePattern="${logpath}Metrics-%i.log.zip">
+         <PatternLayout pattern="%m%n" />
+         <Policies>
+            <SizeBasedTriggeringPolicy size="100MB" />
+         </Policies>
+         <DefaultRolloverStrategy max="20" />
+      </RollingFile>
+   </Appenders>
+   <Loggers>
+      <logger name="Monitoring" additivity="false" level="info">
+         <appender-ref ref="Monitoring" />
+      </logger>
+      <logger name="Metrics" additivity="false" level="info">
+         <appender-ref ref="Metrics" />
+      </logger>
+      <logger name="net.eiroca" additivity="false" level="info">
+         <appender-ref ref="System" />
+      </logger>
+      <Root level="info">
+         <appender-ref ref="System" />
+      </Root>
+   </Loggers>
 </Configuration>

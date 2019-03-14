@@ -161,7 +161,7 @@ public class FeedAction implements Route {
         Statistic m = collector.getMetric(namespace, metric);
         m.addValue(doubleValue);
         if (splitName != null) {
-          m = m.getSplitting(splitName);
+          m = (Statistic)m.getSplitting(splitName);
           m.addValue(split, doubleValue);
         }
         if (SystemContext.consumer != null) {

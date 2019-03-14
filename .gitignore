@@ -60,3 +60,4 @@ licenses/*.lic
 #
 **/target/*
 /target/
+/config_prod/*
