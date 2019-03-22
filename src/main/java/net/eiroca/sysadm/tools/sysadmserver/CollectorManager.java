@@ -61,16 +61,19 @@ public class CollectorManager {
     final ResponseTransformer resultRender = new ResultTransformer(false);
     //
     Spark.get("/about", new AboutAction(), jSonRender);
-    Spark.get("/rest/feed", new FeedAction(), jSonRender);
     Spark.get("/rest/feed/" + MeasureCollector.PARAM_NAMESPACE, new FeedAction(), jSonRender);
-    Spark.get("/rest/metric", new MetricAction(), resultRender);
     Spark.get("/rest/metric/" + MeasureCollector.PARAM_NAMESPACE, new MetricAction(), resultRender);
-    Spark.get("/rest/export", new ExportAction(), resultRender);
     Spark.get("/rest/export/" + MeasureCollector.PARAM_NAMESPACE, new ExportAction(), resultRender);
+    //
+    Spark.get("/rest/feed", new FeedAction(), jSonRender);
+    Spark.get("/rest/metric", new MetricAction(), resultRender);
+    Spark.get("/rest/export", new ExportAction(), resultRender);
+    Spark.get("/rest/export/", new ExportAction(), resultRender);
     //
     Spark.get("/api/v1/feed/" + MeasureCollector.PARAM_NAMESPACE, new FeedAction(), jSonRender);
     Spark.get("/api/v1/metric/" + MeasureCollector.PARAM_NAMESPACE, new MetricAction(), resultRender);
     Spark.get("/api/v1/export/" + MeasureCollector.PARAM_NAMESPACE, new ExportAction(), resultRender);
+    Spark.get("/api/v1/export/", new ExportAction(), resultRender);
     //
     Spark.exception(Exception.class, (e, request, response) -> {
       e.printStackTrace();

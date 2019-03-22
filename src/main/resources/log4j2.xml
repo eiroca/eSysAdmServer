@@ -31,13 +31,13 @@
       </RollingFile>
    </Appenders>
    <Loggers>
-      <logger name="Monitoring" additivity="false" level="info">
+      <logger name="Monitoring" additivity="false" level="debug">
          <appender-ref ref="Monitoring" />
       </logger>
       <logger name="Metrics" additivity="false" level="info">
          <appender-ref ref="Metrics" />
       </logger>
-      <logger name="net.eiroca" additivity="false" level="info">
+      <logger name="net.eiroca" additivity="false" level="debug">
          <appender-ref ref="System" />
       </logger>
       <Root level="info">

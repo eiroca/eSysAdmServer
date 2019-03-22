@@ -18,6 +18,7 @@ package net.eiroca.sysadm.tools.sysadmserver;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Properties;
@@ -31,33 +32,44 @@ import net.eiroca.library.scheduler.Scheduler;
 import net.eiroca.library.scheduler.SchedulerPolicy;
 import net.eiroca.library.server.ServerResponse;
 import net.eiroca.library.sysadm.monitoring.sdk.GenericConsumer;
-import net.eiroca.library.sysadm.monitoring.sdk.GenericContext;
+import net.eiroca.library.system.Context;
 import net.eiroca.library.system.IContext;
 import net.eiroca.library.system.LibFile;
 import net.eiroca.library.system.Logs;
 import net.eiroca.sysadm.tools.sysadmserver.scheduler.MyScheduler;
+import net.eiroca.sysadm.tools.sysadmserver.util.HostGroups;
 
 public final class SystemContext {
 
   private static final String EXPORTER_PREFIX = "exporter.";
+
   private static final String CFG_MONITORS_PATH = "monitors.path";
+  private static final String DEF_PATH_MONITORS = "monitors";
+  private static final String CFG_HOSTGROUPS_PATH = "hostgroups.path";
+  private static final String DEF_PATH_HOSTGROUPS = "hostgroups.config";
+  public static final String CFG_LOCKFILE = "lockFile";
+  public static final String CFG_SCHEDULER_WORKERS = "scheduler.workers";
+  public static final int DEF_SCHEDULER_WORKERS = 4;
+  private static final String CFG_TAG_PREFIX = "hostgroup.tagPrefix";
+  private static final String DEF_TAG_PREFIX = null;
 
   public static final String ME = "eSysAdmServer";
 
   public static final Logger logger = Logs.getLogger(SystemContext.ME);
-
-  public static final String CFG_LOCKFILE = "lockFile";
 
   public static License license;
   public static ServerResponse LICENCE_ERROR = new ServerResponse(-9999, "License is expired, no action is taken");
 
   public static Properties config;
 
-  private final static Scheduler scheduler = new MyScheduler();
+  private static Scheduler scheduler;
   public static GenericConsumer consumer = null;
 
   public static Path lockFile;
   public static Path monitorDefinitionPath;
+  public static Path hostGroupsPath;
+
+  static HostGroups hostGroups;
 
   public static void init(final String path) throws Exception {
     SystemContext.initLicense();
@@ -82,9 +94,11 @@ public final class SystemContext {
     SystemContext.logger.info("lockFile:" + SystemContext.lockFile.toString());
     // Scheduler
     SystemContext.logger.info("Starting scheduler");
+    final int workers = Helper.getInt(SystemContext.config.getProperty(SystemContext.CFG_SCHEDULER_WORKERS), SystemContext.DEF_SCHEDULER_WORKERS);
+    SystemContext.scheduler = new MyScheduler(workers);
     SystemContext.scheduler.start();
     // Measure consumer
-    final IContext context = new GenericContext("Exporter", SystemContext.getExporterConfig(SystemContext.config));
+    final IContext context = new Context("Exporter", SystemContext.getExporterConfig(SystemContext.config));
     SystemContext.consumer = new GenericConsumer();
     SystemContext.consumer.setup(context);
     final String id = SystemContext.addTask(SystemContext.consumer, new DelayPolicy(5, TimeUnit.SECONDS));
@@ -92,11 +106,20 @@ public final class SystemContext {
     //
     final String monitorsPath = SystemContext.config.getProperty(SystemContext.CFG_MONITORS_PATH);
     if (monitorsPath == null) {
-      SystemContext.monitorDefinitionPath = Paths.get(path, "monitors");
+      SystemContext.monitorDefinitionPath = Paths.get(path, SystemContext.DEF_PATH_MONITORS);
     }
     else {
       SystemContext.monitorDefinitionPath = Paths.get(monitorsPath);
     }
+    final String hostGroupsPathStr = SystemContext.config.getProperty(SystemContext.CFG_HOSTGROUPS_PATH);
+    if (SystemContext.hostGroupsPath == null) {
+      SystemContext.hostGroupsPath = Paths.get(path, SystemContext.DEF_PATH_HOSTGROUPS);
+    }
+    else {
+      SystemContext.hostGroupsPath = Paths.get(hostGroupsPathStr);
+    }
+    final String tagPrefix = SystemContext.config.getProperty(SystemContext.CFG_TAG_PREFIX, SystemContext.DEF_TAG_PREFIX);
+    SystemContext.hostGroups = new HostGroups(SystemContext.hostGroupsPath, tagPrefix);
   }
 
   private static Properties getExporterConfig(final Properties config) {
@@ -144,5 +167,12 @@ public final class SystemContext {
     }
     SystemContext.logger.info("Stopping scheduler");
     SystemContext.scheduler.stop();
+    SystemContext.scheduler = null;
+    try {
+      Files.delete(SystemContext.lockFile);
+    }
+    catch (final IOException e) {
+      Logs.ignore(e);
+    }
   }
 }

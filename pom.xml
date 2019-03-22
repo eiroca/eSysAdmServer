@@ -61,6 +61,14 @@
                   <exclude>**/simplelogger.properties</exclude>
                </excludes>
                <archive>
+                  <manifestEntries>
+                     <Build-Jdk>${jdk.version}</Build-Jdk>
+                     <Implementation-Title>${project.name}</Implementation-Title>
+                     <Implementation-Version>${project.version}</Implementation-Version>
+                     <Specification-Title>${project.name} Library</Specification-Title>
+                     <Specification-Version>${project.version}</Specification-Version>
+                     <Class-Path>libs/ojdbc6.jar</Class-Path>
+                  </manifestEntries>
                   <manifest>
                      <addClasspath>true</addClasspath>
                      <mainClass>net.eiroca.sysadm.tools.eSysAdmServer</mainClass>
@@ -103,6 +111,11 @@
       </dependency>
       <dependency>
          <groupId>net.eiroca</groupId>
+         <artifactId>eLibSys</artifactId>
+         <version>${eLib.version}</version>
+      </dependency>
+      <dependency>
+         <groupId>net.eiroca</groupId>
          <artifactId>eLibSysAdm</artifactId>
          <version>${eLib.version}</version>
       </dependency>
@@ -110,6 +123,18 @@
          <groupId>net.eiroca</groupId>
          <artifactId>eLicense-API</artifactId>
          <version>${eLicense.version}</version>
+      </dependency>
+      <dependency>
+         <groupId>net.eiroca</groupId>
+         <artifactId>eJDBCDrivers</artifactId>
+         <version>${eJDBCDrivers.version}</version>
+      </dependency>
+      <dependency>
+         <groupId>systemLibs</groupId>
+         <artifactId>OracleJDBC</artifactId>
+         <version>1.0</version>
+         <scope>system</scope>
+         <systemPath>${project.basedir}/libs/ojdbc6.jar</systemPath>
       </dependency>
       <dependency>
          <groupId>org.apache.logging.log4j</groupId>

@@ -30,9 +30,10 @@ import net.eiroca.library.diagnostics.IServerMonitor;
 import net.eiroca.library.diagnostics.ServerMonitors;
 import net.eiroca.library.scheduler.FixedFrequencyPolicy;
 import net.eiroca.library.sysadm.monitoring.api.IMeasureConsumer;
-import net.eiroca.library.sysadm.monitoring.sdk.GenericContext;
 import net.eiroca.library.sysadm.monitoring.sdk.GenericProducer;
+import net.eiroca.library.sysadm.monitoring.sdk.ServerContext;
 import net.eiroca.library.system.IContext;
+import net.eiroca.sysadm.tools.sysadmserver.util.Configuration;
 
 public class MonitorManager {
 
@@ -56,23 +57,60 @@ public class MonitorManager {
       final Properties monitorConfig = Helper.loadProperties(confPath.toString(), false);
       final String configNode = monitorConfig.getProperty("config");
       MonitorManager.configuration.update(configNode, monitorConfig);
+      final List<String> hosts = MonitorManager.resolveHosts(monitorConfig);
+      if (hosts.size() == 0) {
+        SystemContext.logger.error("No hosts declared for the monitor: " + confPath);
+        return;
+      }
       final String type = monitorConfig.getProperty("monitor-type");
       final IServerMonitor checker = ServerMonitors.build(type);
       final String monitorType = checker.getClass().getSimpleName();
       final long freq = LibTimeUnit.getFrequency(monitorConfig.getProperty("monitor-freq"), 60, TimeUnit.SECONDS, 10, 1 * 24 * 60 * 60);
-      final IContext context = new GenericContext("Monitoring." + monitorType, monitorConfig);
+      final IContext context = new ServerContext("Monitoring." + monitorType, monitorConfig);
       final String name = monitorConfig.getProperty("name");
-      final GenericProducer monitor = new GenericProducer(name, checker, consumer);
+      final GenericProducer monitor = new GenericProducer(name, checker, hosts, SystemContext.hostGroups, consumer);
       final String id = SystemContext.addTask(monitor, new FixedFrequencyPolicy(freq, TimeUnit.SECONDS));
       monitor.setId(id);
       monitor.setup(context);
       MonitorManager.monitors.add(monitor);
       SystemContext.logger.info("New monitor ID:" + id + " config:" + confPath);
-      SystemContext.logger.debug(monitor.toString());
+      SystemContext.logger.debug("monitor=" + monitor.toString());
     }
     catch (final Exception e) {
       SystemContext.logger.error(confPath + " Error: ", e);
     }
+  }
+
+  private static List<String> resolveHosts(final Properties monitorConfig) {
+    final List<String> hosts = new ArrayList<>();
+    String hostName;
+    String aHost = monitorConfig.getProperty("host", null);
+    if (aHost != null) {
+      hostName = aHost.trim();
+      if (SystemContext.hostGroups.hasTag(hostName)) {
+        for (final String hostInGroup : SystemContext.hostGroups.getHostByTag(hostName)) {
+          hosts.add(hostInGroup);
+        }
+      }
+      else {
+        hosts.add(hostName);
+      }
+    }
+    aHost = monitorConfig.getProperty("hosts", null);
+    if (aHost != null) {
+      for (final String s : aHost.split(" ")) {
+        hostName = s.trim();
+        if (SystemContext.hostGroups.hasTag(hostName)) {
+          for (final String hostInGroup : SystemContext.hostGroups.getHostByTag(hostName)) {
+            hosts.add(hostInGroup);
+          }
+        }
+        else {
+          hosts.add(hostName);
+        }
+      }
+    }
+    return hosts;
   }
 
   public static void stop() {

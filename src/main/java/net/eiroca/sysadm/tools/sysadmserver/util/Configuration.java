@@ -14,7 +14,7 @@
  * If not, see <http://www.gnu.org/licenses/>.
  *
  **/
-package net.eiroca.sysadm.tools.sysadmserver;
+package net.eiroca.sysadm.tools.sysadmserver.util;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -111,7 +111,7 @@ public class Configuration {
         if (value == null) {
           continue;
         }
-        if (!config.contains(name)) {
+        if (!config.containsKey(name)) {
           config.setProperty(name, value.toString());
         }
       }

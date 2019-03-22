@@ -16,11 +16,17 @@
  **/
 package net.eiroca.sysadm.tools.sysadmserver.scheduler;
 
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import net.eiroca.library.scheduler.Scheduler;
 import net.eiroca.library.scheduler.Task;
 import net.eiroca.sysadm.tools.sysadmserver.SystemContext;
 
 final public class MyScheduler extends Scheduler {
+
+  public MyScheduler(final int workers) {
+    super(Executors.newFixedThreadPool(workers), 1, TimeUnit.SECONDS, SystemContext.ME + ".scheduler");
+  }
 
   @Override
   public void onTaskStart(final Task task) {

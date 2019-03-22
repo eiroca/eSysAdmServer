@@ -16,8 +16,12 @@
  **/
 package net.eiroca.sysadm.tools;
 
+import java.net.URI;
 import java.nio.file.Files;
+import java.util.ArrayList;
+import java.util.List;
 import net.eiroca.library.core.Helper;
+import net.eiroca.library.system.LibFile;
 import net.eiroca.sysadm.tools.sysadmserver.CollectorManager;
 import net.eiroca.sysadm.tools.sysadmserver.MonitorManager;
 import net.eiroca.sysadm.tools.sysadmserver.SystemContext;
@@ -29,6 +33,7 @@ public class eSysAdmServer {
   public static void main(final String[] args) {
     final String confPath = eSysAdmServer.getConfigPath(args);
     try {
+      listClassPath();
       SystemContext.init(confPath);
       MonitorManager.start();
       CollectorManager.start();
@@ -49,6 +54,14 @@ public class eSysAdmServer {
       CollectorManager.stop();
       MonitorManager.stop();
       SystemContext.done();
+    }
+  }
+
+  private static void listClassPath() {
+    List<URI> filesList = new ArrayList<>();
+    LibFile.getClassPathFiles(filesList);
+    for (URI file : filesList) {
+      SystemContext.logger.debug(file.toString());
     }
   }
 
