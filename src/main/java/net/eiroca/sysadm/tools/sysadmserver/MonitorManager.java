@@ -32,7 +32,6 @@ import net.eiroca.library.scheduler.FixedFrequencyPolicy;
 import net.eiroca.library.sysadm.monitoring.api.IMeasureConsumer;
 import net.eiroca.library.sysadm.monitoring.sdk.GenericProducer;
 import net.eiroca.library.sysadm.monitoring.sdk.ServerContext;
-import net.eiroca.library.system.IContext;
 import net.eiroca.sysadm.tools.sysadmserver.util.Configuration;
 
 public class MonitorManager {
@@ -66,7 +65,8 @@ public class MonitorManager {
       final IServerMonitor checker = ServerMonitors.build(type);
       final String monitorType = checker.getClass().getSimpleName();
       final long freq = LibTimeUnit.getFrequency(monitorConfig.getProperty("monitor-freq"), 60, TimeUnit.SECONDS, 10, 1 * 24 * 60 * 60);
-      final IContext context = new ServerContext("Monitoring." + monitorType, monitorConfig);
+      final ServerContext context = new ServerContext("Monitoring." + monitorType, monitorConfig);
+      context.setCredentialProvider(SystemContext.keyStore);
       final String name = monitorConfig.getProperty("name");
       final GenericProducer monitor = new GenericProducer(name, checker, hosts, SystemContext.hostGroups, consumer);
       final String id = SystemContext.addTask(monitor, new FixedFrequencyPolicy(freq, TimeUnit.SECONDS));

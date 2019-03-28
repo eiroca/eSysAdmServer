@@ -32,11 +32,13 @@ import net.eiroca.library.scheduler.Scheduler;
 import net.eiroca.library.scheduler.SchedulerPolicy;
 import net.eiroca.library.server.ServerResponse;
 import net.eiroca.library.sysadm.monitoring.sdk.GenericConsumer;
+import net.eiroca.library.sysadm.monitoring.sdk.ICredentialProvider;
 import net.eiroca.library.system.Context;
 import net.eiroca.library.system.IContext;
 import net.eiroca.library.system.LibFile;
 import net.eiroca.library.system.Logs;
 import net.eiroca.sysadm.tools.sysadmserver.scheduler.MyScheduler;
+import net.eiroca.sysadm.tools.sysadmserver.util.CredentialStore;
 import net.eiroca.sysadm.tools.sysadmserver.util.HostGroups;
 
 public final class SystemContext {
@@ -46,7 +48,11 @@ public final class SystemContext {
   private static final String CFG_MONITORS_PATH = "monitors.path";
   private static final String DEF_PATH_MONITORS = "monitors";
   private static final String CFG_HOSTGROUPS_PATH = "hostgroups.path";
-  private static final String DEF_PATH_HOSTGROUPS = "hostgroups.config";
+  private static final String DEF_HOSTGROUPS_PATH = "hostgroups.config";
+  //
+  private static final String CFG_KEYSTORE_PATH = "keystore.path";
+  private static final String DEF_KEYSTORE_PATH = "keystore.config";
+  //
   public static final String CFG_LOCKFILE = "lockFile";
   public static final String CFG_SCHEDULER_WORKERS = "scheduler.workers";
   public static final int DEF_SCHEDULER_WORKERS = 4;
@@ -68,8 +74,10 @@ public final class SystemContext {
   public static Path lockFile;
   public static Path monitorDefinitionPath;
   public static Path hostGroupsPath;
+  public static Path keyStorePath;
 
-  static HostGroups hostGroups;
+  public static HostGroups hostGroups;
+  public static ICredentialProvider keyStore;
 
   public static void init(final String path) throws Exception {
     SystemContext.initLicense();
@@ -112,14 +120,24 @@ public final class SystemContext {
       SystemContext.monitorDefinitionPath = Paths.get(monitorsPath);
     }
     final String hostGroupsPathStr = SystemContext.config.getProperty(SystemContext.CFG_HOSTGROUPS_PATH);
-    if (SystemContext.hostGroupsPath == null) {
-      SystemContext.hostGroupsPath = Paths.get(path, SystemContext.DEF_PATH_HOSTGROUPS);
+    if (hostGroupsPathStr == null) {
+      SystemContext.hostGroupsPath = Paths.get(path, SystemContext.DEF_HOSTGROUPS_PATH);
     }
     else {
       SystemContext.hostGroupsPath = Paths.get(hostGroupsPathStr);
     }
     final String tagPrefix = SystemContext.config.getProperty(SystemContext.CFG_TAG_PREFIX, SystemContext.DEF_TAG_PREFIX);
     SystemContext.hostGroups = new HostGroups(SystemContext.hostGroupsPath, tagPrefix);
+
+    //
+    final String keyStorePathStr = SystemContext.config.getProperty(SystemContext.CFG_KEYSTORE_PATH);
+    if (keyStorePathStr == null) {
+      SystemContext.keyStorePath = Paths.get(path, SystemContext.DEF_KEYSTORE_PATH);
+    }
+    else {
+      SystemContext.keyStorePath = Paths.get(keyStorePathStr);
+    }
+    SystemContext.keyStore = new CredentialStore(SystemContext.keyStorePath);
   }
 
   private static Properties getExporterConfig(final Properties config) {
