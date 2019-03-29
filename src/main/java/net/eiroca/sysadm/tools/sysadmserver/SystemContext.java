@@ -28,8 +28,8 @@ import net.eiroca.library.core.Helper;
 import net.eiroca.library.license.api.License;
 import net.eiroca.library.license.api.LicenseManager;
 import net.eiroca.library.scheduler.DelayPolicy;
-import net.eiroca.library.scheduler.Scheduler;
 import net.eiroca.library.scheduler.SchedulerPolicy;
+import net.eiroca.library.scheduler.Task;
 import net.eiroca.library.server.ServerResponse;
 import net.eiroca.library.sysadm.monitoring.sdk.GenericConsumer;
 import net.eiroca.library.sysadm.monitoring.sdk.ICredentialProvider;
@@ -42,6 +42,8 @@ import net.eiroca.sysadm.tools.sysadmserver.util.CredentialStore;
 import net.eiroca.sysadm.tools.sysadmserver.util.HostGroups;
 
 public final class SystemContext {
+
+  private static final int CONSUMER_SLEEPTIME = 10;
 
   private static final String EXPORTER_PREFIX = "exporter.";
 
@@ -68,7 +70,7 @@ public final class SystemContext {
 
   public static Properties config;
 
-  private static Scheduler scheduler;
+  public static MyScheduler scheduler;
   public static GenericConsumer consumer = null;
 
   public static Path lockFile;
@@ -109,8 +111,9 @@ public final class SystemContext {
     final IContext context = new Context("Exporter", SystemContext.getExporterConfig(SystemContext.config));
     SystemContext.consumer = new GenericConsumer();
     SystemContext.consumer.setup(context);
-    final String id = SystemContext.addTask(SystemContext.consumer, new DelayPolicy(5, TimeUnit.SECONDS));
-    SystemContext.logger.info("Consumer ID:" + id);
+    final Task t = SystemContext.addTask(SystemContext.consumer, new DelayPolicy(CONSUMER_SLEEPTIME, TimeUnit.SECONDS));
+    t.setName("Metric consumer");
+    SystemContext.logger.info(t.getName() + " ID:" + t.getId());
     //
     final String monitorsPath = SystemContext.config.getProperty(SystemContext.CFG_MONITORS_PATH);
     if (monitorsPath == null) {
@@ -172,7 +175,7 @@ public final class SystemContext {
     return Helper.getBoolean(SystemContext.config.getProperty(propName), defValue);
   }
 
-  public static String addTask(final Runnable task, final SchedulerPolicy policy) {
+  public static Task addTask(final Runnable task, final SchedulerPolicy policy) {
     return SystemContext.scheduler.addTask(task, policy);
   }
 

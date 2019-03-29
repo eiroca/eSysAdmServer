@@ -15,6 +15,14 @@
          </Policies>
          <DefaultRolloverStrategy max="20" />
       </RollingFile>
+      <RollingFile name="Scheduler" fileName="${logpath}Scheduler.log" filePattern="${logpath}Scheduler-%i.log.zip">
+         <PatternLayout pattern="%d %p [%t] %C{1.} %m%n" />
+         <Policies>
+            <OnStartupTriggeringPolicy />
+            <SizeBasedTriggeringPolicy size="200MB" />
+         </Policies>
+         <DefaultRolloverStrategy max="20" />
+      </RollingFile>
       <RollingFile name="Monitoring" fileName="${logpath}Monitoring.log" filePattern="${logpath}Monitoring-%i.log.zip">
          <PatternLayout pattern="%d %p [%t] %c %m%n" />
          <Policies>
@@ -39,6 +47,9 @@
       </logger>
       <logger name="net.eiroca" additivity="false" level="debug">
          <appender-ref ref="System" />
+      </logger>
+      <logger name="eSysAdmServer.scheduler" additivity="false" level="debug">
+         <appender-ref ref="Scheduler" />
       </logger>
       <Root level="info">
          <appender-ref ref="System" />

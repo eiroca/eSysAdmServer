@@ -29,6 +29,7 @@ import net.eiroca.library.core.LibTimeUnit;
 import net.eiroca.library.diagnostics.IServerMonitor;
 import net.eiroca.library.diagnostics.ServerMonitors;
 import net.eiroca.library.scheduler.FixedFrequencyPolicy;
+import net.eiroca.library.scheduler.Task;
 import net.eiroca.library.sysadm.monitoring.api.IMeasureConsumer;
 import net.eiroca.library.sysadm.monitoring.sdk.GenericProducer;
 import net.eiroca.library.sysadm.monitoring.sdk.ServerContext;
@@ -69,11 +70,12 @@ public class MonitorManager {
       context.setCredentialProvider(SystemContext.keyStore);
       final String name = monitorConfig.getProperty("name");
       final GenericProducer monitor = new GenericProducer(name, checker, hosts, SystemContext.hostGroups, consumer);
-      final String id = SystemContext.addTask(monitor, new FixedFrequencyPolicy(freq, TimeUnit.SECONDS));
-      monitor.setId(id);
+      final Task t = SystemContext.addTask(monitor, new FixedFrequencyPolicy(freq, TimeUnit.SECONDS));
+      t.setName(name);
+      monitor.setId(t.getId());
       monitor.setup(context);
       MonitorManager.monitors.add(monitor);
-      SystemContext.logger.info("New monitor ID:" + id + " config:" + confPath);
+      SystemContext.logger.info(t.getName() + " ID:" + t.getId() + " config:" + confPath);
       SystemContext.logger.debug("monitor=" + monitor.toString());
     }
     catch (final Exception e) {

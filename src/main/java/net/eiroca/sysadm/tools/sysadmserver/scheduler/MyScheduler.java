@@ -16,26 +16,59 @@
  **/
 package net.eiroca.sysadm.tools.sysadmserver.scheduler;
 
+import java.text.SimpleDateFormat;
+import java.util.ConcurrentModificationException;
+import java.util.Date;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import org.slf4j.Logger;
 import net.eiroca.library.scheduler.Scheduler;
 import net.eiroca.library.scheduler.Task;
+import net.eiroca.library.system.Logs;
 import net.eiroca.sysadm.tools.sysadmserver.SystemContext;
 
 final public class MyScheduler extends Scheduler {
 
+  private static final String SCHEDULERNAME = SystemContext.ME + ".scheduler";
+
+  public static final Logger logger = Logs.getLogger(MyScheduler.SCHEDULERNAME);
+
+  long runningTask = 0;
+  long executedTask = 0;
+
   public MyScheduler(final int workers) {
-    super(Executors.newFixedThreadPool(workers), 1, TimeUnit.SECONDS, SystemContext.ME + ".scheduler");
+    super(Executors.newFixedThreadPool(workers), 1, 60, TimeUnit.SECONDS, MyScheduler.SCHEDULERNAME);
   }
 
   @Override
   public void onTaskStart(final Task task) {
-    SystemContext.logger.info("START of " + task.getId());
+    super.onTaskStart(task);
+    MyScheduler.logger.debug(task.getName() + " started");
+    runningTask++;
   }
 
   @Override
   public void onTaskEnd(final Task task) {
-    SystemContext.logger.info("END of " + task.getId());
+    super.onTaskEnd(task);
+    MyScheduler.logger.info(task.getName() + " completed");
+    executedTask++;
+    runningTask--;
+  }
+
+  private final static SimpleDateFormat SDF = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
+
+  public void logStat() {
+    try {
+      MyScheduler.logger.info("Running Task = " + runningTask);
+      MyScheduler.logger.debug("Scheduler state = " + schedulerThread.getShedulerState());
+      MyScheduler.logger.debug("Scheduler nextRun = " + MyScheduler.SDF.format(new Date(schedulerThread.getNextRun())));
+      MyScheduler.logger.debug("Executed Task = " + executedTask);
+      for (final Task t : schedulerThread.getTaskList()) {
+        MyScheduler.logger.debug(t.getName() + " " + t.getState() + " " + MyScheduler.SDF.format(new Date(t.nextRun())));
+      }
+    }
+    catch (final ConcurrentModificationException e) {
+    }
   }
 
 }

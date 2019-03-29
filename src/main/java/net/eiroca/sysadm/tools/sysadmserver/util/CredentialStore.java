@@ -28,17 +28,17 @@ public class CredentialStore implements ICredentialProvider {
   final private transient Map<String, String> keyStore = new HashMap<>();
 
   public CredentialStore(final Path defPath) {
-    CSVMap csv = new CSVMap(defPath.toString(), '\t', '"', '#', "UTF-8");
-    for (String user : csv.getKeys()) {
+    final CSVMap csv = new CSVMap(defPath.toString(), '\t', '"', '#', "UTF-8");
+    for (final String user : csv.getKeys()) {
       String pwd = csv.getData(user);
-      Base64 base64 = new Base64();
+      final Base64 base64 = new Base64();
       pwd = new String(base64.decode(pwd.getBytes()));
       keyStore.put(user, pwd);
     }
   }
 
   @Override
-  public String getPlainPassword(String key) {
+  public String getPlainPassword(final String key) {
     return keyStore.get(key);
   }
 

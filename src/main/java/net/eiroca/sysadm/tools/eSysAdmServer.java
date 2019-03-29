@@ -33,11 +33,12 @@ public class eSysAdmServer {
   public static void main(final String[] args) {
     final String confPath = eSysAdmServer.getConfigPath(args);
     try {
-      listClassPath();
+      eSysAdmServer.listClassPath();
       SystemContext.init(confPath);
       MonitorManager.start();
       CollectorManager.start();
       while (true) {
+        SystemContext.scheduler.logStat();
         Helper.sleep(eSysAdmServer.SLEEPTIME);
         if (!Files.exists(SystemContext.lockFile)) {
           break;
@@ -58,9 +59,9 @@ public class eSysAdmServer {
   }
 
   private static void listClassPath() {
-    List<URI> filesList = new ArrayList<>();
+    final List<URI> filesList = new ArrayList<>();
     LibFile.getClassPathFiles(filesList);
-    for (URI file : filesList) {
+    for (final URI file : filesList) {
       SystemContext.logger.debug(file.toString());
     }
   }
