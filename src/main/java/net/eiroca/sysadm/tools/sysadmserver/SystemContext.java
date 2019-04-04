@@ -31,8 +31,10 @@ import net.eiroca.library.scheduler.DelayPolicy;
 import net.eiroca.library.scheduler.SchedulerPolicy;
 import net.eiroca.library.scheduler.Task;
 import net.eiroca.library.server.ServerResponse;
+import net.eiroca.library.sysadm.monitoring.api.EventRule;
 import net.eiroca.library.sysadm.monitoring.sdk.GenericConsumer;
 import net.eiroca.library.sysadm.monitoring.sdk.ICredentialProvider;
+import net.eiroca.library.sysadm.monitoring.sdk.RuleEngine;
 import net.eiroca.library.system.Context;
 import net.eiroca.library.system.IContext;
 import net.eiroca.library.system.LibFile;
@@ -51,6 +53,8 @@ public final class SystemContext {
   private static final String DEF_PATH_MONITORS = "monitors";
   private static final String CFG_HOSTGROUPS_PATH = "hostgroups.path";
   private static final String DEF_HOSTGROUPS_PATH = "hostgroups.config";
+  private static final String CFG_RULEENGINE_PATH = "rule-engine.path";
+  private static final String DEF_RULEENGINE_PATH = "rule-engine.config";
   //
   private static final String CFG_KEYSTORE_PATH = "keystore.path";
   private static final String DEF_KEYSTORE_PATH = "keystore.config";
@@ -107,9 +111,15 @@ public final class SystemContext {
     final int workers = Helper.getInt(SystemContext.config.getProperty(SystemContext.CFG_SCHEDULER_WORKERS), SystemContext.DEF_SCHEDULER_WORKERS);
     SystemContext.scheduler = new MyScheduler(workers);
     SystemContext.scheduler.start();
+    // Metric Rule Engine
+    final String ruleEnginePathStr = SystemContext.config.getProperty(SystemContext.CFG_RULEENGINE_PATH, DEF_RULEENGINE_PATH);
+    RuleEngine engine = new RuleEngine();
+    Properties ruleConfig = Helper.loadProperties(ruleEnginePathStr, false);
+    engine.loadRules(ruleConfig);
+    engine.addRule(new EventRule()); // default rule
     // Measure consumer
     final IContext context = new Context("Exporter", SystemContext.getExporterConfig(SystemContext.config));
-    SystemContext.consumer = new GenericConsumer();
+    SystemContext.consumer = new GenericConsumer(engine);
     SystemContext.consumer.setup(context);
     final Task t = SystemContext.addTask(SystemContext.consumer, new DelayPolicy(CONSUMER_SLEEPTIME, TimeUnit.SECONDS));
     t.setName("Metric consumer");
