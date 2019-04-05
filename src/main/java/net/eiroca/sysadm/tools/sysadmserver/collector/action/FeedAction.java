@@ -23,7 +23,6 @@ import net.eiroca.library.core.LibFormat;
 import net.eiroca.library.core.LibStr;
 import net.eiroca.library.metrics.Statistic;
 import net.eiroca.library.metrics.datum.Datum;
-import net.eiroca.library.metrics.datum.IDatum;
 import net.eiroca.library.server.ServerResponse;
 import net.eiroca.library.sysadm.monitoring.sdk.GenericProducer;
 import net.eiroca.sysadm.tools.sysadmserver.SystemContext;

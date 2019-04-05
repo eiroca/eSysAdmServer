@@ -81,6 +81,7 @@ public final class SystemContext {
   public static Path monitorDefinitionPath;
   public static Path hostGroupsPath;
   public static Path keyStorePath;
+  public static Path ruleEnginePath;
 
   public static HostGroups hostGroups;
   public static ICredentialProvider keyStore;
@@ -112,16 +113,23 @@ public final class SystemContext {
     SystemContext.scheduler = new MyScheduler(workers);
     SystemContext.scheduler.start();
     // Metric Rule Engine
-    final String ruleEnginePathStr = SystemContext.config.getProperty(SystemContext.CFG_RULEENGINE_PATH, DEF_RULEENGINE_PATH);
-    RuleEngine engine = new RuleEngine();
-    Properties ruleConfig = Helper.loadProperties(ruleEnginePathStr, false);
+    final String ruleEnginePathStr = SystemContext.config.getProperty(SystemContext.CFG_RULEENGINE_PATH);
+    if (ruleEnginePathStr == null) {
+      SystemContext.ruleEnginePath = Paths.get(path, SystemContext.DEF_RULEENGINE_PATH);
+    }
+    else {
+      SystemContext.ruleEnginePath = Paths.get(ruleEnginePathStr);
+    }
+
+    final RuleEngine engine = new RuleEngine();
+    final Properties ruleConfig = Helper.loadProperties(SystemContext.ruleEnginePath.toString(), false);
     engine.loadRules(ruleConfig);
     engine.addRule(new EventRule()); // default rule
     // Measure consumer
     final IContext context = new Context("Exporter", SystemContext.getExporterConfig(SystemContext.config));
     SystemContext.consumer = new GenericConsumer(engine);
     SystemContext.consumer.setup(context);
-    final Task t = SystemContext.addTask(SystemContext.consumer, new DelayPolicy(CONSUMER_SLEEPTIME, TimeUnit.SECONDS));
+    final Task t = SystemContext.addTask(SystemContext.consumer, new DelayPolicy(SystemContext.CONSUMER_SLEEPTIME, TimeUnit.SECONDS));
     t.setName("Metric consumer");
     SystemContext.logger.info(t.getName() + " ID:" + t.getId());
     //
