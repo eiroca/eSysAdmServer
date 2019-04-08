@@ -119,6 +119,8 @@ public class FeedAction implements Route {
     int rows = 0;
     if (valuePairs == null) { return rows; }
     final SortedMap<String, Object> meta = new TreeMap<>();
+    meta.put(GenericProducer.FLD_SOURCE, SystemContext.ME);
+    meta.put(GenericProducer.FLD_HOST, SystemContext.hostname);
     final MeasureCollector collector = MeasureCollector.getCollector();
     for (String valuePair : valuePairs) {
       if (valuePair == null) {

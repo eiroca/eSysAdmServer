@@ -18,9 +18,12 @@ package net.eiroca.sysadm.tools.sysadmserver;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.InetAddress;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
@@ -55,6 +58,9 @@ public final class SystemContext {
   private static final String DEF_HOSTGROUPS_PATH = "hostgroups.config";
   private static final String CFG_RULEENGINE_PATH = "rule-engine.path";
   private static final String DEF_RULEENGINE_PATH = "rule-engine.config";
+  private static final String CFG_HOSTNAME = "hostname";
+  private static final String CFG_ALIAS_PATH = "alias.path";
+  private static final String DEF_PATH_ALIAS = "alias.config";
   //
   private static final String CFG_KEYSTORE_PATH = "keystore.path";
   private static final String DEF_KEYSTORE_PATH = "keystore.config";
@@ -77,11 +83,13 @@ public final class SystemContext {
   public static MyScheduler scheduler;
   public static GenericConsumer consumer = null;
 
+  public static String hostname;
   public static Path lockFile;
   public static Path monitorDefinitionPath;
   public static Path hostGroupsPath;
   public static Path keyStorePath;
   public static Path ruleEnginePath;
+  public static Path aliasPath;
 
   public static HostGroups hostGroups;
   public static ICredentialProvider keyStore;
@@ -101,6 +109,16 @@ public final class SystemContext {
       }
     }
     SystemContext.logger.debug("config:" + SystemContext.config);
+    // name of the server
+    SystemContext.hostname = SystemContext.config.getProperty(SystemContext.CFG_HOSTNAME);
+    if (SystemContext.hostname == null) {
+      try {
+        SystemContext.hostname = InetAddress.getLocalHost().getHostName();
+      }
+      catch (final Exception e) {
+        SystemContext.hostname = "localhost";
+      }
+    }
     // Lock file
     String lockPath = path + SystemContext.ME + ".lock";
     lockPath = SystemContext.config.getProperty(SystemContext.CFG_LOCKFILE, lockPath);
@@ -120,14 +138,26 @@ public final class SystemContext {
     else {
       SystemContext.ruleEnginePath = Paths.get(ruleEnginePathStr);
     }
-
     final RuleEngine engine = new RuleEngine();
     final Properties ruleConfig = Helper.loadProperties(SystemContext.ruleEnginePath.toString(), false);
     engine.loadRules(ruleConfig);
     engine.addRule(new EventRule()); // default rule
+    // Alias
+    final String aliasPathStr = SystemContext.config.getProperty(SystemContext.CFG_ALIAS_PATH);
+    if (aliasPathStr == null) {
+      SystemContext.aliasPath = Paths.get(path, SystemContext.DEF_PATH_ALIAS);
+    }
+    else {
+      SystemContext.aliasPath = Paths.get(aliasPathStr);
+    }
+    final Properties aliasProp = Helper.loadProperties(aliasPath.toString(), false);
+    final Map<String, String> alias = new HashMap<>();
+    for (final String name : aliasProp.stringPropertyNames()) {
+      alias.put(name, aliasProp.getProperty(name));
+    }
     // Measure consumer
     final IContext context = new Context("Exporter", SystemContext.getExporterConfig(SystemContext.config));
-    SystemContext.consumer = new GenericConsumer(engine);
+    SystemContext.consumer = new GenericConsumer(engine, alias);
     SystemContext.consumer.setup(context);
     final Task t = SystemContext.addTask(SystemContext.consumer, new DelayPolicy(SystemContext.CONSUMER_SLEEPTIME, TimeUnit.SECONDS));
     t.setName("Metric consumer");
