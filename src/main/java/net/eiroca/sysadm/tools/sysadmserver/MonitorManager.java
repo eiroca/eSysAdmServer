@@ -43,8 +43,8 @@ public class MonitorManager {
   static List<GenericProducer> monitors = new ArrayList<>();
 
   public static void start() throws IOException {
-    MonitorManager.configuration = new Configuration("config.", SystemContext.config);
-    final Stream<Path> monitorConfigs = Files.find(SystemContext.monitorDefinitionPath, 1, (filePath, fileAttr) -> {
+    MonitorManager.configuration = new Configuration("config.", SystemContext.properties);
+    final Stream<Path> monitorConfigs = Files.find(SystemContext.config.monitors_path, 1, (filePath, fileAttr) -> {
       final boolean ok = fileAttr.isRegularFile() && filePath.toString().endsWith(MonitorManager.MONITOR_FILEEXT);
       return ok;
     });

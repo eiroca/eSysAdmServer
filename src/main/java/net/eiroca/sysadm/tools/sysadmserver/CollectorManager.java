@@ -30,15 +30,11 @@ public class CollectorManager {
 
   public static final String SERVER_APINAME = "Measure Collector";
   public static final String SERVER_APIVERS = "0.0.2";
-  public static final String CFG_SERVERPORT = "collector.port";
-  public static final String CFG_SERVERENABLED = "collector.enabled";
-  public static final int DEFAULT_SERVERPORT = 1972;
-  public static final boolean DEFAULT_SERVERENABLED = true;
 
   private static boolean started = false;
 
   public static void start() {
-    if (SystemContext.getProperty(CollectorManager.CFG_SERVERENABLED, CollectorManager.DEFAULT_SERVERENABLED)) {
+    if (SystemContext.config.collector_enabled) {
       CollectorManager.initServer();
       CollectorManager.initAction();
       CollectorManager.started = true;
@@ -81,7 +77,7 @@ public class CollectorManager {
   }
 
   private static int getServerPort() {
-    return SystemContext.getProperty(CollectorManager.CFG_SERVERPORT, CollectorManager.DEFAULT_SERVERPORT);
+    return SystemContext.config.collector_port;
   }
 
 }

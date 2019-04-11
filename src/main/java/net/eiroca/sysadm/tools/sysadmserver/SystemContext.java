@@ -18,10 +18,7 @@ package net.eiroca.sysadm.tools.sysadmserver;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.InetAddress;
 import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -48,147 +45,66 @@ import net.eiroca.sysadm.tools.sysadmserver.util.HostGroups;
 
 public final class SystemContext {
 
-  private static final int CONSUMER_SLEEPTIME = 10;
+  public static final ServerResponse LICENCE_ERROR = new ServerResponse(-9999, "License is expired, no action is taken");
+  public static final Logger logger = Logs.getLogger(SystemConfig.ME);
 
+  private static final int CONSUMER_SLEEPTIME = 10;
   private static final String EXPORTER_PREFIX = "exporter.";
 
-  private static final String CFG_MONITORS_PATH = "monitors.path";
-  private static final String DEF_PATH_MONITORS = "monitors";
-  private static final String CFG_HOSTGROUPS_PATH = "hostgroups.path";
-  private static final String DEF_HOSTGROUPS_PATH = "hostgroups.config";
-  private static final String CFG_RULEENGINE_PATH = "rule-engine.path";
-  private static final String DEF_RULEENGINE_PATH = "rule-engine.config";
-  private static final String CFG_HOSTNAME = "hostname";
-  private static final String CFG_ALIAS_PATH = "alias.path";
-  private static final String DEF_PATH_ALIAS = "alias.config";
-  //
-  private static final String CFG_KEYSTORE_PATH = "keystore.path";
-  private static final String DEF_KEYSTORE_PATH = "keystore.config";
-  //
-  public static final String CFG_LOCKFILE = "lockFile";
-  public static final String CFG_SCHEDULER_WORKERS = "scheduler.workers";
-  public static final int DEF_SCHEDULER_WORKERS = 4;
-  private static final String CFG_TAG_PREFIX = "hostgroup.tagPrefix";
-  private static final String DEF_TAG_PREFIX = null;
-
-  public static final String ME = "eSysAdmServer";
-
-  public static final Logger logger = Logs.getLogger(SystemContext.ME);
-
   public static License license;
-  public static ServerResponse LICENCE_ERROR = new ServerResponse(-9999, "License is expired, no action is taken");
-
-  public static Properties config;
-
+  public static Properties properties;
+  public static SystemConfig config = new SystemConfig();
   public static MyScheduler scheduler;
-  public static GenericConsumer consumer = null;
-
-  public static String hostname;
-  public static Path lockFile;
-  public static Path monitorDefinitionPath;
-  public static Path hostGroupsPath;
-  public static Path keyStorePath;
-  public static Path ruleEnginePath;
-  public static Path aliasPath;
-
+  public static GenericConsumer consumer;
   public static HostGroups hostGroups;
   public static ICredentialProvider keyStore;
 
   public static void init(final String path) throws Exception {
     SystemContext.initLicense();
     // Configuration
-    SystemContext.config = new Properties();
-    SystemContext.config.putAll(System.getProperties());
-    final InputStream prop = LibFile.findResource(path + SystemContext.ME + ".config", path + SystemContext.ME + ".properties");
+    SystemContext.properties = new Properties();
+    SystemContext.properties.putAll(System.getProperties());
+    final InputStream prop = LibFile.findResource(path + SystemConfig.ME + ".config", path + SystemConfig.ME + ".properties");
     if (prop != null) {
       try {
         final Properties localConf = Helper.loadProperties(prop, false);
-        SystemContext.config.putAll(localConf);
+        SystemContext.properties.putAll(localConf);
       }
       catch (final IOException e) {
       }
     }
-    SystemContext.logger.debug("config:" + SystemContext.config);
-    // name of the server
-    SystemContext.hostname = SystemContext.config.getProperty(SystemContext.CFG_HOSTNAME);
-    if (SystemContext.hostname == null) {
-      try {
-        SystemContext.hostname = InetAddress.getLocalHost().getHostName();
-      }
-      catch (final Exception e) {
-        SystemContext.hostname = "localhost";
-      }
-    }
+    SystemContext.logger.debug("config:" + SystemContext.properties);
+    SystemConfig.basePath = path;
+    SystemContext.config.setup(SystemContext.properties);
     // Lock file
-    String lockPath = path + SystemContext.ME + ".lock";
-    lockPath = SystemContext.config.getProperty(SystemContext.CFG_LOCKFILE, lockPath);
-    SystemContext.lockFile = Paths.get(lockPath);
-    LibFile.writeString(SystemContext.lockFile.toString(), "delete me to stop the process");
-    SystemContext.logger.info("lockFile:" + SystemContext.lockFile.toString());
+    SystemContext.logger.info("lockFile: " + SystemContext.config.lockfile.toString());
+    LibFile.writeString(SystemContext.config.lockfile.toString(), "delete me to stop the process");
     // Scheduler
     SystemContext.logger.info("Starting scheduler");
-    final int workers = Helper.getInt(SystemContext.config.getProperty(SystemContext.CFG_SCHEDULER_WORKERS), SystemContext.DEF_SCHEDULER_WORKERS);
-    SystemContext.scheduler = new MyScheduler(workers);
+    SystemContext.scheduler = new MyScheduler(SystemContext.config.scheduler_workers);
     SystemContext.scheduler.start();
     // Metric Rule Engine
-    final String ruleEnginePathStr = SystemContext.config.getProperty(SystemContext.CFG_RULEENGINE_PATH);
-    if (ruleEnginePathStr == null) {
-      SystemContext.ruleEnginePath = Paths.get(path, SystemContext.DEF_RULEENGINE_PATH);
-    }
-    else {
-      SystemContext.ruleEnginePath = Paths.get(ruleEnginePathStr);
-    }
     final RuleEngine engine = new RuleEngine();
-    final Properties ruleConfig = Helper.loadProperties(SystemContext.ruleEnginePath.toString(), false);
+    final Properties ruleConfig = Helper.loadProperties(SystemContext.config.rule_engine_path.toString(), false);
     engine.loadRules(ruleConfig);
     engine.addRule(new EventRule()); // default rule
     // Alias
-    final String aliasPathStr = SystemContext.config.getProperty(SystemContext.CFG_ALIAS_PATH);
-    if (aliasPathStr == null) {
-      SystemContext.aliasPath = Paths.get(path, SystemContext.DEF_PATH_ALIAS);
-    }
-    else {
-      SystemContext.aliasPath = Paths.get(aliasPathStr);
-    }
-    final Properties aliasProp = Helper.loadProperties(aliasPath.toString(), false);
+    final Properties aliasProp = Helper.loadProperties(SystemContext.config.alias_path.toString(), false);
     final Map<String, String> alias = new HashMap<>();
     for (final String name : aliasProp.stringPropertyNames()) {
       alias.put(name, aliasProp.getProperty(name));
     }
     // Measure consumer
-    final IContext context = new Context("Exporter", SystemContext.getExporterConfig(SystemContext.config));
+    final IContext context = new Context("Exporter", SystemContext.getExporterConfig(SystemContext.properties));
     SystemContext.consumer = new GenericConsumer(engine, alias);
     SystemContext.consumer.setup(context);
     final Task t = SystemContext.addTask(SystemContext.consumer, new DelayPolicy(SystemContext.CONSUMER_SLEEPTIME, TimeUnit.SECONDS));
     t.setName("Metric consumer");
     SystemContext.logger.info(t.getName() + " ID:" + t.getId());
-    //
-    final String monitorsPath = SystemContext.config.getProperty(SystemContext.CFG_MONITORS_PATH);
-    if (monitorsPath == null) {
-      SystemContext.monitorDefinitionPath = Paths.get(path, SystemContext.DEF_PATH_MONITORS);
-    }
-    else {
-      SystemContext.monitorDefinitionPath = Paths.get(monitorsPath);
-    }
-    final String hostGroupsPathStr = SystemContext.config.getProperty(SystemContext.CFG_HOSTGROUPS_PATH);
-    if (hostGroupsPathStr == null) {
-      SystemContext.hostGroupsPath = Paths.get(path, SystemContext.DEF_HOSTGROUPS_PATH);
-    }
-    else {
-      SystemContext.hostGroupsPath = Paths.get(hostGroupsPathStr);
-    }
-    final String tagPrefix = SystemContext.config.getProperty(SystemContext.CFG_TAG_PREFIX, SystemContext.DEF_TAG_PREFIX);
-    SystemContext.hostGroups = new HostGroups(SystemContext.hostGroupsPath, tagPrefix);
-
-    //
-    final String keyStorePathStr = SystemContext.config.getProperty(SystemContext.CFG_KEYSTORE_PATH);
-    if (keyStorePathStr == null) {
-      SystemContext.keyStorePath = Paths.get(path, SystemContext.DEF_KEYSTORE_PATH);
-    }
-    else {
-      SystemContext.keyStorePath = Paths.get(keyStorePathStr);
-    }
-    SystemContext.keyStore = new CredentialStore(SystemContext.keyStorePath);
+    // Hostgroups
+    SystemContext.hostGroups = new HostGroups(SystemContext.config.hostgroups_path, SystemContext.config.hostgroups_tag_prefix);
+    // Keystore
+    SystemContext.keyStore = new CredentialStore(SystemContext.config.keystore_path);
   }
 
   private static Properties getExporterConfig(final Properties config) {
@@ -203,24 +119,16 @@ public final class SystemContext {
   }
 
   public static void initLicense() {
-    SystemContext.license = LicenseManager.getInstance().getLicense(SystemContext.ME, true);
+    SystemContext.license = LicenseManager.getInstance().getLicense(SystemConfig.ME, true);
     if (!SystemContext.isLicenseValid()) {
       SystemContext.logger.error("Invalid license");
       System.exit(1);
     }
-    SystemContext.logger.info(SystemContext.ME + " licensed to " + SystemContext.license.getHolder());
+    SystemContext.logger.info(SystemConfig.ME + " licensed to " + SystemContext.license.getHolder());
   }
 
   public static boolean isLicenseValid() {
     return LicenseManager.isValidLicense(SystemContext.license);
-  }
-
-  public static int getProperty(final String propName, final int defValue) {
-    return Helper.getInt(SystemContext.config.getProperty(propName), defValue);
-  }
-
-  public static boolean getProperty(final String propName, final boolean defValue) {
-    return Helper.getBoolean(SystemContext.config.getProperty(propName), defValue);
   }
 
   public static Task addTask(final Runnable task, final SchedulerPolicy policy) {
@@ -229,16 +137,21 @@ public final class SystemContext {
 
   public static void done() {
     try {
+      SystemContext.logger.info("Stopping consumer");
       SystemContext.consumer.teardown();
     }
     catch (final Exception e) {
       SystemContext.logger.error("SystemError: ", e);
     }
-    SystemContext.logger.info("Stopping scheduler");
-    SystemContext.scheduler.stop();
-    SystemContext.scheduler = null;
     try {
-      Files.delete(SystemContext.lockFile);
+      SystemContext.logger.info("Stopping scheduler");
+      SystemContext.scheduler.stop();
+    }
+    catch (final Exception e) {
+      SystemContext.logger.error("SystemError: ", e);
+    }
+    try {
+      Files.delete(SystemContext.config.lockfile);
     }
     catch (final IOException e) {
       Logs.ignore(e);

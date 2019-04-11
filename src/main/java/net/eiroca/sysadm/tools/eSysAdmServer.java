@@ -40,7 +40,7 @@ public class eSysAdmServer {
       while (true) {
         SystemContext.scheduler.logStat();
         Helper.sleep(eSysAdmServer.SLEEPTIME);
-        if (!Files.exists(SystemContext.lockFile)) {
+        if (!Files.exists(SystemContext.config.lockfile)) {
           break;
         }
         if (!SystemContext.isLicenseValid()) {
