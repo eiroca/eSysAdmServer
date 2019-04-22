@@ -114,14 +114,16 @@ public class FeedAction implements Route {
     final SortedMap<String, Object> meta = new TreeMap<>();
     meta.put(GenericProducer.FLD_SOURCE, SystemConfig.ME);
     String ip = request.ip();
-    if (ip == null) ip = SystemContext.config.hostname;
+    if (ip == null) {
+      ip = SystemContext.config.hostname;
+    }
     meta.put(GenericProducer.FLD_HOST, ip);
     final int rows = processRequestParameter(namespace, data, meta);
     result.message = MessageFormat.format("Namespace: {0} processed: {1} measure(s).", namespace, rows);
     return result;
   }
 
-  public int processRequestParameter(final String namespace, final String[] valuePairs, SortedMap<String, Object> meta) {
+  public int processRequestParameter(final String namespace, final String[] valuePairs, final SortedMap<String, Object> meta) {
     int rows = 0;
     if (valuePairs == null) { return rows; }
     final MeasureCollector collector = MeasureCollector.getCollector();
