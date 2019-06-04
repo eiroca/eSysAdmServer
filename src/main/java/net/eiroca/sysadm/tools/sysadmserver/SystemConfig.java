@@ -61,12 +61,12 @@ public final class SystemConfig {
   public boolean collector_enabled;
 
   public SystemConfig() {
-    SystemConfig.config.saveConfig(this, SystemConfig.VAR_PREFIX, true);
+    SystemConfig.config.saveConfig(this, SystemConfig.VAR_PREFIX, true, true);
   }
 
   public void setup(final Properties params) throws Exception {
     SystemConfig.config.loadConfig(params, null);
-    SystemConfig.config.saveConfig(this, SystemConfig.VAR_PREFIX, true);
+    SystemConfig.config.saveConfig(this, SystemConfig.VAR_PREFIX, true, true);
   }
 
 }
