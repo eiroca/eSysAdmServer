@@ -30,7 +30,7 @@ public class ResultTransformer implements ResponseTransformer {
 
   @Override
   public String render(final Object model) {
-    final ResultResponse response = (ResultResponse)model;
+    final ResultResponse<?> response = (ResultResponse<?>)model;
     final StringBuilder sb = new StringBuilder(1024);
     sb.append("{");
     sb.append("\"status\":").append(response.status);

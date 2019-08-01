@@ -31,7 +31,7 @@ public class ExportAction implements Route {
   public Object handle(final Request request, final Response response) throws Exception {
     final String namespace = request.params(MeasureCollector.PARAM_NAMESPACE);
     SystemContext.logger.info(MessageFormat.format("handle({0})", namespace));
-    final ResultResponse result = new ResultResponse(0);
+    final ResultResponse<Object> result = new ResultResponse<>(0);
     final StringBuilder sb = new StringBuilder(1024);
     sb.append('{');
     if (namespace == null) {
