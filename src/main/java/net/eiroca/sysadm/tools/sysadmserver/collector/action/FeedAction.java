@@ -177,7 +177,7 @@ public class FeedAction implements Route {
         }
         if (SystemContext.consumer != null) {
           final Datum d = new Datum(doubleValue);
-          GenericProducer.exportData(SystemContext.consumer, namespace, metric, splitName, split, meta, d);
+          GenericProducer.exportData(SystemContext.consumer, m.getMetadata(), namespace, metric, splitName, split, meta, d);
         }
         rows++;
       }
