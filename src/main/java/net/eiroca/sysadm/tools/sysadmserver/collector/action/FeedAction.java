@@ -88,7 +88,6 @@ public class FeedAction implements Route {
    * @param request
    * @return
    */
-
   @Override
   public Object handle(final Request request, final Response response) throws Exception {
     if (!SystemContext.isLicenseValid()) { return SystemContext.LICENCE_ERROR; }
