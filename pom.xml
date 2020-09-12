@@ -28,16 +28,6 @@
          </resource>
       </resources>
       <plugins>
-         <!-- download source code in Eclipse, best practice -->
-         <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-eclipse-plugin</artifactId>
-            <version>2.9</version>
-            <configuration>
-               <downloadSources>true</downloadSources>
-               <downloadJavadocs>false</downloadJavadocs>
-            </configuration>
-         </plugin>
          <!-- Set a JDK compiler level -->
          <plugin>
             <groupId>org.apache.maven.plugins</groupId>
@@ -129,6 +119,7 @@
          <artifactId>eLibDynatrace</artifactId>
          <version>${eLib.version}</version>
       </dependency>
+      <!-- 
       <dependency>
          <groupId>systemLibs</groupId>
          <artifactId>OracleJDBC</artifactId>
@@ -136,6 +127,7 @@
          <scope>system</scope>
          <systemPath>${project.basedir}/libs/ojdbc6.jar</systemPath>
       </dependency>
+       -->
       <dependency>
          <groupId>org.apache.logging.log4j</groupId>
          <artifactId>log4j-api</artifactId>
