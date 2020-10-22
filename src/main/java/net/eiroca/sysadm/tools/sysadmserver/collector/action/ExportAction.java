@@ -20,7 +20,7 @@ import java.text.MessageFormat;
 import net.eiroca.library.server.ResultResponse;
 import net.eiroca.sysadm.tools.sysadmserver.SystemContext;
 import net.eiroca.sysadm.tools.sysadmserver.collector.MeasureCollector;
-import net.eiroca.sysadm.tools.sysadmserver.collector.RestUtils;
+import net.eiroca.sysadm.tools.sysadmserver.collector.util.RestUtils;
 import spark.Request;
 import spark.Response;
 import spark.Route;

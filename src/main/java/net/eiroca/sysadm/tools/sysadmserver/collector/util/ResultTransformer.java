@@ -14,7 +14,7 @@
  * If not, see <http://www.gnu.org/licenses/>.
  *
  **/
-package net.eiroca.sysadm.tools.sysadmserver.collector;
+package net.eiroca.sysadm.tools.sysadmserver.collector.util;
 
 import net.eiroca.library.core.LibStr;
 import net.eiroca.library.server.ResultResponse;

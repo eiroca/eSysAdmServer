@@ -16,13 +16,14 @@
  **/
 package net.eiroca.sysadm.tools.sysadmserver;
 
-import net.eiroca.sysadm.tools.sysadmserver.collector.JsonTransformer;
 import net.eiroca.sysadm.tools.sysadmserver.collector.MeasureCollector;
-import net.eiroca.sysadm.tools.sysadmserver.collector.ResultTransformer;
 import net.eiroca.sysadm.tools.sysadmserver.collector.action.AboutAction;
+import net.eiroca.sysadm.tools.sysadmserver.collector.action.AlertAction;
 import net.eiroca.sysadm.tools.sysadmserver.collector.action.ExportAction;
 import net.eiroca.sysadm.tools.sysadmserver.collector.action.FeedAction;
 import net.eiroca.sysadm.tools.sysadmserver.collector.action.MetricAction;
+import net.eiroca.sysadm.tools.sysadmserver.collector.util.JsonTransformer;
+import net.eiroca.sysadm.tools.sysadmserver.collector.util.ResultTransformer;
 import spark.ResponseTransformer;
 import spark.Spark;
 
@@ -61,18 +62,24 @@ public class CollectorManager {
     Spark.post("/rest/feed/" + MeasureCollector.PARAM_NAMESPACE, new FeedAction(), jSonRender);
     Spark.get("/rest/metric/" + MeasureCollector.PARAM_NAMESPACE, new MetricAction(), resultRender);
     Spark.get("/rest/export/" + MeasureCollector.PARAM_NAMESPACE, new ExportAction(), resultRender);
+
+    Spark.get("/rest/alert/" + MeasureCollector.PARAM_NAMESPACE, new AlertAction(), resultRender);
     //
     Spark.get("/rest/feed", new FeedAction(), jSonRender);
     Spark.post("/rest/feed", new FeedAction(), jSonRender);
     Spark.get("/rest/metric", new MetricAction(), resultRender);
     Spark.get("/rest/export", new ExportAction(), resultRender);
     Spark.get("/rest/export/", new ExportAction(), resultRender);
+
+    Spark.get("/rest/alert", new AlertAction(), resultRender);
     //
     Spark.get("/api/v1/feed/" + MeasureCollector.PARAM_NAMESPACE, new FeedAction(), jSonRender);
     Spark.post("/api/v1/feed/" + MeasureCollector.PARAM_NAMESPACE, new FeedAction(), jSonRender);
     Spark.get("/api/v1/metric/" + MeasureCollector.PARAM_NAMESPACE, new MetricAction(), resultRender);
     Spark.get("/api/v1/export/" + MeasureCollector.PARAM_NAMESPACE, new ExportAction(), resultRender);
     Spark.get("/api/v1/export/", new ExportAction(), resultRender);
+
+    Spark.get("/api/v1/alert/" + MeasureCollector.PARAM_NAMESPACE, new AlertAction(), jSonRender);
     //
     Spark.exception(Exception.class, (e, request, response) -> {
       e.printStackTrace();

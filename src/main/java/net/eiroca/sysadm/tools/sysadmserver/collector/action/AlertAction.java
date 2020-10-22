@@ -19,13 +19,14 @@ package net.eiroca.sysadm.tools.sysadmserver.collector.action;
 import java.text.MessageFormat;
 import net.eiroca.library.server.ResultResponse;
 import net.eiroca.sysadm.tools.sysadmserver.SystemContext;
+import net.eiroca.sysadm.tools.sysadmserver.collector.AlertCollector;
 import net.eiroca.sysadm.tools.sysadmserver.collector.MeasureCollector;
-import net.eiroca.sysadm.tools.sysadmserver.collector.util.RestUtils;
+import net.eiroca.sysadm.tools.sysadmserver.event.Alert;
 import spark.Request;
 import spark.Response;
 import spark.Route;
 
-public class MetricAction implements Route {
+public class AlertAction implements Route {
 
   @Override
   public Object handle(final Request request, final Response response) throws Exception {
@@ -35,9 +36,9 @@ public class MetricAction implements Route {
     final ResultResponse<Object> result = new ResultResponse<>(0);
     result.message = MessageFormat.format("Namespace: {0}", namespace);
     final StringBuilder sb = new StringBuilder(1024);
-    sb.append('{');
-    RestUtils.measures2json(sb, MeasureCollector.getCollector().getMetrics(namespace));
-    sb.append('}');
+    final String data = request.body();
+    final Alert alert = AlertCollector.getCollector().addAlertFormJson(namespace, data);
+    sb.append('{').append(alert.toString()).append('}');
     result.setResult(sb.toString());
     return result;
   }

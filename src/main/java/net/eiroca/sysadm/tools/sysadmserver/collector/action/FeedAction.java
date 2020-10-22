@@ -24,7 +24,7 @@ import net.eiroca.library.core.LibStr;
 import net.eiroca.library.metrics.Statistic;
 import net.eiroca.library.metrics.datum.Datum;
 import net.eiroca.library.server.ServerResponse;
-import net.eiroca.library.sysadm.monitoring.sdk.GenericProducer;
+import net.eiroca.library.sysadm.monitoring.sdk.MeasureProducer;
 import net.eiroca.sysadm.tools.sysadmserver.SystemConfig;
 import net.eiroca.sysadm.tools.sysadmserver.SystemContext;
 import net.eiroca.sysadm.tools.sysadmserver.collector.MeasureCollector;
@@ -111,12 +111,12 @@ public class FeedAction implements Route {
     }
     // process the request string
     final SortedMap<String, Object> meta = new TreeMap<>();
-    meta.put(GenericProducer.FLD_SOURCE, SystemConfig.ME);
+    meta.put(MeasureProducer.FLD_SOURCE, SystemConfig.ME);
     String ip = request.ip();
     if (ip == null) {
       ip = SystemContext.config.hostname;
     }
-    meta.put(GenericProducer.FLD_HOST, ip);
+    meta.put(MeasureProducer.FLD_HOST, ip);
     final int rows = processRequestParameter(namespace, data, meta);
     result.message = MessageFormat.format("Namespace: {0} processed: {1} measure(s).", namespace, rows);
     return result;
@@ -174,9 +174,9 @@ public class FeedAction implements Route {
           m = (Statistic)m.getSplitting(splitName);
           m.addValue(split, doubleValue);
         }
-        if (SystemContext.consumer != null) {
+        if (SystemContext.consumer_metrics != null) {
           final Datum d = new Datum(doubleValue);
-          GenericProducer.exportData(SystemContext.consumer, m.getMetadata(), namespace, metric, splitName, split, meta, d);
+          MeasureProducer.exportData(SystemContext.consumer_metrics, m.getMetadata(), namespace, metric, splitName, split, meta, d);
         }
         rows++;
       }

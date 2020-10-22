@@ -14,28 +14,28 @@
  * If not, see <http://www.gnu.org/licenses/>.
  *
  **/
-package net.eiroca.sysadm.tools.sysadmserver.collector;
+package net.eiroca.sysadm.tools.sysadmserver.event;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import spark.ResponseTransformer;
+import java.util.Date;
 
-public class JsonTransformer implements ResponseTransformer {
+public class Alert extends Event {
 
-  private static final boolean PRETTY = true;
-  private final Gson gson;
+  public Date end;
+  public AlertState state;
+  public String message;
 
-  public JsonTransformer() {
-    final GsonBuilder builder = new GsonBuilder();
-    if (JsonTransformer.PRETTY) {
-      builder.setPrettyPrinting();
-    }
-    gson = builder.create();
+  public Alert(final String id) {
+    super(id);
+    state = AlertState.NEW;
   }
 
-  @Override
-  public String render(final Object model) {
-    return gson.toJson(model);
+  public Alert() {
+    super();
+    state = AlertState.NEW;
+  }
+
+  public boolean isNew() {
+    return (state == AlertState.NEW);
   }
 
 }
