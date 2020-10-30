@@ -29,7 +29,7 @@ import net.eiroca.sysadm.tools.sysadmserver.SystemContext;
 
 public class eSysAdmServer {
 
-  private static final int SLEEPTIME = 15 * 1000;
+  private static final int SLEEPTIME = 5 * 1000;
 
   public static void main(final String[] args) {
     DynatraceExporter.init();

@@ -18,7 +18,7 @@ package net.eiroca.sysadm.tools.sysadmserver.collector.action;
 
 import java.text.MessageFormat;
 import net.eiroca.library.server.ResultResponse;
-import net.eiroca.sysadm.tools.sysadmserver.SystemContext;
+import net.eiroca.sysadm.tools.sysadmserver.CollectorManager;
 import net.eiroca.sysadm.tools.sysadmserver.collector.MeasureCollector;
 import net.eiroca.sysadm.tools.sysadmserver.collector.util.RestUtils;
 import spark.Request;
@@ -30,7 +30,7 @@ public class ExportAction implements Route {
   @Override
   public Object handle(final Request request, final Response response) throws Exception {
     final String namespace = request.params(MeasureCollector.PARAM_NAMESPACE);
-    SystemContext.logger.info(MessageFormat.format("handle({0})", namespace));
+    CollectorManager.logger.info(MessageFormat.format("handle({0})", namespace));
     final ResultResponse<Object> result = new ResultResponse<>(0);
     final StringBuilder sb = new StringBuilder(1024);
     sb.append('{');

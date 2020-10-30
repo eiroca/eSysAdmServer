@@ -25,6 +25,7 @@ import net.eiroca.library.metrics.Statistic;
 import net.eiroca.library.metrics.datum.Datum;
 import net.eiroca.library.server.ServerResponse;
 import net.eiroca.library.sysadm.monitoring.sdk.MeasureProducer;
+import net.eiroca.sysadm.tools.sysadmserver.CollectorManager;
 import net.eiroca.sysadm.tools.sysadmserver.SystemConfig;
 import net.eiroca.sysadm.tools.sysadmserver.SystemContext;
 import net.eiroca.sysadm.tools.sysadmserver.collector.MeasureCollector;
@@ -92,19 +93,19 @@ public class FeedAction implements Route {
   public Object handle(final Request request, final Response response) throws Exception {
     if (!SystemContext.isLicenseValid()) { return SystemContext.LICENCE_ERROR; }
     final String namespace = MeasureCollector.getNamespace(request);
-    SystemContext.logger.info(MessageFormat.format("handle({0})", namespace));
+    CollectorManager.logger.info(MessageFormat.format("handle({0})", namespace));
     final ServerResponse result = new ServerResponse(0);
     String[] data = null;
     if (FeedAction.POST.equalsIgnoreCase(request.requestMethod())) {
       final String body = request.body();
-      SystemContext.logger.trace("Body: " + body);
+      CollectorManager.logger.trace("Body: " + body);
       if (body != null) {
         data = body.split(FeedAction.REGEX_NL);
       }
     }
     else {
       final String queryParams = request.queryString();
-      SystemContext.logger.trace("Query: " + queryParams);
+      CollectorManager.logger.trace("Query: " + queryParams);
       if (queryParams != null) {
         data = queryParams.split(";");
       }
@@ -130,7 +131,7 @@ public class FeedAction implements Route {
       if (valuePair == null) {
         continue;
       }
-      SystemContext.logger.debug("Processing " + valuePair);
+      CollectorManager.logger.debug("Processing " + valuePair);
       String metricName = null;
       String splitName = null;
       final int colonIx = valuePair.indexOf(":");

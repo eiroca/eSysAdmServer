@@ -30,9 +30,10 @@ public final class SystemConfig {
 
   public static final String ME = "eSysAdmServer";
 
-  private static final String VAR_PREFIX = null;
+  public static final String EXPORTER_PREFIX = "exporter.";
 
-  protected static ContextParameters config = new ContextParameters();
+  protected static final String VAR_PREFIX = null;
+  protected static final ContextParameters config = new ContextParameters();
   //
   protected static StringParameter _hostname = new HostnameParameter(SystemConfig.config, "hostname", "locahost");
   protected static PathParameter _lockfile = new LocalPathParameter(SystemConfig.config, "lockfile", SystemConfig.ME + ".lock");
@@ -51,7 +52,7 @@ public final class SystemConfig {
   //
   protected static BooleanParameter _dryrun = new BooleanParameter(SystemConfig.config, "dryrun", false);
 
-  public String basePath;
+  public String basePath = "";
   public String hostname;
   public Path lockfile;
   public int scheduler_workers;
@@ -66,10 +67,7 @@ public final class SystemConfig {
   public boolean collector_enabled;
   public boolean dryrun;
 
-  public static final String EXPORTER_PREFIX = "exporter.";
-
   public SystemConfig() {
-    SystemConfig.config.saveConfig(this, SystemConfig.VAR_PREFIX, true, true);
   }
 
   public void setup(final Properties params) throws Exception {

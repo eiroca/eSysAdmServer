@@ -18,6 +18,7 @@ package net.eiroca.sysadm.tools.sysadmserver.collector.action;
 
 import java.text.MessageFormat;
 import net.eiroca.library.server.ResultResponse;
+import net.eiroca.sysadm.tools.sysadmserver.CollectorManager;
 import net.eiroca.sysadm.tools.sysadmserver.SystemContext;
 import net.eiroca.sysadm.tools.sysadmserver.collector.AlertCollector;
 import net.eiroca.sysadm.tools.sysadmserver.collector.MeasureCollector;
@@ -32,7 +33,7 @@ public class AlertAction implements Route {
   public Object handle(final Request request, final Response response) throws Exception {
     if (!SystemContext.isLicenseValid()) { return SystemContext.LICENCE_ERROR; }
     final String namespace = MeasureCollector.getNamespace(request);
-    SystemContext.logger.info(MessageFormat.format("handle({0})", namespace));
+    CollectorManager.logger.info(MessageFormat.format("handle({0})", namespace));
     final ResultResponse<Object> result = new ResultResponse<>(0);
     result.message = MessageFormat.format("Namespace: {0}", namespace);
     final StringBuilder sb = new StringBuilder(1024);

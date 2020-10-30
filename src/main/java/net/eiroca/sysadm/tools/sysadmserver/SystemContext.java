@@ -49,6 +49,7 @@ public final class SystemContext {
   public static final ServerResponse LICENCE_ERROR = new ServerResponse(-9999, "License is expired, no action is taken");
 
   public static final Logger logger = Logs.getLogger(SystemConfig.ME);
+
   public static final SystemConfig config = new SystemConfig();
   public static final AlertCollectorConfig alertCollectorConfig = new AlertCollectorConfig();
 
@@ -96,7 +97,7 @@ public final class SystemContext {
     }
     // consumers
     // Metrics
-    final Properties exporterConfig = SystemContext.getExporterConfig(SystemContext.properties);
+    final Properties exporterConfig = SystemContext.getSubConfig(SystemContext.properties, SystemConfig.EXPORTER_PREFIX);
     final IContext context = new Context("Exporter", exporterConfig);
     SystemContext.consumer_metrics = new MeasureConsumer(engine, alias);
     SystemContext.consumer_metrics.setup(context);
@@ -110,12 +111,13 @@ public final class SystemContext {
     SystemContext.alertCollectorConfig.setup(SystemContext.properties);
   }
 
-  private static Properties getExporterConfig(final Properties config) {
+  public static Properties getSubConfig(final Properties config, String prefix) {
     final Properties exporterConfig = new Properties();
+    int len = prefix.length();
     for (final String propName : config.stringPropertyNames()) {
-      if (propName.startsWith(SystemConfig.EXPORTER_PREFIX)) {
+      if (propName.startsWith(prefix)) {
         final String val = config.getProperty(propName);
-        exporterConfig.setProperty(propName.substring(SystemConfig.EXPORTER_PREFIX.length()), val);
+        exporterConfig.setProperty(propName.substring(len), val);
       }
     }
     return exporterConfig;
@@ -125,6 +127,7 @@ public final class SystemContext {
     SystemContext.license = LicenseManager.getInstance().getLicense(SystemConfig.ME, true);
     if (!SystemContext.isLicenseValid()) {
       SystemContext.logger.error("Invalid license");
+      SystemContext.logger.debug("License: " + SystemContext.license);
       System.exit(1);
     }
     SystemContext.logger.info(SystemConfig.ME + " licensed to " + SystemContext.license.getHolder());

@@ -28,6 +28,7 @@ import net.eiroca.sysadm.tools.sysadmserver.SystemContext;
 
 public class AlertCollectorConfig {
 
+  private static final String PREFIX_CONSUMER = "consumer.config.DB.";
   private static final String VAR_PREFIX = null;
 
   protected static ContextParameters config = new ContextParameters();
@@ -42,20 +43,18 @@ public class AlertCollectorConfig {
 
   public final DBConfig dbConfig = new DBConfig(null);
 
-  public static final String CONFIG_PREFIX = "consumer.config.DB.";
-
   public AlertCollectorConfig() {
-    AlertCollectorConfig.config.saveConfig(this, AlertCollectorConfig.VAR_PREFIX, true, true);
   }
 
   public void setup(final Properties params) throws Exception {
-    AlertCollectorConfig.config.loadConfig(params, null);
+    AlertCollectorConfig.config.loadConfig(params, PREFIX_CONSUMER);
     AlertCollectorConfig.config.saveConfig(this, AlertCollectorConfig.VAR_PREFIX, true, true);
-    final ServerContext context = new ServerContext(AlertCollectorConfig.CONFIG_PREFIX, params);
+    final ServerContext context = new ServerContext(AlertCollectorConfig.PREFIX_CONSUMER, SystemContext.getSubConfig(params, PREFIX_CONSUMER));
     context.setCredentialProvider(SystemContext.keyStore);
     dbConfig.setup(context);
-    SystemContext.logger.info("AlertCollector.Cofig: " + this);
-    SystemContext.logger.info("AlertCollector.DBCofig: " + dbConfig);
+    SystemContext.logger.debug("Context: " + params);
+    SystemContext.logger.info("AlertCollector.config: " + this);
+    SystemContext.logger.info("AlertCollector.DBConfig: " + dbConfig);
   }
 
   @Override

@@ -23,7 +23,15 @@
          </Policies>
          <DefaultRolloverStrategy max="20" />
       </RollingFile>
-      <RollingFile name="Monitoring" fileName="${logpath}Monitoring.log" filePattern="${logpath}Monitoring-%i.log.zip">
+      <RollingFile name="Collector" fileName="${logpath}Collector.log" filePattern="${logpath}Collector-%i.log.zip">
+         <PatternLayout pattern="%d %p [%t] %C{1.} %m%n" />
+         <Policies>
+            <OnStartupTriggeringPolicy />
+            <SizeBasedTriggeringPolicy size="200MB" />
+         </Policies>
+         <DefaultRolloverStrategy max="20" />
+      </RollingFile>
+      <RollingFile name="Monitor" fileName="${logpath}Monitoring.log" filePattern="${logpath}Monitor-%i.log.zip">
          <PatternLayout pattern="%d %p [%t] %c %m%n" />
          <Policies>
             <SizeBasedTriggeringPolicy size="100MB" />
@@ -39,8 +47,8 @@
       </RollingFile>
    </Appenders>
    <Loggers>
-      <logger name="Monitoring" additivity="false" level="debug">
-         <appender-ref ref="Monitoring" />
+      <logger name="Monitor" additivity="false" level="debug">
+         <appender-ref ref="Monitor" />
       </logger>
       <logger name="Metrics" additivity="false" level="info">
          <appender-ref ref="Metrics" />
@@ -50,6 +58,9 @@
       </logger>
       <logger name="eSysAdmServer.scheduler" additivity="false" level="debug">
          <appender-ref ref="Scheduler" />
+      </logger>
+      <logger name="eSysAdmServer.collector" additivity="false" level="debug">
+         <appender-ref ref="Collector" />
       </logger>
       <Root level="info">
          <appender-ref ref="System" />

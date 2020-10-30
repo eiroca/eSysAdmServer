@@ -26,7 +26,7 @@ public class Event implements Comparable<Event> {
   public String id;
   public Date start;
   public EventSeverity severity;
-  public Tags tag;
+  public Tags tag = new Tags();
 
   public Event(final String id) {
     this.id = id;

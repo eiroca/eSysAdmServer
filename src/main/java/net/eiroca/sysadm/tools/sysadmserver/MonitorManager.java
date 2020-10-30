@@ -37,6 +37,7 @@ import net.eiroca.sysadm.tools.sysadmserver.util.Configuration;
 
 public class MonitorManager {
 
+  private static final String MONITOR_BASENAME = "Monitor.";
   private static final String MONITOR_FILEEXT = ".monitor";
 
   static Configuration configuration;
@@ -66,7 +67,7 @@ public class MonitorManager {
       final IServerMonitor checker = ServerMonitors.build(type);
       final String monitorType = checker.getClass().getSimpleName();
       final long freq = LibTimeUnit.getFrequency(monitorConfig.getProperty("monitor-freq"), 60, TimeUnit.SECONDS, 10, 1 * 24 * 60 * 60);
-      final ServerContext context = new ServerContext("Monitoring." + monitorType, monitorConfig);
+      final ServerContext context = new ServerContext(MonitorManager.MONITOR_BASENAME + monitorType, monitorConfig);
       context.setCredentialProvider(SystemContext.keyStore);
       final String name = monitorConfig.getProperty("name");
       final MeasureProducer monitor = new MeasureProducer(name, checker, hosts, SystemContext.hostGroups, consumer);
