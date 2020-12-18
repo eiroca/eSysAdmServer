@@ -24,10 +24,10 @@ import spark.Route;
 
 public class AboutAction implements Route {
 
-  private final ServerResponse aboutMe = new ServerResponse(0, MeasureCollector.SERVER_APINAME + " " + MeasureCollector.SERVER_APIVERS);
+  private final static ServerResponse ABOUT = new ServerResponse(0, MeasureCollector.SERVER_APINAME + " " + MeasureCollector.SERVER_APIVERS);
 
   @Override
   public Object handle(final Request request, final Response response) throws Exception {
-    return aboutMe;
+    return AboutAction.ABOUT;
   }
 }

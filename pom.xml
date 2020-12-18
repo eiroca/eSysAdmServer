@@ -103,6 +103,11 @@
       </dependency>
       <dependency>
          <groupId>net.eiroca</groupId>
+         <artifactId>eLibSysAdm</artifactId>
+         <version>${eLib.version}</version>
+      </dependency>
+      <dependency>
+         <groupId>net.eiroca</groupId>
          <artifactId>eLicense-API</artifactId>
          <version>${eLicense.version}</version>
       </dependency>

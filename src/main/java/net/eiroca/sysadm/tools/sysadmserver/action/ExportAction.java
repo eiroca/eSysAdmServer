@@ -21,6 +21,7 @@ import org.slf4j.Logger;
 import net.eiroca.library.server.ResultResponse;
 import net.eiroca.library.system.Logs;
 import net.eiroca.sysadm.tools.sysadmserver.MeasureCollector;
+import net.eiroca.sysadm.tools.sysadmserver.Utils;
 import spark.Request;
 import spark.Response;
 import spark.Route;
@@ -34,7 +35,19 @@ public class ExportAction implements Route {
     final String namespace = request.params(MeasureCollector.PARAM_NAMESPACE);
     ExportAction.logger.info(MessageFormat.format("handle({0})", namespace));
     final ResultResponse result = new ResultResponse(0);
-    result.setResult((namespace == null) ? MeasureCollector.getCollector().exportMeasures() : MeasureCollector.getCollector().exportMeasures(namespace));
+    final StringBuilder sb = new StringBuilder(1024);
+    sb.append('{');
+    if (namespace == null) {
+      Utils.namespaces2json(sb, MeasureCollector.getCollector().exportMeasures());
+    }
+    else {
+      result.message = MessageFormat.format("Namespace: {0}", namespace);
+      Utils.measures2json(sb, MeasureCollector.getCollector().exportMeasures(namespace));
+    }
+    sb.append('}');
+    result.setResult(sb.toString());
     return result;
+
   }
+
 }

@@ -21,6 +21,7 @@ import net.eiroca.library.system.Logs;
 import net.eiroca.sysadm.tools.sysadmserver.JsonTransformer;
 import net.eiroca.sysadm.tools.sysadmserver.LicenseCheck;
 import net.eiroca.sysadm.tools.sysadmserver.MeasureCollector;
+import net.eiroca.sysadm.tools.sysadmserver.ResultTransformer;
 import net.eiroca.sysadm.tools.sysadmserver.action.AboutAction;
 import net.eiroca.sysadm.tools.sysadmserver.action.ExportAction;
 import net.eiroca.sysadm.tools.sysadmserver.action.FeedAction;
@@ -41,17 +42,18 @@ public class eSysAdmServer {
     eSysAdmServer.logger.info(LicenseCheck.ME + " licensed to " + LicenseCheck.license.getHolder());
     Spark.port(MeasureCollector.getServerPort());
     final ResponseTransformer jSonRender = new JsonTransformer();
+    final ResponseTransformer resultRender = new ResultTransformer(false);
     Spark.get("/about", new AboutAction(), jSonRender);
     Spark.get("/rest/feed", new FeedAction(), jSonRender);
     Spark.get("/rest/feed/" + MeasureCollector.PARAM_NAMESPACE, new FeedAction(), jSonRender);
-    Spark.get("/rest/metric", new MetricAction(), jSonRender);
-    Spark.get("/rest/metric/" + MeasureCollector.PARAM_NAMESPACE, new MetricAction(), jSonRender);
-    Spark.get("/rest/export", new ExportAction(), jSonRender);
-    Spark.get("/rest/export/" + MeasureCollector.PARAM_NAMESPACE, new ExportAction(), jSonRender);
+    Spark.get("/rest/metric", new MetricAction(), resultRender);
+    Spark.get("/rest/metric/" + MeasureCollector.PARAM_NAMESPACE, new MetricAction(), resultRender);
+    Spark.get("/rest/export", new ExportAction(), resultRender);
+    Spark.get("/rest/export/" + MeasureCollector.PARAM_NAMESPACE, new ExportAction(), resultRender);
 
     Spark.get("/api/v1/feed/" + MeasureCollector.PARAM_NAMESPACE, new FeedAction(), jSonRender);
-    Spark.get("/api/v1/metric/" + MeasureCollector.PARAM_NAMESPACE, new MetricAction(), jSonRender);
-    Spark.get("/api/v1/export/" + MeasureCollector.PARAM_NAMESPACE, new ExportAction(), jSonRender);
+    Spark.get("/api/v1/metric/" + MeasureCollector.PARAM_NAMESPACE, new MetricAction(), resultRender);
+    Spark.get("/api/v1/export/" + MeasureCollector.PARAM_NAMESPACE, new ExportAction(), resultRender);
 
     Spark.exception(Exception.class, (e, request, response) -> {
       e.printStackTrace();
