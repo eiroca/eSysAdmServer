@@ -160,7 +160,8 @@ public class AlertCollector {
     CollectorManager.logger.debug("flushing: " + a);
     vals.clear();
     vals.add(System.currentTimeMillis() + "." + count);
-    vals.add(a.state);
+    final String state = (a.end != null) ? "CLOSED" : "OPEN";
+    vals.add(state);
     vals.add(a.start);
     vals.add(a.end);
     vals.add(a.message);
@@ -178,7 +179,6 @@ public class AlertCollector {
         vals.add(4);
         break;
     }
-    vals.add(a.severity);
     vals.add(a.tag.tagValue("host"));
     exportIncident(vals);
     count++;
@@ -190,12 +190,13 @@ public class AlertCollector {
       final StringBuilder sb = new StringBuilder();
       Helper.writeList(sb, vals);
       CollectorManager.logger.error("Invalid data: " + sb);
+      CollectorManager.logger.debug("fields: " + fields.length);
     }
     else {
       final StringBuilder sb = new StringBuilder();
       Helper.writeList(sb, vals);
       try {
-        if (SystemContext.config.dryrun || true) {
+        if (SystemContext.config.dryrun) {
           CollectorManager.logger.info(sb.toString());
         }
         else {
@@ -204,9 +205,9 @@ public class AlertCollector {
             conn = SystemContext.alertCollectorConfig.dbConfig.getConnection();
             CollectorManager.logger.debug("err=" + SystemContext.alertCollectorConfig.dbConfig.getLastError());
           }
-          CollectorManager.logger.debug(sb.toString());
+          CollectorManager.logger.debug("Inserting: " + sb.toString());
           if (conn != null) {
-            LibDB.insertRecord(conn, SystemContext.alertCollectorConfig.tableName, null, vals.toArray(), SystemContext.alertCollectorConfig.maxSize);
+            LibDB.insertRecord(conn, SystemContext.alertCollectorConfig.tableName, fields, vals.toArray(), SystemContext.alertCollectorConfig.maxSize);
           }
         }
       }
