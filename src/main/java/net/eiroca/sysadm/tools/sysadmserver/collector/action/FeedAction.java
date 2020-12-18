@@ -17,11 +17,14 @@
 package net.eiroca.sysadm.tools.sysadmserver.collector.action;
 
 import java.text.MessageFormat;
+import java.util.SortedMap;
+import java.util.TreeMap;
 import net.eiroca.library.core.LibFormat;
 import net.eiroca.library.core.LibStr;
 import net.eiroca.library.metrics.Statistic;
 import net.eiroca.library.metrics.datum.Datum;
 import net.eiroca.library.server.ServerResponse;
+import net.eiroca.library.sysadm.monitoring.sdk.GenericProducer;
 import net.eiroca.sysadm.tools.sysadmserver.SystemContext;
 import net.eiroca.sysadm.tools.sysadmserver.collector.MeasureCollector;
 import spark.Request;
@@ -115,6 +118,9 @@ public class FeedAction implements Route {
   public int processRequestParameter(final String namespace, final String[] valuePairs) {
     int rows = 0;
     if (valuePairs == null) { return rows; }
+    final SortedMap<String, Object> meta = new TreeMap<>();
+    meta.put(GenericProducer.FLD_SOURCE, SystemContext.ME);
+    meta.put(GenericProducer.FLD_HOST, SystemContext.hostname);
     final MeasureCollector collector = MeasureCollector.getCollector();
     for (String valuePair : valuePairs) {
       if (valuePair == null) {
@@ -166,7 +172,7 @@ public class FeedAction implements Route {
         }
         if (SystemContext.consumer != null) {
           final Datum d = new Datum(doubleValue);
-          SystemContext.consumer.exportData(namespace, metric, splitName, split, d, null);
+          GenericProducer.exportData(SystemContext.consumer, namespace, metric, splitName, split, meta, d);
         }
         rows++;
       }

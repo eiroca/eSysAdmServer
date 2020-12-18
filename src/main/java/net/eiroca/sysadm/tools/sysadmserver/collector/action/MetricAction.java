@@ -14,40 +14,31 @@
  * If not, see <http://www.gnu.org/licenses/>.
  *
  **/
-package net.eiroca.sysadm.tools.sysadmserver.action;
+package net.eiroca.sysadm.tools.sysadmserver.collector.action;
 
 import java.text.MessageFormat;
-import org.slf4j.Logger;
 import net.eiroca.library.server.ResultResponse;
-import net.eiroca.library.system.Logs;
-import net.eiroca.sysadm.tools.sysadmserver.MeasureCollector;
-import net.eiroca.sysadm.tools.sysadmserver.Utils;
+import net.eiroca.sysadm.tools.sysadmserver.SystemContext;
+import net.eiroca.sysadm.tools.sysadmserver.collector.MeasureCollector;
+import net.eiroca.sysadm.tools.sysadmserver.collector.RestUtils;
 import spark.Request;
 import spark.Response;
 import spark.Route;
 
-public class ExportAction implements Route {
-
-  private static Logger logger = Logs.getLogger();
+public class MetricAction implements Route {
 
   @Override
   public Object handle(final Request request, final Response response) throws Exception {
-    final String namespace = request.params(MeasureCollector.PARAM_NAMESPACE);
-    ExportAction.logger.info(MessageFormat.format("handle({0})", namespace));
+    if (!SystemContext.isLicenseValid()) { return SystemContext.LICENCE_ERROR; }
+    final String namespace = MeasureCollector.getNamespace(request);
+    SystemContext.logger.info(MessageFormat.format("handle({0})", namespace));
     final ResultResponse result = new ResultResponse(0);
+    result.message = MessageFormat.format("Namespace: {0}", namespace);
     final StringBuilder sb = new StringBuilder(1024);
     sb.append('{');
-    if (namespace == null) {
-      Utils.namespaces2json(sb, MeasureCollector.getCollector().exportMeasures());
-    }
-    else {
-      result.message = MessageFormat.format("Namespace: {0}", namespace);
-      Utils.measures2json(sb, MeasureCollector.getCollector().exportMeasures(namespace));
-    }
+    RestUtils.measures2json(sb, MeasureCollector.getCollector().getMetrics(namespace));
     sb.append('}');
     result.setResult(sb.toString());
     return result;
-
   }
-
 }

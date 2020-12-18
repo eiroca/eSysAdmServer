@@ -1,0 +1,11 @@
+#Name of the montior
+name = FLUME collector
+#Monitor default configuration (in eSysAdmMonitor.properties)
+config = flume-collector
+#Tags
+#tags[] = tag1 tag2     -> merge default configuration with tag1 and tag2
+#tags   = tag1 tag2     -> ignore default configuration tags final tags are only tag1 and tag2
+tags[] = tag1 tag2
+
+## Configuration specific for each monitor type
+hosts = localhost

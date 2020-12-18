@@ -14,17 +14,17 @@
  * If not, see <http://www.gnu.org/licenses/>.
  *
  **/
-package net.eiroca.sysadm.tools.sysadmserver.action;
+package net.eiroca.sysadm.tools.sysadmserver.collector.action;
 
 import net.eiroca.library.server.ServerResponse;
-import net.eiroca.sysadm.tools.sysadmserver.MeasureCollector;
+import net.eiroca.sysadm.tools.sysadmserver.CollectorManager;
 import spark.Request;
 import spark.Response;
 import spark.Route;
 
 public class AboutAction implements Route {
 
-  private final static ServerResponse ABOUT = new ServerResponse(0, MeasureCollector.SERVER_APINAME + " " + MeasureCollector.SERVER_APIVERS);
+  private final static ServerResponse ABOUT = new ServerResponse(0, CollectorManager.SERVER_APINAME + " " + CollectorManager.SERVER_APIVERS);
 
   @Override
   public Object handle(final Request request, final Response response) throws Exception {
