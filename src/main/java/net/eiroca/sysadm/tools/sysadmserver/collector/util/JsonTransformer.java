@@ -14,26 +14,28 @@
  * If not, see <http://www.gnu.org/licenses/>.
  *
  **/
-package net.eiroca.sysadm.tools.sysadmserver.util.params;
+package net.eiroca.sysadm.tools.sysadmserver.collector.util;
 
-import java.net.InetAddress;
-import net.eiroca.library.config.Parameters;
-import net.eiroca.library.config.parameter.StringParameter;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import spark.ResponseTransformer;
 
-public final class HostnameParameter extends StringParameter {
+public class JsonTransformer implements ResponseTransformer {
 
-  public HostnameParameter(final Parameters owner, final String paramName, final String paramDef) {
-    super(owner, paramName, paramDef);
+  private static final boolean PRETTY = true;
+  private final Gson gson;
+
+  public JsonTransformer() {
+    final GsonBuilder builder = new GsonBuilder();
+    if (JsonTransformer.PRETTY) {
+      builder.setPrettyPrinting();
+    }
+    gson = builder.create();
   }
 
   @Override
-  public String getDefault() {
-    try {
-      return InetAddress.getLocalHost().getHostName();
-    }
-    catch (final Exception e) {
-      return super.getDefault();
-    }
+  public String render(final Object model) {
+    return gson.toJson(model);
   }
 
 }

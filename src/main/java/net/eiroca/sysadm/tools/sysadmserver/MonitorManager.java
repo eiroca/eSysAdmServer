@@ -31,16 +31,17 @@ import net.eiroca.library.diagnostics.ServerMonitors;
 import net.eiroca.library.scheduler.FixedFrequencyPolicy;
 import net.eiroca.library.scheduler.Task;
 import net.eiroca.library.sysadm.monitoring.api.IMeasureConsumer;
-import net.eiroca.library.sysadm.monitoring.sdk.GenericProducer;
+import net.eiroca.library.sysadm.monitoring.sdk.MeasureProducer;
 import net.eiroca.library.sysadm.monitoring.sdk.ServerContext;
 import net.eiroca.sysadm.tools.sysadmserver.util.Configuration;
 
 public class MonitorManager {
 
+  private static final String MONITOR_BASENAME = "Monitor.";
   private static final String MONITOR_FILEEXT = ".monitor";
 
   static Configuration configuration;
-  static List<GenericProducer> monitors = new ArrayList<>();
+  static List<MeasureProducer> monitors = new ArrayList<>();
 
   public static void start() throws IOException {
     MonitorManager.configuration = new Configuration("config.", SystemContext.properties);
@@ -48,7 +49,7 @@ public class MonitorManager {
       final boolean ok = fileAttr.isRegularFile() && filePath.toString().endsWith(MonitorManager.MONITOR_FILEEXT);
       return ok;
     });
-    monitorConfigs.forEach(path -> MonitorManager.createMonitor(SystemContext.consumer, path));
+    monitorConfigs.forEach(path -> MonitorManager.createMonitor(SystemContext.consumer_metrics, path));
     monitorConfigs.close();
   }
 
@@ -66,10 +67,10 @@ public class MonitorManager {
       final IServerMonitor checker = ServerMonitors.build(type);
       final String monitorType = checker.getClass().getSimpleName();
       final long freq = LibTimeUnit.getFrequency(monitorConfig.getProperty("monitor-freq"), 60, TimeUnit.SECONDS, 10, 1 * 24 * 60 * 60);
-      final ServerContext context = new ServerContext("Monitoring." + monitorType, monitorConfig);
+      final ServerContext context = new ServerContext(MonitorManager.MONITOR_BASENAME + monitorType, monitorConfig);
       context.setCredentialProvider(SystemContext.keyStore);
       final String name = monitorConfig.getProperty("name");
-      final GenericProducer monitor = new GenericProducer(name, checker, hosts, SystemContext.hostGroups, consumer);
+      final MeasureProducer monitor = new MeasureProducer(name, checker, hosts, SystemContext.hostGroups, consumer);
       final Task t = SystemContext.addTask(monitor, new FixedFrequencyPolicy(freq, TimeUnit.SECONDS));
       t.setName(name);
       monitor.setId(t.getId());
@@ -117,7 +118,7 @@ public class MonitorManager {
 
   public static void stop() {
     SystemContext.logger.info("Stopping monitoring");
-    for (final GenericProducer m : MonitorManager.monitors) {
+    for (final MeasureProducer m : MonitorManager.monitors) {
       try {
         m.teardown();
       }

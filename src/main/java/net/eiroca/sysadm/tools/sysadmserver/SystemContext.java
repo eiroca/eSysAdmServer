@@ -32,13 +32,14 @@ import net.eiroca.library.scheduler.SchedulerPolicy;
 import net.eiroca.library.scheduler.Task;
 import net.eiroca.library.server.ServerResponse;
 import net.eiroca.library.sysadm.monitoring.api.EventRule;
-import net.eiroca.library.sysadm.monitoring.sdk.GenericConsumer;
 import net.eiroca.library.sysadm.monitoring.sdk.ICredentialProvider;
+import net.eiroca.library.sysadm.monitoring.sdk.MeasureConsumer;
 import net.eiroca.library.sysadm.monitoring.sdk.RuleEngine;
 import net.eiroca.library.system.Context;
 import net.eiroca.library.system.IContext;
 import net.eiroca.library.system.LibFile;
 import net.eiroca.library.system.Logs;
+import net.eiroca.sysadm.tools.sysadmserver.collector.AlertCollectorConfig;
 import net.eiroca.sysadm.tools.sysadmserver.scheduler.MyScheduler;
 import net.eiroca.sysadm.tools.sysadmserver.util.CredentialStore;
 import net.eiroca.sysadm.tools.sysadmserver.util.HostGroups;
@@ -46,16 +47,16 @@ import net.eiroca.sysadm.tools.sysadmserver.util.HostGroups;
 public final class SystemContext {
 
   public static final ServerResponse LICENCE_ERROR = new ServerResponse(-9999, "License is expired, no action is taken");
+
   public static final Logger logger = Logs.getLogger(SystemConfig.ME);
 
-  private static final int CONSUMER_SLEEPTIME = 10;
-  private static final String EXPORTER_PREFIX = "exporter.";
+  public static final SystemConfig config = new SystemConfig();
+  public static final AlertCollectorConfig alertCollectorConfig = new AlertCollectorConfig();
 
   public static License license;
   public static Properties properties;
-  public static SystemConfig config = new SystemConfig();
   public static MyScheduler scheduler;
-  public static GenericConsumer consumer;
+  public static MeasureConsumer consumer_metrics;
   public static HostGroups hostGroups;
   public static ICredentialProvider keyStore;
 
@@ -74,7 +75,7 @@ public final class SystemContext {
       }
     }
     SystemContext.logger.debug("config:" + SystemContext.properties);
-    SystemConfig.basePath = path;
+    SystemContext.config.basePath = path;
     SystemContext.config.setup(SystemContext.properties);
     // Lock file
     SystemContext.logger.info("lockFile: " + SystemContext.config.lockfile.toString());
@@ -83,7 +84,7 @@ public final class SystemContext {
     SystemContext.logger.info("Starting scheduler");
     SystemContext.scheduler = new MyScheduler(SystemContext.config.scheduler_workers);
     SystemContext.scheduler.start();
-    // Metric Rule Engine
+    // Event Rule Engine
     final RuleEngine engine = new RuleEngine();
     final Properties ruleConfig = Helper.loadProperties(SystemContext.config.rule_engine_path.toString(), false);
     engine.loadRules(ruleConfig);
@@ -94,25 +95,29 @@ public final class SystemContext {
     for (final String name : aliasProp.stringPropertyNames()) {
       alias.put(name, aliasProp.getProperty(name));
     }
-    // Measure consumer
-    final IContext context = new Context("Exporter", SystemContext.getExporterConfig(SystemContext.properties));
-    SystemContext.consumer = new GenericConsumer(engine, alias);
-    SystemContext.consumer.setup(context);
-    final Task t = SystemContext.addTask(SystemContext.consumer, new DelayPolicy(SystemContext.CONSUMER_SLEEPTIME, TimeUnit.SECONDS));
+    // consumers
+    // Metrics
+    final Properties exporterConfig = SystemContext.getSubConfig(SystemContext.properties, SystemConfig.EXPORTER_PREFIX);
+    final IContext context = new Context("Exporter", exporterConfig);
+    SystemContext.consumer_metrics = new MeasureConsumer(engine, alias);
+    SystemContext.consumer_metrics.setup(context);
+    final Task t = SystemContext.addTask(SystemContext.consumer_metrics, new DelayPolicy(SystemContext.config.consumers_sleeptime, TimeUnit.SECONDS));
     t.setName("Metric consumer");
     SystemContext.logger.info(t.getName() + " ID:" + t.getId());
     // Hostgroups
     SystemContext.hostGroups = new HostGroups(SystemContext.config.hostgroups_path, SystemContext.config.hostgroups_tag_prefix);
     // Keystore
     SystemContext.keyStore = new CredentialStore(SystemContext.config.keystore_path);
+    SystemContext.alertCollectorConfig.setup(SystemContext.properties);
   }
 
-  private static Properties getExporterConfig(final Properties config) {
+  public static Properties getSubConfig(final Properties config, String prefix) {
     final Properties exporterConfig = new Properties();
+    int len = prefix.length();
     for (final String propName : config.stringPropertyNames()) {
-      if (propName.startsWith(SystemContext.EXPORTER_PREFIX)) {
+      if (propName.startsWith(prefix)) {
         final String val = config.getProperty(propName);
-        exporterConfig.setProperty(propName.substring(SystemContext.EXPORTER_PREFIX.length()), val);
+        exporterConfig.setProperty(propName.substring(len), val);
       }
     }
     return exporterConfig;
@@ -122,6 +127,7 @@ public final class SystemContext {
     SystemContext.license = LicenseManager.getInstance().getLicense(SystemConfig.ME, true);
     if (!SystemContext.isLicenseValid()) {
       SystemContext.logger.error("Invalid license");
+      SystemContext.logger.debug("License: " + SystemContext.license);
       System.exit(1);
     }
     SystemContext.logger.info(SystemConfig.ME + " licensed to " + SystemContext.license.getHolder());
@@ -138,7 +144,7 @@ public final class SystemContext {
   public static void done() {
     try {
       SystemContext.logger.info("Stopping consumer");
-      SystemContext.consumer.teardown();
+      SystemContext.consumer_metrics.teardown();
     }
     catch (final Exception e) {
       SystemContext.logger.error("SystemError: ", e);

@@ -16,20 +16,27 @@
  **/
 package net.eiroca.sysadm.tools.sysadmserver;
 
-import net.eiroca.sysadm.tools.sysadmserver.collector.JsonTransformer;
+import org.slf4j.Logger;
+import net.eiroca.library.system.Logs;
 import net.eiroca.sysadm.tools.sysadmserver.collector.MeasureCollector;
-import net.eiroca.sysadm.tools.sysadmserver.collector.ResultTransformer;
 import net.eiroca.sysadm.tools.sysadmserver.collector.action.AboutAction;
+import net.eiroca.sysadm.tools.sysadmserver.collector.action.AlertAction;
 import net.eiroca.sysadm.tools.sysadmserver.collector.action.ExportAction;
 import net.eiroca.sysadm.tools.sysadmserver.collector.action.FeedAction;
 import net.eiroca.sysadm.tools.sysadmserver.collector.action.MetricAction;
+import net.eiroca.sysadm.tools.sysadmserver.collector.util.JsonTransformer;
+import net.eiroca.sysadm.tools.sysadmserver.collector.util.ResultTransformer;
 import spark.ResponseTransformer;
 import spark.Spark;
 
 public class CollectorManager {
 
+  private static final String COLLECTORNAME = SystemConfig.ME + ".collector";
+
+  public static final Logger logger = Logs.getLogger(CollectorManager.COLLECTORNAME);
+
   public static final String SERVER_APINAME = "Measure Collector";
-  public static final String SERVER_APIVERS = "0.0.2";
+  public static final String SERVER_APIVERS = "0.0.3";
 
   private static boolean started = false;
 
@@ -57,25 +64,33 @@ public class CollectorManager {
     final ResponseTransformer resultRender = new ResultTransformer(false);
     //
     Spark.get("/about", new AboutAction(), jSonRender);
+    Spark.get("/rest/about", new AboutAction(), jSonRender);
+    //
     Spark.get("/rest/feed/" + MeasureCollector.PARAM_NAMESPACE, new FeedAction(), jSonRender);
     Spark.post("/rest/feed/" + MeasureCollector.PARAM_NAMESPACE, new FeedAction(), jSonRender);
-    Spark.get("/rest/metric/" + MeasureCollector.PARAM_NAMESPACE, new MetricAction(), resultRender);
-    Spark.get("/rest/export/" + MeasureCollector.PARAM_NAMESPACE, new ExportAction(), resultRender);
-    //
     Spark.get("/rest/feed", new FeedAction(), jSonRender);
     Spark.post("/rest/feed", new FeedAction(), jSonRender);
+    //
+    Spark.get("/rest/metric/" + MeasureCollector.PARAM_NAMESPACE, new MetricAction(), resultRender);
     Spark.get("/rest/metric", new MetricAction(), resultRender);
+    //
+    Spark.get("/rest/export/" + MeasureCollector.PARAM_NAMESPACE, new ExportAction(), resultRender);
     Spark.get("/rest/export", new ExportAction(), resultRender);
     Spark.get("/rest/export/", new ExportAction(), resultRender);
     //
-    Spark.get("/api/v1/feed/" + MeasureCollector.PARAM_NAMESPACE, new FeedAction(), jSonRender);
+    Spark.get("/rest/alert/" + MeasureCollector.PARAM_NAMESPACE, new AlertAction(), resultRender);
+    Spark.post("/rest/alert/" + MeasureCollector.PARAM_NAMESPACE, new AlertAction(), resultRender);
+    Spark.get("/rest/alert", new AlertAction(), resultRender);
+    Spark.post("/rest/alert", new AlertAction(), resultRender);
+    //
     Spark.post("/api/v1/feed/" + MeasureCollector.PARAM_NAMESPACE, new FeedAction(), jSonRender);
     Spark.get("/api/v1/metric/" + MeasureCollector.PARAM_NAMESPACE, new MetricAction(), resultRender);
     Spark.get("/api/v1/export/" + MeasureCollector.PARAM_NAMESPACE, new ExportAction(), resultRender);
     Spark.get("/api/v1/export/", new ExportAction(), resultRender);
+    Spark.post("/api/v1/alert/" + MeasureCollector.PARAM_NAMESPACE, new AlertAction(), jSonRender);
     //
     Spark.exception(Exception.class, (e, request, response) -> {
-      e.printStackTrace();
+      SystemContext.logger.error("Collector Error:" + e.getMessage(), e);
     });
   }
 

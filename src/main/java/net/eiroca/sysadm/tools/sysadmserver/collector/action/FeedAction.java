@@ -24,7 +24,8 @@ import net.eiroca.library.core.LibStr;
 import net.eiroca.library.metrics.Statistic;
 import net.eiroca.library.metrics.datum.Datum;
 import net.eiroca.library.server.ServerResponse;
-import net.eiroca.library.sysadm.monitoring.sdk.GenericProducer;
+import net.eiroca.library.sysadm.monitoring.sdk.MeasureProducer;
+import net.eiroca.sysadm.tools.sysadmserver.CollectorManager;
 import net.eiroca.sysadm.tools.sysadmserver.SystemConfig;
 import net.eiroca.sysadm.tools.sysadmserver.SystemContext;
 import net.eiroca.sysadm.tools.sysadmserver.collector.MeasureCollector;
@@ -92,31 +93,31 @@ public class FeedAction implements Route {
   public Object handle(final Request request, final Response response) throws Exception {
     if (!SystemContext.isLicenseValid()) { return SystemContext.LICENCE_ERROR; }
     final String namespace = MeasureCollector.getNamespace(request);
-    SystemContext.logger.info(MessageFormat.format("handle({0})", namespace));
+    CollectorManager.logger.info(MessageFormat.format("handle({0})", namespace));
     final ServerResponse result = new ServerResponse(0);
     String[] data = null;
     if (FeedAction.POST.equalsIgnoreCase(request.requestMethod())) {
       final String body = request.body();
-      SystemContext.logger.trace("Body: " + body);
+      CollectorManager.logger.trace("Body: " + body);
       if (body != null) {
         data = body.split(FeedAction.REGEX_NL);
       }
     }
     else {
       final String queryParams = request.queryString();
-      SystemContext.logger.trace("Query: " + queryParams);
+      CollectorManager.logger.trace("Query: " + queryParams);
       if (queryParams != null) {
         data = queryParams.split(";");
       }
     }
     // process the request string
     final SortedMap<String, Object> meta = new TreeMap<>();
-    meta.put(GenericProducer.FLD_SOURCE, SystemConfig.ME);
+    meta.put(MeasureProducer.FLD_SOURCE, SystemConfig.ME);
     String ip = request.ip();
     if (ip == null) {
       ip = SystemContext.config.hostname;
     }
-    meta.put(GenericProducer.FLD_HOST, ip);
+    meta.put(MeasureProducer.FLD_HOST, ip);
     final int rows = processRequestParameter(namespace, data, meta);
     result.message = MessageFormat.format("Namespace: {0} processed: {1} measure(s).", namespace, rows);
     return result;
@@ -130,7 +131,7 @@ public class FeedAction implements Route {
       if (valuePair == null) {
         continue;
       }
-      SystemContext.logger.debug("Processing " + valuePair);
+      CollectorManager.logger.debug("Processing " + valuePair);
       String metricName = null;
       String splitName = null;
       final int colonIx = valuePair.indexOf(":");
@@ -174,9 +175,9 @@ public class FeedAction implements Route {
           m = (Statistic)m.getSplitting(splitName);
           m.addValue(split, doubleValue);
         }
-        if (SystemContext.consumer != null) {
+        if (SystemContext.consumer_metrics != null) {
           final Datum d = new Datum(doubleValue);
-          GenericProducer.exportData(SystemContext.consumer, m.getMetadata(), namespace, metric, splitName, split, meta, d);
+          MeasureProducer.exportData(SystemContext.consumer_metrics, m.getMetadata(), namespace, metric, splitName, split, meta, d);
         }
         rows++;
       }

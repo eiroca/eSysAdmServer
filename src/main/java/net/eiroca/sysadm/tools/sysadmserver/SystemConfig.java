@@ -30,9 +30,10 @@ public final class SystemConfig {
 
   public static final String ME = "eSysAdmServer";
 
-  private static final String VAR_PREFIX = null;
+  public static final String EXPORTER_PREFIX = "exporter.";
 
-  protected static ContextParameters config = new ContextParameters();
+  protected static final String VAR_PREFIX = null;
+  protected static final ContextParameters config = new ContextParameters();
   //
   protected static StringParameter _hostname = new HostnameParameter(SystemConfig.config, "hostname", "locahost");
   protected static PathParameter _lockfile = new LocalPathParameter(SystemConfig.config, "lockfile", SystemConfig.ME + ".lock");
@@ -43,11 +44,15 @@ public final class SystemConfig {
   protected static StringParameter _hostgroup_tag_prefix = new StringParameter(SystemConfig.config, "hostgroups.tag-prefix", "#");
   protected static PathParameter _keystore_path = new LocalPathParameter(SystemConfig.config, "keystore.path", "keystore.config");
   protected static PathParameter _monitors_path = new LocalPathParameter(SystemConfig.config, "monitors.path", "monitors");
-  //
+  // Consumers
+  protected static IntegerParameter _consumers_sleeptime = new IntegerParameter(SystemConfig.config, "consumers.sleeptime", 10);
+  // Collector
   protected static IntegerParameter _collector_port = new IntegerParameter(SystemConfig.config, "collector.port", 1972);
   protected static BooleanParameter _collector_enabled = new BooleanParameter(SystemConfig.config, "collector.enabled", true);
+  //
+  protected static BooleanParameter _dryrun = new BooleanParameter(SystemConfig.config, "dryrun", false);
 
-  public static String basePath;
+  public String basePath = "";
   public String hostname;
   public Path lockfile;
   public int scheduler_workers;
@@ -57,11 +62,12 @@ public final class SystemConfig {
   public String hostgroups_tag_prefix;
   public Path keystore_path;
   public Path monitors_path;
+  public int consumers_sleeptime;
   public int collector_port;
   public boolean collector_enabled;
+  public boolean dryrun;
 
   public SystemConfig() {
-    SystemConfig.config.saveConfig(this, SystemConfig.VAR_PREFIX, true, true);
   }
 
   public void setup(final Properties params) throws Exception {
