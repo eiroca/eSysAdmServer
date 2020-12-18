@@ -1,6 +1,6 @@
 /**
  *
- * Copyright (C) 2001-2019 eIrOcA (eNrIcO Croce & sImOnA Burzio) - AGPL >= 3.0
+ * Copyright (C) 1999-2019 Enrico Croce - AGPL >= 3.0
  *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
@@ -25,11 +25,11 @@ import org.slf4j.Logger;
 import net.eiroca.library.scheduler.Scheduler;
 import net.eiroca.library.scheduler.Task;
 import net.eiroca.library.system.Logs;
-import net.eiroca.sysadm.tools.sysadmserver.SystemContext;
+import net.eiroca.sysadm.tools.sysadmserver.SystemConfig;
 
 final public class MyScheduler extends Scheduler {
 
-  private static final String SCHEDULERNAME = SystemContext.ME + ".scheduler";
+  private static final String SCHEDULERNAME = SystemConfig.ME + ".scheduler";
 
   public static final Logger logger = Logs.getLogger(MyScheduler.SCHEDULERNAME);
 

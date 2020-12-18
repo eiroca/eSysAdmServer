@@ -1,6 +1,6 @@
 /**
  *
- * Copyright (C) 2001-2019 eIrOcA (eNrIcO Croce & sImOnA Burzio) - AGPL >= 3.0
+ * Copyright (C) 1999-2019 Enrico Croce - AGPL >= 3.0
  *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
@@ -26,7 +26,8 @@ import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import net.eiroca.library.core.LibStr;
-import net.eiroca.library.sysadm.monitoring.sdk.ITagsProvider;
+import net.eiroca.library.data.ITagsProvider;
+import net.eiroca.library.data.Tags;
 import net.eiroca.library.system.LibFile;
 
 public class HostGroups implements ITagsProvider {
@@ -38,7 +39,7 @@ public class HostGroups implements ITagsProvider {
   Pattern regExGroups = Pattern.compile("([^\\s]+)");
 
   final private Map<String, Set<String>> hostGroups = new HashMap<>();
-  final private Map<String, Set<String>> hostTags = new HashMap<>();
+  final private Map<String, Tags> hostTags = new HashMap<>();
 
   public HostGroups(final Path defPath, final String tagPrefix) {
     if (defPath != null) {
@@ -73,10 +74,10 @@ public class HostGroups implements ITagsProvider {
     }
   }
 
-  private synchronized Set<String> getHostTags(final String host) {
-    Set<String> result = hostTags.get(host);
+  private synchronized Tags getHostTags(final String host) {
+    Tags result = hostTags.get(host);
     if (result == null) {
-      result = new TreeSet<>();
+      result = new Tags();
       hostTags.put(host, result);
     }
     return result;
@@ -96,7 +97,7 @@ public class HostGroups implements ITagsProvider {
   }
 
   @Override
-  public Set<String> getTags(final String host) {
+  public Tags getTags(final String host) {
     return hostTags.get(host);
   }
 

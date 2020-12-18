@@ -1,6 +1,6 @@
 /**
  *
- * Copyright (C) 2001-2019 eIrOcA (eNrIcO Croce & sImOnA Burzio) - AGPL >= 3.0
+ * Copyright (C) 1999-2019 Enrico Croce - AGPL >= 3.0
  *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
@@ -31,7 +31,7 @@ public class ExportAction implements Route {
   public Object handle(final Request request, final Response response) throws Exception {
     final String namespace = request.params(MeasureCollector.PARAM_NAMESPACE);
     SystemContext.logger.info(MessageFormat.format("handle({0})", namespace));
-    final ResultResponse result = new ResultResponse(0);
+    final ResultResponse<Object> result = new ResultResponse<>(0);
     final StringBuilder sb = new StringBuilder(1024);
     sb.append('{');
     if (namespace == null) {

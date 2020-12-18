@@ -1,6 +1,6 @@
 /**
  *
- * Copyright (C) 2001-2019 eIrOcA (eNrIcO Croce & sImOnA Burzio) - AGPL >= 3.0
+ * Copyright (C) 1999-2019 Enrico Croce - AGPL >= 3.0
  *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
@@ -43,8 +43,8 @@ public class MonitorManager {
   static List<GenericProducer> monitors = new ArrayList<>();
 
   public static void start() throws IOException {
-    MonitorManager.configuration = new Configuration("config.", SystemContext.config);
-    final Stream<Path> monitorConfigs = Files.find(SystemContext.monitorDefinitionPath, 1, (filePath, fileAttr) -> {
+    MonitorManager.configuration = new Configuration("config.", SystemContext.properties);
+    final Stream<Path> monitorConfigs = Files.find(SystemContext.config.monitors_path, 1, (filePath, fileAttr) -> {
       final boolean ok = fileAttr.isRegularFile() && filePath.toString().endsWith(MonitorManager.MONITOR_FILEEXT);
       return ok;
     });

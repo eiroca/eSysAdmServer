@@ -1,6 +1,6 @@
 /**
  *
- * Copyright (C) 2001-2019 eIrOcA (eNrIcO Croce & sImOnA Burzio) - AGPL >= 3.0
+ * Copyright (C) 1999-2019 Enrico Croce - AGPL >= 3.0
  *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
@@ -32,7 +32,7 @@ public class MetricAction implements Route {
     if (!SystemContext.isLicenseValid()) { return SystemContext.LICENCE_ERROR; }
     final String namespace = MeasureCollector.getNamespace(request);
     SystemContext.logger.info(MessageFormat.format("handle({0})", namespace));
-    final ResultResponse result = new ResultResponse(0);
+    final ResultResponse<Object> result = new ResultResponse<>(0);
     result.message = MessageFormat.format("Namespace: {0}", namespace);
     final StringBuilder sb = new StringBuilder(1024);
     sb.append('{');
