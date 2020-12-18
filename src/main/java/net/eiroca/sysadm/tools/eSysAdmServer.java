@@ -21,6 +21,7 @@ import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 import net.eiroca.library.core.Helper;
+import net.eiroca.library.dynatrace.exporter.DynatraceExporter;
 import net.eiroca.library.system.LibFile;
 import net.eiroca.sysadm.tools.sysadmserver.CollectorManager;
 import net.eiroca.sysadm.tools.sysadmserver.MonitorManager;
@@ -31,6 +32,7 @@ public class eSysAdmServer {
   private static final int SLEEPTIME = 15 * 1000;
 
   public static void main(final String[] args) {
+    DynatraceExporter.init();
     final String confPath = eSysAdmServer.getConfigPath(args);
     try {
       eSysAdmServer.listClassPath();

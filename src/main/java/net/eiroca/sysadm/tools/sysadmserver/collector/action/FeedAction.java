@@ -88,7 +88,6 @@ public class FeedAction implements Route {
    * @param request
    * @return
    */
-
   @Override
   public Object handle(final Request request, final Response response) throws Exception {
     if (!SystemContext.isLicenseValid()) { return SystemContext.LICENCE_ERROR; }
@@ -177,7 +176,7 @@ public class FeedAction implements Route {
         }
         if (SystemContext.consumer != null) {
           final Datum d = new Datum(doubleValue);
-          GenericProducer.exportData(SystemContext.consumer, namespace, metric, splitName, split, meta, d);
+          GenericProducer.exportData(SystemContext.consumer, m.getMetadata(), namespace, metric, splitName, split, meta, d);
         }
         rows++;
       }
