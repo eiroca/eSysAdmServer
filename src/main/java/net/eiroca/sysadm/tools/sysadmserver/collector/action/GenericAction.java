@@ -17,23 +17,35 @@
 package net.eiroca.sysadm.tools.sysadmserver.collector.action;
 
 import net.eiroca.library.server.ServerResponse;
-import net.eiroca.sysadm.tools.sysadmserver.manager.CollectorManager;
+import net.eiroca.sysadm.tools.sysadmserver.SystemContext;
+import net.eiroca.sysadm.tools.sysadmserver.util.Role;
 import spark.Request;
 import spark.Response;
+import spark.Route;
 
-public class AboutAction extends GenericAction {
+public abstract class GenericAction implements Route {
 
-  private final static ServerResponse ABOUT = new ServerResponse(0, CollectorManager.SERVER_APINAME + " " + CollectorManager.SERVER_APIVERS);
+  private static final ServerResponse LICENCE_ERROR = new ServerResponse(-9999, "License is expired, no action is taken");
+  private static final ServerResponse PERMISSION_ERROR = new ServerResponse(-9998, "No permission to execute the action");
 
-  public AboutAction() {
-    super(CollectorManager.PERM_ACTION_ABOUT);
+  protected String permission = null;
+
+  public GenericAction(final String permAction) {
+    permission = permAction;
   }
 
   @Override
   public Object handle(final Request request, final Response response) throws Exception {
-    final Object r = super.handle(request, response);
-    if (r != null) { return r; }
-    return AboutAction.ABOUT;
+    if (!SystemContext.isLicenseValid()) { return GenericAction.LICENCE_ERROR; }
+    if (!canRun(request)) { return GenericAction.PERMISSION_ERROR; }
+    return null;
+  }
+
+  protected boolean canRun(final Request request) {
+    if (permission == null) { return true; }
+    final Role role = SystemContext.roleManager.getRole(request);
+    if (role != null) { return role.isAllowed(permission); }
+    return true; // for backward compatibility
   }
 
 }

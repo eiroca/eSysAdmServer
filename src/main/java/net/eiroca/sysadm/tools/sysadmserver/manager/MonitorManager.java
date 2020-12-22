@@ -14,9 +14,8 @@
  * If not, see <http://www.gnu.org/licenses/>.
  *
  **/
-package net.eiroca.sysadm.tools.sysadmserver;
+package net.eiroca.sysadm.tools.sysadmserver.manager;
 
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -33,32 +32,49 @@ import net.eiroca.library.scheduler.Task;
 import net.eiroca.library.sysadm.monitoring.api.IMeasureConsumer;
 import net.eiroca.library.sysadm.monitoring.sdk.MeasureProducer;
 import net.eiroca.library.sysadm.monitoring.sdk.ServerContext;
+import net.eiroca.sysadm.tools.sysadmserver.SystemContext;
 import net.eiroca.sysadm.tools.sysadmserver.util.Configuration;
 
-public class MonitorManager {
+public class MonitorManager extends GenericManager {
 
   private static final String MONITOR_BASENAME = "Monitor.";
   private static final String MONITOR_FILEEXT = ".monitor";
 
-  static Configuration configuration;
-  static List<MeasureProducer> monitors = new ArrayList<>();
+  private Configuration configuration;
+  private final List<MeasureProducer> monitors = new ArrayList<>();
 
-  public static void start() throws IOException {
-    MonitorManager.configuration = new Configuration("config.", SystemContext.properties);
+  @Override
+  public void start() throws Exception {
+    super.start();
+    final Properties monitorsDefaults = Helper.loadProperties(SystemContext.config.monitors_default_path.toString(), false);
+    configuration = new Configuration("config.", monitorsDefaults);
     final Stream<Path> monitorConfigs = Files.find(SystemContext.config.monitors_path, 1, (filePath, fileAttr) -> {
       final boolean ok = fileAttr.isRegularFile() && filePath.toString().endsWith(MonitorManager.MONITOR_FILEEXT);
       return ok;
     });
-    monitorConfigs.forEach(path -> MonitorManager.createMonitor(SystemContext.consumer_metrics, path));
+    monitorConfigs.forEach(path -> createMonitor(SystemContext.consumer_metrics, path));
     monitorConfigs.close();
   }
 
-  private static void createMonitor(final IMeasureConsumer consumer, final Path confPath) {
+  @Override
+  public void stop() throws Exception {
+    super.stop();
+    for (final MeasureProducer m : monitors) {
+      try {
+        m.teardown();
+      }
+      catch (final Exception e) {
+        SystemContext.logger.error("SystemError: ", e);
+      }
+    }
+  }
+
+  private void createMonitor(final IMeasureConsumer consumer, final Path confPath) {
     try {
       final Properties monitorConfig = Helper.loadProperties(confPath.toString(), false);
       final String configNode = monitorConfig.getProperty("config");
-      MonitorManager.configuration.update(configNode, monitorConfig);
-      final List<String> hosts = MonitorManager.resolveHosts(monitorConfig);
+      configuration.update(configNode, monitorConfig);
+      final List<String> hosts = resolveHosts(monitorConfig);
       if (hosts.size() == 0) {
         SystemContext.logger.error("No hosts declared for the monitor: " + confPath);
         return;
@@ -75,7 +91,7 @@ public class MonitorManager {
       t.setName(name);
       monitor.setId(t.getId());
       monitor.setup(context);
-      MonitorManager.monitors.add(monitor);
+      monitors.add(monitor);
       SystemContext.logger.info(t.getName() + " ID:" + t.getId() + " config:" + confPath);
       SystemContext.logger.debug("monitor=" + monitor.toString());
     }
@@ -84,7 +100,7 @@ public class MonitorManager {
     }
   }
 
-  private static List<String> resolveHosts(final Properties monitorConfig) {
+  private List<String> resolveHosts(final Properties monitorConfig) {
     final List<String> hosts = new ArrayList<>();
     String hostName;
     String aHost = monitorConfig.getProperty("host", null);
@@ -114,18 +130,6 @@ public class MonitorManager {
       }
     }
     return hosts;
-  }
-
-  public static void stop() {
-    SystemContext.logger.info("Stopping monitoring");
-    for (final MeasureProducer m : MonitorManager.monitors) {
-      try {
-        m.teardown();
-      }
-      catch (final Exception e) {
-        SystemContext.logger.error("SystemError: ", e);
-      }
-    }
   }
 
 }

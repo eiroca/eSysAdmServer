@@ -30,7 +30,6 @@ import net.eiroca.library.license.api.LicenseManager;
 import net.eiroca.library.scheduler.DelayPolicy;
 import net.eiroca.library.scheduler.SchedulerPolicy;
 import net.eiroca.library.scheduler.Task;
-import net.eiroca.library.server.ServerResponse;
 import net.eiroca.library.sysadm.monitoring.api.EventRule;
 import net.eiroca.library.sysadm.monitoring.sdk.ICredentialProvider;
 import net.eiroca.library.sysadm.monitoring.sdk.MeasureConsumer;
@@ -40,13 +39,15 @@ import net.eiroca.library.system.IContext;
 import net.eiroca.library.system.LibFile;
 import net.eiroca.library.system.Logs;
 import net.eiroca.sysadm.tools.sysadmserver.collector.AlertCollectorConfig;
+import net.eiroca.sysadm.tools.sysadmserver.manager.CollectorManager;
+import net.eiroca.sysadm.tools.sysadmserver.manager.ISysAdmManager;
+import net.eiroca.sysadm.tools.sysadmserver.manager.MonitorManager;
+import net.eiroca.sysadm.tools.sysadmserver.manager.RoleManager;
 import net.eiroca.sysadm.tools.sysadmserver.scheduler.MyScheduler;
 import net.eiroca.sysadm.tools.sysadmserver.util.CredentialStore;
 import net.eiroca.sysadm.tools.sysadmserver.util.HostGroups;
 
 public final class SystemContext {
-
-  public static final ServerResponse LICENCE_ERROR = new ServerResponse(-9999, "License is expired, no action is taken");
 
   public static final Logger logger = Logs.getLogger(SystemConfig.ME);
 
@@ -59,6 +60,16 @@ public final class SystemContext {
   public static MeasureConsumer consumer_metrics;
   public static HostGroups hostGroups;
   public static ICredentialProvider keyStore;
+
+  public static final ISysAdmManager managers[] = {
+      new RoleManager(),
+      new CollectorManager(),
+      new MonitorManager()
+  };
+
+  public static final RoleManager roleManager = (RoleManager)SystemContext.managers[0];
+  public static final CollectorManager collectorManager = (CollectorManager)SystemContext.managers[1];
+  public static final MonitorManager monitorManager = (MonitorManager)SystemContext.managers[2];
 
   public static void init(final String path) throws Exception {
     SystemContext.initLicense();
@@ -75,7 +86,7 @@ public final class SystemContext {
       }
     }
     SystemContext.logger.debug("config:" + SystemContext.properties);
-    SystemContext.config.basePath = path;
+    SystemContext.config.configPath = path;
     SystemContext.config.setup(SystemContext.properties);
     // Lock file
     SystemContext.logger.info("lockFile: " + SystemContext.config.lockfile.toString());
@@ -111,9 +122,9 @@ public final class SystemContext {
     SystemContext.alertCollectorConfig.setup(SystemContext.properties);
   }
 
-  public static Properties getSubConfig(final Properties config, String prefix) {
+  public static Properties getSubConfig(final Properties config, final String prefix) {
     final Properties exporterConfig = new Properties();
-    int len = prefix.length();
+    final int len = prefix.length();
     for (final String propName : config.stringPropertyNames()) {
       if (propName.startsWith(prefix)) {
         final String val = config.getProperty(propName);

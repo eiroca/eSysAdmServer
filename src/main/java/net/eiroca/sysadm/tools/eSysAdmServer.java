@@ -23,9 +23,8 @@ import java.util.List;
 import net.eiroca.library.core.Helper;
 import net.eiroca.library.dynatrace.exporter.DynatraceExporter;
 import net.eiroca.library.system.LibFile;
-import net.eiroca.sysadm.tools.sysadmserver.CollectorManager;
-import net.eiroca.sysadm.tools.sysadmserver.MonitorManager;
 import net.eiroca.sysadm.tools.sysadmserver.SystemContext;
+import net.eiroca.sysadm.tools.sysadmserver.manager.ISysAdmManager;
 
 public class eSysAdmServer {
 
@@ -37,8 +36,9 @@ public class eSysAdmServer {
     try {
       eSysAdmServer.listClassPath();
       SystemContext.init(confPath);
-      MonitorManager.start();
-      CollectorManager.start();
+      for (final ISysAdmManager manager : SystemContext.managers) {
+        manager.start();
+      }
       while (true) {
         SystemContext.scheduler.logStat();
         Helper.sleep(eSysAdmServer.SLEEPTIME);
@@ -54,8 +54,16 @@ public class eSysAdmServer {
       SystemContext.logger.error("Fatal error: " + e.getMessage(), e);
     }
     finally {
-      CollectorManager.stop();
-      MonitorManager.stop();
+      for (final ISysAdmManager manager : SystemContext.managers) {
+        if (manager.isStarted()) {
+          try {
+            manager.stop();
+          }
+          catch (final Exception e) {
+            SystemContext.logger.warn(Helper.getExceptionAsString(e));
+          }
+        }
+      }
       SystemContext.done();
     }
   }

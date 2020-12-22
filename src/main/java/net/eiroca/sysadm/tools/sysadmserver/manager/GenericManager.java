@@ -14,26 +14,30 @@
  * If not, see <http://www.gnu.org/licenses/>.
  *
  **/
-package net.eiroca.sysadm.tools.sysadmserver.collector.action;
+package net.eiroca.sysadm.tools.sysadmserver.manager;
 
-import net.eiroca.library.server.ServerResponse;
-import net.eiroca.sysadm.tools.sysadmserver.manager.CollectorManager;
-import spark.Request;
-import spark.Response;
+import net.eiroca.sysadm.tools.sysadmserver.SystemContext;
 
-public class AboutAction extends GenericAction {
+public class GenericManager implements ISysAdmManager {
 
-  private final static ServerResponse ABOUT = new ServerResponse(0, CollectorManager.SERVER_APINAME + " " + CollectorManager.SERVER_APIVERS);
+  private boolean started = false;
 
-  public AboutAction() {
-    super(CollectorManager.PERM_ACTION_ABOUT);
+  @Override
+  public void start() throws Exception {
+    if (started) { throw new IllegalStateException(); }
+    SystemContext.logger.info("Starting " + getClass().getCanonicalName());
+    started = true;
   }
 
   @Override
-  public Object handle(final Request request, final Response response) throws Exception {
-    final Object r = super.handle(request, response);
-    if (r != null) { return r; }
-    return AboutAction.ABOUT;
+  public void stop() throws Exception {
+    if (!started) { throw new IllegalStateException(); }
+    started = false;
+  }
+
+  @Override
+  public boolean isStarted() {
+    return started;
   }
 
 }

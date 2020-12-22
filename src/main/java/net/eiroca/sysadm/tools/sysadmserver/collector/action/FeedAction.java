@@ -25,73 +25,74 @@ import net.eiroca.library.metrics.Statistic;
 import net.eiroca.library.metrics.datum.Datum;
 import net.eiroca.library.server.ServerResponse;
 import net.eiroca.library.sysadm.monitoring.sdk.MeasureProducer;
-import net.eiroca.sysadm.tools.sysadmserver.CollectorManager;
 import net.eiroca.sysadm.tools.sysadmserver.SystemConfig;
 import net.eiroca.sysadm.tools.sysadmserver.SystemContext;
 import net.eiroca.sysadm.tools.sysadmserver.collector.MeasureCollector;
+import net.eiroca.sysadm.tools.sysadmserver.manager.CollectorManager;
 import spark.Request;
 import spark.Response;
-import spark.Route;
 
-public class FeedAction implements Route {
+/**
+ * Sample URLs:
+ *
+ * Measure syntax:
+ * <ul>
+ * <li>Measure[.SplittingName]:SplitValue=value[modifier],SplitValue=value[modifier],...</li>
+ * <li>Measure=value[modifier],Measure=value[modifier],...</li>
+ * </ul>
+ *
+ * value type:
+ * <ul>
+ * <li>literal (case insensitive)</li>
+ * <li>double[modifier]</li>
+ * <li>timestamp (yyyy-mm-dd hh:mi:ss or yyyy-mm-dd hh:mi:ss:ms or hh:mi:ss:ms or hh:mi:ss)</li>
+ * </ul>
+ *
+ * modifiers:
+ * <ul>
+ * <li>s ( * 1000)</li>
+ * <li>ms ( * 1)</li>
+ * <li>m ( * 60000)</li>
+ * <li>ns ( / 1000)</li>
+ * <li>h ( * 3600000)</li>
+ * <li>% ( / 100)</li>
+ * <li>! (0->1 1->0 e.g. true! return 0, 1.5! return 0)</li>
+ * </ul>
+ *
+ * supported literals:
+ * <ul>
+ * <li>true -> 1</li>
+ * <li>false -> 0</li>
+ * <li>ok -> 0</li>
+ * <li>ko -> 1</li>
+ * <li>off -> 0</li>
+ * <li>on -> 1</li>
+ * </ul>
+ *
+ *
+ * /rest/feed?Metrics.server:cpu=100%,ram=10;Alerts.my_app:webserver=false,tomcat=true
+ * /rest/feed?Check.Gugol:time=100ms,connect=10ms,Status=200;Check.eppol:time=100ms,connect=10ms,Status=200
+ *
+ * /rest/feed?Timer1:Response+Time=123,Bytes=234,Latency=332
+ *
+ * /rest/feed?ResponseTime=1s;Latency=2ms
+ *
+ * /rest/feed?Live=true
+ *
+ */
+public class FeedAction extends GenericAction {
 
   private static final String REGEX_NL = "(\n|\r)+";
-
   private static final String POST = "POST";
 
-  /**
-   * Sample URLs:
-   *
-   * Measure syntax:
-   * <ul>
-   * <li>Measure[.SplittingName]:SplitValue=value[modifier],SplitValue=value[modifier],...</li>
-   * <li>Measure=value[modifier],Measure=value[modifier],...</li>
-   * </ul>
-   *
-   * value type:
-   * <ul>
-   * <li>literal (case insensitive)</li>
-   * <li>double[modifier]</li>
-   * <li>timestamp (yyyy-mm-dd hh:mi:ss or yyyy-mm-dd hh:mi:ss:ms or hh:mi:ss:ms or hh:mi:ss)</li>
-   * </ul>
-   *
-   * modifiers:
-   * <ul>
-   * <li>s ( * 1000)</li>
-   * <li>ms ( * 1)</li>
-   * <li>m ( * 60000)</li>
-   * <li>ns ( / 1000)</li>
-   * <li>h ( * 3600000)</li>
-   * <li>% ( / 100)</li>
-   * <li>! (0->1 1->0 e.g. true! return 0, 1.5! return 0)</li>
-   * </ul>
-   *
-   * supported literals:
-   * <ul>
-   * <li>true -> 1</li>
-   * <li>false -> 0</li>
-   * <li>ok -> 0</li>
-   * <li>ko -> 1</li>
-   * <li>off -> 0</li>
-   * <li>on -> 1</li>
-   * </ul>
-   *
-   *
-   * /rest/feed?Metrics.server:cpu=100%,ram=10;Alerts.my_app:webserver=false,tomcat=true
-   * /rest/feed?Check.Gugol:time=100ms,connect=10ms,Status=200;Check.eppol:time=100ms,connect=10ms,Status=200
-   *
-   * /rest/feed?Timer1:Response+Time=123,Bytes=234,Latency=332
-   *
-   * /rest/feed?ResponseTime=1s;Latency=2ms
-   *
-   * /rest/feed?Live=true
-   *
-   * @param request
-   * @return
-   */
+  public FeedAction() {
+    super(CollectorManager.PERM_ACTION_FEED);
+  }
+
   @Override
   public Object handle(final Request request, final Response response) throws Exception {
-    if (!SystemContext.isLicenseValid()) { return SystemContext.LICENCE_ERROR; }
+    final Object r = super.handle(request, response);
+    if (r != null) { return r; }
     final String namespace = MeasureCollector.getNamespace(request);
     CollectorManager.logger.info(MessageFormat.format("handle({0})", namespace));
     final ServerResponse result = new ServerResponse(0);
@@ -184,4 +185,5 @@ public class FeedAction implements Route {
     }
     return rows;
   }
+
 }

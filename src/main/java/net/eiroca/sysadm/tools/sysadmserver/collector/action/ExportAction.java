@@ -18,17 +18,22 @@ package net.eiroca.sysadm.tools.sysadmserver.collector.action;
 
 import java.text.MessageFormat;
 import net.eiroca.library.server.ResultResponse;
-import net.eiroca.sysadm.tools.sysadmserver.CollectorManager;
 import net.eiroca.sysadm.tools.sysadmserver.collector.MeasureCollector;
 import net.eiroca.sysadm.tools.sysadmserver.collector.util.RestUtils;
+import net.eiroca.sysadm.tools.sysadmserver.manager.CollectorManager;
 import spark.Request;
 import spark.Response;
-import spark.Route;
 
-public class ExportAction implements Route {
+public class ExportAction extends GenericAction {
+
+  public ExportAction() {
+    super(CollectorManager.PERM_ACTION_EXPORT);
+  }
 
   @Override
   public Object handle(final Request request, final Response response) throws Exception {
+    final Object r = super.handle(request, response);
+    if (r != null) { return r; }
     final String namespace = request.params(MeasureCollector.PARAM_NAMESPACE);
     CollectorManager.logger.info(MessageFormat.format("handle({0})", namespace));
     final ResultResponse<Object> result = new ResultResponse<>(0);
@@ -44,7 +49,6 @@ public class ExportAction implements Route {
     sb.append('}');
     result.setResult(sb.toString());
     return result;
-
   }
 
 }

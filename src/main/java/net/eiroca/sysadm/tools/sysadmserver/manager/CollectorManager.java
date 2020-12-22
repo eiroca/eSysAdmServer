@@ -14,10 +14,12 @@
  * If not, see <http://www.gnu.org/licenses/>.
  *
  **/
-package net.eiroca.sysadm.tools.sysadmserver;
+package net.eiroca.sysadm.tools.sysadmserver.manager;
 
 import org.slf4j.Logger;
 import net.eiroca.library.system.Logs;
+import net.eiroca.sysadm.tools.sysadmserver.SystemConfig;
+import net.eiroca.sysadm.tools.sysadmserver.SystemContext;
 import net.eiroca.sysadm.tools.sysadmserver.collector.MeasureCollector;
 import net.eiroca.sysadm.tools.sysadmserver.collector.action.AboutAction;
 import net.eiroca.sysadm.tools.sysadmserver.collector.action.AlertAction;
@@ -29,7 +31,7 @@ import net.eiroca.sysadm.tools.sysadmserver.collector.util.ResultTransformer;
 import spark.ResponseTransformer;
 import spark.Spark;
 
-public class CollectorManager {
+public class CollectorManager extends GenericManager {
 
   private static final String COLLECTORNAME = SystemConfig.ME + ".collector";
 
@@ -38,28 +40,29 @@ public class CollectorManager {
   public static final String SERVER_APINAME = "Measure Collector";
   public static final String SERVER_APIVERS = "0.0.3";
 
-  private static boolean started = false;
+  public static final String PERM_ACTION_ABOUT = "collector.action.about";
+  public static final String PERM_ACTION_ALERT = "collector.action.alert";
+  public static final String PERM_ACTION_FEED = "collector.action.feed";
+  public static final String PERM_ACTION_EXPORT = "collector.action.export";
+  public static final String PERM_ACTION_METRIC = "collector.action.metric";
 
-  public static void start() {
+  @Override
+  public void start() throws Exception {
     if (SystemContext.config.collector_enabled) {
-      CollectorManager.initServer();
-      CollectorManager.initAction();
-      CollectorManager.started = true;
+      super.start();
+      initServer();
     }
   }
 
-  public static void stop() {
-    if (CollectorManager.started) {
-      Spark.stop();
-      CollectorManager.started = false;
-    }
+  @Override
+  public void stop() throws Exception {
+    super.stop();
+    Spark.stop();
   }
 
-  public static void initServer() {
-    Spark.port(CollectorManager.getServerPort());
-  }
-
-  public static void initAction() {
+  public void initServer() {
+    Spark.port(getServerPort());
+    //
     final ResponseTransformer jSonRender = new JsonTransformer();
     final ResponseTransformer resultRender = new ResultTransformer(false);
     //
@@ -94,7 +97,7 @@ public class CollectorManager {
     });
   }
 
-  private static int getServerPort() {
+  private int getServerPort() {
     return SystemContext.config.collector_port;
   }
 

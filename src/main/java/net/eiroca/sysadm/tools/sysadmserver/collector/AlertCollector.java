@@ -31,10 +31,10 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import net.eiroca.library.core.Helper;
 import net.eiroca.library.db.LibDB;
-import net.eiroca.sysadm.tools.sysadmserver.CollectorManager;
 import net.eiroca.sysadm.tools.sysadmserver.SystemContext;
 import net.eiroca.sysadm.tools.sysadmserver.event.Alert;
 import net.eiroca.sysadm.tools.sysadmserver.event.EventSeverity;
+import net.eiroca.sysadm.tools.sysadmserver.manager.CollectorManager;
 import spark.Request;
 
 public class AlertCollector {
@@ -155,7 +155,7 @@ public class AlertCollector {
   private long count = 0;
   private Connection conn = null;
 
-  private void flush(Alert a) {
+  private void flush(final Alert a) {
     final List<Object> vals = new ArrayList<>();
     CollectorManager.logger.debug("flushing: " + a);
     vals.clear();

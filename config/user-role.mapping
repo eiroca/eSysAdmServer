@@ -1,0 +1,8 @@
+#role mapping ("*" for any)
+#subnet	token	role
+
+127.0.0.1/32	*	admin
+*	consumer_token	consumer
+*	producer_token	producer
+*	*	guest
+	

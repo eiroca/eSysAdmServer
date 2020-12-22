@@ -14,26 +14,14 @@
  * If not, see <http://www.gnu.org/licenses/>.
  *
  **/
-package net.eiroca.sysadm.tools.sysadmserver.collector.action;
+package net.eiroca.sysadm.tools.sysadmserver.manager;
 
-import net.eiroca.library.server.ServerResponse;
-import net.eiroca.sysadm.tools.sysadmserver.manager.CollectorManager;
-import spark.Request;
-import spark.Response;
+public interface ISysAdmManager {
 
-public class AboutAction extends GenericAction {
+  public void start() throws Exception;
 
-  private final static ServerResponse ABOUT = new ServerResponse(0, CollectorManager.SERVER_APINAME + " " + CollectorManager.SERVER_APIVERS);
+  public void stop() throws Exception;
 
-  public AboutAction() {
-    super(CollectorManager.PERM_ACTION_ABOUT);
-  }
-
-  @Override
-  public Object handle(final Request request, final Response response) throws Exception {
-    final Object r = super.handle(request, response);
-    if (r != null) { return r; }
-    return AboutAction.ABOUT;
-  }
+  public boolean isStarted();
 
 }

@@ -47,9 +47,9 @@ public class AlertCollectorConfig {
   }
 
   public void setup(final Properties params) throws Exception {
-    AlertCollectorConfig.config.loadConfig(params, PREFIX_CONSUMER);
+    AlertCollectorConfig.config.loadConfig(params, AlertCollectorConfig.PREFIX_CONSUMER);
     AlertCollectorConfig.config.saveConfig(this, AlertCollectorConfig.VAR_PREFIX, true, true);
-    final ServerContext context = new ServerContext(AlertCollectorConfig.PREFIX_CONSUMER, SystemContext.getSubConfig(params, PREFIX_CONSUMER));
+    final ServerContext context = new ServerContext(AlertCollectorConfig.PREFIX_CONSUMER, SystemContext.getSubConfig(params, AlertCollectorConfig.PREFIX_CONSUMER));
     context.setCredentialProvider(SystemContext.keyStore);
     dbConfig.setup(context);
     SystemContext.logger.debug("Context: " + params);

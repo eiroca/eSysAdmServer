@@ -18,20 +18,23 @@ package net.eiroca.sysadm.tools.sysadmserver.collector.action;
 
 import java.text.MessageFormat;
 import net.eiroca.library.server.ResultResponse;
-import net.eiroca.sysadm.tools.sysadmserver.CollectorManager;
-import net.eiroca.sysadm.tools.sysadmserver.SystemContext;
 import net.eiroca.sysadm.tools.sysadmserver.collector.AlertCollector;
 import net.eiroca.sysadm.tools.sysadmserver.collector.MeasureCollector;
 import net.eiroca.sysadm.tools.sysadmserver.event.Alert;
+import net.eiroca.sysadm.tools.sysadmserver.manager.CollectorManager;
 import spark.Request;
 import spark.Response;
-import spark.Route;
 
-public class AlertAction implements Route {
+public class AlertAction extends GenericAction {
+
+  public AlertAction() {
+    super(CollectorManager.PERM_ACTION_ALERT);
+  }
 
   @Override
   public Object handle(final Request request, final Response response) throws Exception {
-    if (!SystemContext.isLicenseValid()) { return SystemContext.LICENCE_ERROR; }
+    final Object r = super.handle(request, response);
+    if (r != null) { return r; }
     final String namespace = MeasureCollector.getNamespace(request);
     CollectorManager.logger.info(MessageFormat.format("handle({0})", namespace));
     final ResultResponse<Object> result = new ResultResponse<>(0);
@@ -43,4 +46,5 @@ public class AlertAction implements Route {
     result.setResult(sb.toString());
     return result;
   }
+
 }

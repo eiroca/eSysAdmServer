@@ -1,0 +1,7 @@
+# collector permissions
+description = Full privileges
+collector.action.about = true
+collector.action.alert = true
+collector.action.feed = true
+collector.action.export = false
+collector.action.metric = false

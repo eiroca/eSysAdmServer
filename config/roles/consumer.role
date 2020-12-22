@@ -1,0 +1,7 @@
+# collector permissions
+description = Can read data
+collector.action.about = true
+collector.action.alert = true
+collector.action.feed = true
+collector.action.export = true
+collector.action.metric = true

@@ -20,6 +20,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import net.eiroca.library.config.Parameters;
 import net.eiroca.library.config.parameter.PathParameter;
+import net.eiroca.library.core.Helper;
+import net.eiroca.library.core.LibStr;
 import net.eiroca.sysadm.tools.sysadmserver.SystemContext;
 
 public final class LocalPathParameter extends PathParameter {
@@ -33,8 +35,22 @@ public final class LocalPathParameter extends PathParameter {
 
   @Override
   public Path getDefault() {
-    return Paths.get(SystemContext.config.basePath + defPath);
+    return Paths.get(defPath);
+  }
 
+  @Override
+  public Path convertString(String strValue) {
+    if (LibStr.isEmptyOrNull(strValue)) {
+      strValue = "&" + defPath;
+    }
+    if (strValue.startsWith("&")) {
+      strValue = SystemContext.config.configPath + strValue.substring(1);
+    }
+    Path value = Helper.getDirPath(strValue);
+    if (value == null) {
+      value = getDefault();
+    }
+    return value;
   }
 
 }

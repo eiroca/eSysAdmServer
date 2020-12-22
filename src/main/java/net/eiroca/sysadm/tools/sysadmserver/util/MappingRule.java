@@ -14,26 +14,33 @@
  * If not, see <http://www.gnu.org/licenses/>.
  *
  **/
-package net.eiroca.sysadm.tools.sysadmserver.collector.action;
+package net.eiroca.sysadm.tools.sysadmserver.util;
 
-import net.eiroca.library.server.ServerResponse;
-import net.eiroca.sysadm.tools.sysadmserver.manager.CollectorManager;
-import spark.Request;
-import spark.Response;
+import inet.ipaddr.IPAddressString;
 
-public class AboutAction extends GenericAction {
+public class MappingRule {
 
-  private final static ServerResponse ABOUT = new ServerResponse(0, CollectorManager.SERVER_APINAME + " " + CollectorManager.SERVER_APIVERS);
+  IPAddressString network;
+  String token;
+  String role;
 
-  public AboutAction() {
-    super(CollectorManager.PERM_ACTION_ABOUT);
+  public IPAddressString getNetwork() {
+    return network;
   }
 
-  @Override
-  public Object handle(final Request request, final Response response) throws Exception {
-    final Object r = super.handle(request, response);
-    if (r != null) { return r; }
-    return AboutAction.ABOUT;
+  public String getToken() {
+    return token;
+  }
+
+  public String getRole() {
+    return role;
+  }
+
+  public MappingRule(final IPAddressString network, final String token, final String role) {
+    super();
+    this.network = network;
+    this.token = token;
+    this.role = role;
   }
 
 }

@@ -1,0 +1,7 @@
+# collector permissions
+description = Can send data
+collector.action.about = true
+collector.action.alert = false
+collector.action.feed = false
+collector.action.export = true
+collector.action.metric = true
