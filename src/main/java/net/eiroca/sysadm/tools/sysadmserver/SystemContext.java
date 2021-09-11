@@ -1,6 +1,6 @@
 /**
  *
- * Copyright (C) 1999-2020 Enrico Croce - AGPL >= 3.0
+ * Copyright (C) 1999-2021 Enrico Croce - AGPL >= 3.0
  *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
@@ -17,7 +17,6 @@
 package net.eiroca.sysadm.tools.sysadmserver;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.file.Files;
 import java.util.HashMap;
 import java.util.Map;
@@ -74,17 +73,7 @@ public final class SystemContext {
   public static void init(final String path) throws Exception {
     SystemContext.initLicense();
     // Configuration
-    SystemContext.properties = new Properties();
-    SystemContext.properties.putAll(System.getProperties());
-    final InputStream prop = LibFile.findResource(path + SystemConfig.ME + ".config", path + SystemConfig.ME + ".properties");
-    if (prop != null) {
-      try {
-        final Properties localConf = Helper.loadProperties(prop, false);
-        SystemContext.properties.putAll(localConf);
-      }
-      catch (final IOException e) {
-      }
-    }
+    SystemContext.properties = LibFile.loadConfiguration(path + SystemConfig.ME + ".config", path + SystemConfig.ME + ".properties");
     SystemContext.logger.debug("config:" + SystemContext.properties);
     SystemContext.config.configPath = path;
     SystemContext.config.setup(SystemContext.properties);
