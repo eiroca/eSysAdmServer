@@ -36,6 +36,8 @@ import spark.Request;
 
 public class RoleManager extends GenericManager {
 
+  private static final String ESYSADM_TOKEN_HEADER = "X-eSysAdm-TOKEN";
+
   private static final String ANY_VALUE = "*";
 
   private static final String ROLE_FILEEXT = ".role";
@@ -56,7 +58,7 @@ public class RoleManager extends GenericManager {
   }
 
   private void readMapping() {
-    final CSVData mappingCSV = new CSVData(SystemContext.config.user_roles_mapping_path, '\t', CSV.QUOTE, CSV.COMMENT, CSV.ENCODING);
+    final CSVData mappingCSV = new CSVData(SystemContext.config.user_roles_mapping_path.toString(), '\t', CSV.QUOTE, CSV.COMMENT, CSV.ENCODING);
     for (int i = 0; i < mappingCSV.size(); i++) {
       final String[] data = mappingCSV.getData(i);
       String str;
@@ -97,7 +99,7 @@ public class RoleManager extends GenericManager {
 
   public Role getRole(final Request request) {
     final IPAddressString req_ip = new IPAddressString(request.ip());
-    final String req_token = request.headers("X-eSysAdm-TOKEN");
+    final String req_token = request.headers(RoleManager.ESYSADM_TOKEN_HEADER);
     for (final MappingRule rule : mapping) {
       final IPAddressString network = rule.getNetwork();
       final String token = rule.getToken();

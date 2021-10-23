@@ -17,15 +17,13 @@
 package net.eiroca.sysadm.tools.sysadmserver.manager;
 
 import org.slf4j.Logger;
+import net.eiroca.library.core.Helper;
 import net.eiroca.library.system.Logs;
 import net.eiroca.sysadm.tools.sysadmserver.SystemConfig;
 import net.eiroca.sysadm.tools.sysadmserver.SystemContext;
-import net.eiroca.sysadm.tools.sysadmserver.collector.MeasureCollector;
-import net.eiroca.sysadm.tools.sysadmserver.collector.action.AboutAction;
-import net.eiroca.sysadm.tools.sysadmserver.collector.action.AlertAction;
-import net.eiroca.sysadm.tools.sysadmserver.collector.action.ExportAction;
-import net.eiroca.sysadm.tools.sysadmserver.collector.action.FeedAction;
-import net.eiroca.sysadm.tools.sysadmserver.collector.action.MetricAction;
+import net.eiroca.sysadm.tools.sysadmserver.collector.action.ActionDef;
+import net.eiroca.sysadm.tools.sysadmserver.collector.action.Actions;
+import net.eiroca.sysadm.tools.sysadmserver.collector.action.GenericAction;
 import net.eiroca.sysadm.tools.sysadmserver.collector.util.JsonTransformer;
 import net.eiroca.sysadm.tools.sysadmserver.collector.util.ResultTransformer;
 import spark.ResponseTransformer;
@@ -39,12 +37,6 @@ public class CollectorManager extends GenericManager {
 
   public static final String SERVER_APINAME = "Measure Collector";
   public static final String SERVER_APIVERS = "0.0.3";
-
-  public static final String PERM_ACTION_ABOUT = "collector.action.about";
-  public static final String PERM_ACTION_ALERT = "collector.action.alert";
-  public static final String PERM_ACTION_FEED = "collector.action.feed";
-  public static final String PERM_ACTION_EXPORT = "collector.action.export";
-  public static final String PERM_ACTION_METRIC = "collector.action.metric";
 
   @Override
   public void start() throws Exception {
@@ -60,38 +52,51 @@ public class CollectorManager extends GenericManager {
     Spark.stop();
   }
 
+  public static GenericAction buildAction(final ActionDef def) {
+    GenericAction obj = null;
+    if (def != null) {
+      try {
+        obj = (GenericAction)Class.forName(def.getClassName()).newInstance();
+      }
+      catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
+        CollectorManager.logger.error(Helper.getExceptionAsString("Unable to create class " + def.getClassName(), e, false));
+      }
+    }
+    return obj;
+  }
+
   public void initServer() {
     Spark.port(getServerPort());
     //
     final ResponseTransformer jSonRender = new JsonTransformer();
     final ResponseTransformer resultRender = new ResultTransformer(false);
     //
-    Spark.get("/about", new AboutAction(), jSonRender);
-    Spark.get("/rest/about", new AboutAction(), jSonRender);
-    //
-    Spark.get("/rest/feed/" + MeasureCollector.PARAM_NAMESPACE, new FeedAction(), jSonRender);
-    Spark.post("/rest/feed/" + MeasureCollector.PARAM_NAMESPACE, new FeedAction(), jSonRender);
-    Spark.get("/rest/feed", new FeedAction(), jSonRender);
-    Spark.post("/rest/feed", new FeedAction(), jSonRender);
-    //
-    Spark.get("/rest/metric/" + MeasureCollector.PARAM_NAMESPACE, new MetricAction(), resultRender);
-    Spark.get("/rest/metric", new MetricAction(), resultRender);
-    //
-    Spark.get("/rest/export/" + MeasureCollector.PARAM_NAMESPACE, new ExportAction(), resultRender);
-    Spark.get("/rest/export", new ExportAction(), resultRender);
-    Spark.get("/rest/export/", new ExportAction(), resultRender);
-    //
-    Spark.get("/rest/alert/" + MeasureCollector.PARAM_NAMESPACE, new AlertAction(), resultRender);
-    Spark.post("/rest/alert/" + MeasureCollector.PARAM_NAMESPACE, new AlertAction(), resultRender);
-    Spark.get("/rest/alert", new AlertAction(), resultRender);
-    Spark.post("/rest/alert", new AlertAction(), resultRender);
-    //
-    Spark.post("/api/v1/feed/" + MeasureCollector.PARAM_NAMESPACE, new FeedAction(), jSonRender);
-    Spark.get("/api/v1/metric/" + MeasureCollector.PARAM_NAMESPACE, new MetricAction(), resultRender);
-    Spark.get("/api/v1/export/" + MeasureCollector.PARAM_NAMESPACE, new ExportAction(), resultRender);
-    Spark.get("/api/v1/export/", new ExportAction(), resultRender);
-    Spark.post("/api/v1/alert/" + MeasureCollector.PARAM_NAMESPACE, new AlertAction(), jSonRender);
-    //
+    for (final String actionName : Actions.getActionNames()) {
+      if (actionName == null) {
+        continue;
+      }
+      final ActionDef def = Actions.registry.get(actionName);
+      final GenericAction action = CollectorManager.buildAction(def);
+      ResponseTransformer t;
+      switch (def.getMode()) {
+        case JSON: {
+          t = jSonRender;
+          break;
+        }
+        default: {
+          t = resultRender;
+          break;
+        }
+      }
+      switch (def.getMethod()) {
+        case POST: {
+          Spark.post(actionName, action, t);
+        }
+        default: {
+          Spark.get(actionName, action, t);
+        }
+      }
+    }
     Spark.exception(Exception.class, (e, request, response) -> {
       SystemContext.logger.error("Collector Error:" + e.getMessage(), e);
     });

@@ -19,11 +19,11 @@ package net.eiroca.sysadm.tools.sysadmserver;
 import java.nio.file.Path;
 import java.util.Properties;
 import net.eiroca.library.config.parameter.BooleanParameter;
+import net.eiroca.library.config.parameter.HostnameParameter;
 import net.eiroca.library.config.parameter.IntegerParameter;
 import net.eiroca.library.config.parameter.PathParameter;
 import net.eiroca.library.config.parameter.StringParameter;
 import net.eiroca.library.system.ContextParameters;
-import net.eiroca.sysadm.tools.sysadmserver.util.params.HostnameParameter;
 import net.eiroca.sysadm.tools.sysadmserver.util.params.LocalPathParameter;
 
 public final class SystemConfig {
@@ -56,7 +56,7 @@ public final class SystemConfig {
   // User Roles
   protected static PathParameter _user_roles_path = new LocalPathParameter(SystemConfig.config, "user-roles.path", "roles");
   protected static StringParameter _user_roles_default = new StringParameter(SystemConfig.config, "user-roles.default", "guest");
-  protected static StringParameter _user_roles_mapping_path = new StringParameter(SystemConfig.config, "user-roles.mapping.path", "user-role.mapping");
+  protected static PathParameter _user_roles_mapping_path = new LocalPathParameter(SystemConfig.config, "user-roles.mapping.path", "user-role.mapping");
   // Monitors
   protected static PathParameter _monitors_path = new LocalPathParameter(SystemConfig.config, "monitors.path", "monitors");
   protected static PathParameter _monitors_default_path = new LocalPathParameter(SystemConfig.config, "monitors.default.path", "monitor-default.config");
@@ -77,8 +77,8 @@ public final class SystemConfig {
   public Path alias_path;
   public Path rule_engine_path;
   public Path user_roles_path;
+  public Path user_roles_mapping_path;
   public String user_roles_default;
-  public String user_roles_mapping_path;
   public Path monitors_path;
   public Path monitors_default_path;
   public int consumers_sleeptime;

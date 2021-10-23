@@ -26,8 +26,11 @@ import spark.Response;
 
 public class MetricAction extends GenericAction {
 
+  public final static String NAME = MetricAction.class.getName();
+  public final static String PERM = "collector.action.metric";
+
   public MetricAction() {
-    super(CollectorManager.PERM_ACTION_METRIC);
+    super(MetricAction.PERM);
   }
 
   @Override

@@ -24,6 +24,7 @@ import net.eiroca.library.core.LibStr;
 import net.eiroca.library.metrics.Statistic;
 import net.eiroca.library.metrics.datum.Datum;
 import net.eiroca.library.server.ServerResponse;
+import net.eiroca.library.sysadm.monitoring.sdk.MeasureFields;
 import net.eiroca.library.sysadm.monitoring.sdk.MeasureProducer;
 import net.eiroca.sysadm.tools.sysadmserver.SystemConfig;
 import net.eiroca.sysadm.tools.sysadmserver.SystemContext;
@@ -33,6 +34,8 @@ import spark.Request;
 import spark.Response;
 
 /**
+ * Send Metric(s) to the controller
+ *
  * Sample URLs:
  *
  * Measure syntax:
@@ -85,8 +88,11 @@ public class FeedAction extends GenericAction {
   private static final String REGEX_NL = "(\n|\r)+";
   private static final String POST = "POST";
 
+  public final static String NAME = FeedAction.class.getName();
+  public final static String PERM = "collector.action.feed";
+
   public FeedAction() {
-    super(CollectorManager.PERM_ACTION_FEED);
+    super(FeedAction.PERM);
   }
 
   @Override
@@ -113,12 +119,12 @@ public class FeedAction extends GenericAction {
     }
     // process the request string
     final SortedMap<String, Object> meta = new TreeMap<>();
-    meta.put(MeasureProducer.FLD_SOURCE, SystemConfig.ME);
+    meta.put(MeasureFields.FLD_SOURCE, SystemConfig.ME);
     String ip = request.ip();
     if (ip == null) {
       ip = SystemContext.config.hostname;
     }
-    meta.put(MeasureProducer.FLD_HOST, ip);
+    meta.put(MeasureFields.FLD_HOST, ip);
     final int rows = processRequestParameter(namespace, data, meta);
     result.message = MessageFormat.format("Namespace: {0} processed: {1} measure(s).", namespace, rows);
     return result;

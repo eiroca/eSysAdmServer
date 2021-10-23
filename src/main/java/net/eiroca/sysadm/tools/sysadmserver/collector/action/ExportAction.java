@@ -26,8 +26,11 @@ import spark.Response;
 
 public class ExportAction extends GenericAction {
 
+  public final static String NAME = ExportAction.class.getName();
+  public final static String PERM = "collector.action.export";
+
   public ExportAction() {
-    super(CollectorManager.PERM_ACTION_EXPORT);
+    super(ExportAction.PERM);
   }
 
   @Override

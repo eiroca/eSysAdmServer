@@ -27,8 +27,11 @@ import spark.Response;
 
 public class AlertAction extends GenericAction {
 
+  public final static String NAME = AlertAction.class.getName();
+  public final static String PERM = "collector.action.alert";
+
   public AlertAction() {
-    super(CollectorManager.PERM_ACTION_ALERT);
+    super(AlertAction.PERM);
   }
 
   @Override

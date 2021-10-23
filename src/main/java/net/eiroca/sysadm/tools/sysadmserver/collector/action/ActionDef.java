@@ -16,27 +16,49 @@
  **/
 package net.eiroca.sysadm.tools.sysadmserver.collector.action;
 
-import net.eiroca.library.server.ServerResponse;
-import net.eiroca.sysadm.tools.sysadmserver.manager.CollectorManager;
-import spark.Request;
-import spark.Response;
+public class ActionDef {
 
-public class AboutAction extends GenericAction {
-
-  public final static String NAME = AboutAction.class.getName();
-  public final static String PERM = "collector.action.about";
-
-  private final static ServerResponse ABOUT = new ServerResponse(0, CollectorManager.SERVER_APINAME + " " + CollectorManager.SERVER_APIVERS);
-
-  public AboutAction() {
-    super(AboutAction.PERM);
+  public enum Method {
+    GET, POST
   }
 
-  @Override
-  public Object handle(final Request request, final Response response) throws Exception {
-    final Object r = super.handle(request, response);
-    if (r != null) { return r; }
-    return AboutAction.ABOUT;
+  public enum Mode {
+    JSON, OBJECT
+  }
+
+  private String className;
+  private Method method;
+  private Mode mode;
+
+  public ActionDef(final String className, final Method method, final Mode mode) {
+    super();
+    this.className = className;
+    this.method = method;
+    this.mode = mode;
+  }
+
+  public String getClassName() {
+    return className;
+  }
+
+  public void setClassName(final String className) {
+    this.className = className;
+  }
+
+  public Method getMethod() {
+    return method;
+  }
+
+  public void setMethod(final Method method) {
+    this.method = method;
+  }
+
+  public Mode getMode() {
+    return mode;
+  }
+
+  public void setMode(final Mode mode) {
+    this.mode = mode;
   }
 
 }

@@ -63,3 +63,4 @@ licenses/*.lic
 /config_prod/*
 /prod/*
 /libs/*
+/data/*

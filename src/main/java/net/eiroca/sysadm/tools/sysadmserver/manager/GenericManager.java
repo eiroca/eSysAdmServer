@@ -18,7 +18,7 @@ package net.eiroca.sysadm.tools.sysadmserver.manager;
 
 import net.eiroca.sysadm.tools.sysadmserver.SystemContext;
 
-public class GenericManager implements ISysAdmManager {
+abstract public class GenericManager implements ISysAdmManager {
 
   private boolean started = false;
 

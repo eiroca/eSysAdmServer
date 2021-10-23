@@ -49,7 +49,7 @@ public class eSysAdmServer {
       }
     }
     catch (final Exception e) {
-      SystemContext.logger.error("Fatal error: " + e.getMessage(), e);
+      SystemContext.logger.error(Helper.getExceptionAsString("Fatal error: ", e, false), e);
     }
     finally {
       for (final ISysAdmManager manager : SystemContext.managers) {
