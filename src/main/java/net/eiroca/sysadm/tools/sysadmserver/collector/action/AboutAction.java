@@ -33,9 +33,7 @@ public class AboutAction extends GenericAction {
   }
 
   @Override
-  public Object handle(final Request request, final Response response) throws Exception {
-    final Object r = super.handle(request, response);
-    if (r != null) { return r; }
+  public Object execute(final String namespace, final Request request, final Response response) throws Exception {
     return AboutAction.ABOUT;
   }
 

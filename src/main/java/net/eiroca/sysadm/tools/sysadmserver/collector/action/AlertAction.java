@@ -16,12 +16,9 @@
  **/
 package net.eiroca.sysadm.tools.sysadmserver.collector.action;
 
-import java.text.MessageFormat;
 import net.eiroca.library.server.ResultResponse;
 import net.eiroca.sysadm.tools.sysadmserver.collector.AlertCollector;
-import net.eiroca.sysadm.tools.sysadmserver.collector.MeasureCollector;
 import net.eiroca.sysadm.tools.sysadmserver.event.Alert;
-import net.eiroca.sysadm.tools.sysadmserver.manager.CollectorManager;
 import spark.Request;
 import spark.Response;
 
@@ -35,13 +32,8 @@ public class AlertAction extends GenericAction {
   }
 
   @Override
-  public Object handle(final Request request, final Response response) throws Exception {
-    final Object r = super.handle(request, response);
-    if (r != null) { return r; }
-    final String namespace = MeasureCollector.getNamespace(request);
-    CollectorManager.logger.info(MessageFormat.format("handle({0})", namespace));
+  public Object execute(final String namespace, final Request request, final Response response) throws Exception {
     final ResultResponse<Object> result = new ResultResponse<>(0);
-    result.message = MessageFormat.format("Namespace: {0}", namespace);
     final StringBuilder sb = new StringBuilder(1024);
     final String data = request.body();
     final Alert alert = AlertCollector.getCollector().addAlertFormJson(namespace, data);

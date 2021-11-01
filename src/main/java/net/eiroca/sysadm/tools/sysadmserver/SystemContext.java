@@ -88,7 +88,7 @@ public final class SystemContext {
     final RuleEngine engine = new RuleEngine();
     final Properties ruleConfig = Helper.loadProperties(SystemContext.config.rule_engine_path.toString(), false);
     engine.loadRules(ruleConfig);
-    engine.addRule(new EventRule()); // default rule
+    engine.addRule(new EventRule("*")); // default rule
     // Alias
     final Properties aliasProp = Helper.loadProperties(SystemContext.config.alias_path.toString(), false);
     final Map<String, String> alias = new HashMap<>();

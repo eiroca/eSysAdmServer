@@ -36,7 +36,7 @@ public class CollectorManager extends GenericManager {
   public static final Logger logger = Logs.getLogger(CollectorManager.COLLECTORNAME);
 
   public static final String SERVER_APINAME = "Measure Collector";
-  public static final String SERVER_APIVERS = "0.0.3";
+  public static final String SERVER_APIVERS = "0.0.4";
 
   @Override
   public void start() throws Exception {

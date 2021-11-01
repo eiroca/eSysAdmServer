@@ -96,11 +96,7 @@ public class FeedAction extends GenericAction {
   }
 
   @Override
-  public Object handle(final Request request, final Response response) throws Exception {
-    final Object r = super.handle(request, response);
-    if (r != null) { return r; }
-    final String namespace = MeasureCollector.getNamespace(request);
-    CollectorManager.logger.info(MessageFormat.format("handle({0})", namespace));
+  public Object execute(final String namespace, final Request request, final Response response) throws Exception {
     final ServerResponse result = new ServerResponse(0);
     String[] data = null;
     if (FeedAction.POST.equalsIgnoreCase(request.requestMethod())) {

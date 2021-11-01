@@ -53,10 +53,7 @@ public class IngestAction extends GenericAction {
   }
 
   @Override
-  public Object handle(final Request request, final Response response) throws Exception {
-    final Object r = super.handle(request, response);
-    if (r != null) { return r; }
-    CollectorManager.logger.info("ingest()");
+  public Object execute(final String namespace, final Request request, final Response response) throws Exception {
     final ServerResponse result = new ServerResponse(0);
     final String body = request.body();
     CollectorManager.logger.trace("Body: " + body);
@@ -106,8 +103,7 @@ public class IngestAction extends GenericAction {
     final SortedMap<String, Object> meta = new TreeMap<>();
     meta.putAll(baseMeta);
     try {
-
-      final Date timestamp = GsonUtil.getDate(json, MeasureFields.FLD_DATETIME, LibDate.ISO8601_1, LibDate.ISO8601_2);
+      final Date timestamp = GsonUtil.getDate(json, MeasureFields.FLD_DATETIME, LibDate.ISO8601_2, LibDate.ISO8601_1);
       final String namespace = GsonUtil.getString(json, MeasureFields.FLD_GROUP);
       final String metric = GsonUtil.getString(json, MeasureFields.FLD_METRIC);
       final JsonElement v = json.get(MeasureFields.FLD_VALUE);
@@ -120,8 +116,9 @@ public class IngestAction extends GenericAction {
         m = (Statistic)m.getSplitting(splitGroup);
         m = (Statistic)m.getSplitting(splitName);
       }
-      final IDatum d = m.getDatum();
       final Tags dTag = m.getTags();
+      final IDatum d = m.getDatum();
+      d.init(0.0);
       d.setValue(timestamp.getTime(), v.getAsDouble());
       final JsonElement tags = json.get(MeasureFields.FLD_TAGS_ALT);
       if ((tags != null) && (tags.isJsonArray())) {

@@ -16,8 +16,12 @@
  **/
 package net.eiroca.sysadm.tools.sysadmserver.collector.action;
 
+import java.text.MessageFormat;
+import net.eiroca.library.core.Helper;
 import net.eiroca.library.server.ServerResponse;
 import net.eiroca.sysadm.tools.sysadmserver.SystemContext;
+import net.eiroca.sysadm.tools.sysadmserver.collector.MeasureCollector;
+import net.eiroca.sysadm.tools.sysadmserver.manager.CollectorManager;
 import net.eiroca.sysadm.tools.sysadmserver.util.Role;
 import spark.Request;
 import spark.Response;
@@ -29,17 +33,37 @@ public abstract class GenericAction implements Route {
   private static final ServerResponse PERMISSION_ERROR = new ServerResponse(-9998, "No permission to execute the action");
 
   protected String permission = null;
+  protected String name = null;
 
   public GenericAction(final String permAction) {
     permission = permAction;
+    name = getClass().getSimpleName();
   }
 
   @Override
-  public Object handle(final Request request, final Response response) throws Exception {
+  final public Object handle(final Request request, final Response response) throws Exception {
     if (!SystemContext.isLicenseValid()) { return GenericAction.LICENCE_ERROR; }
     if (!canRun(request)) { return GenericAction.PERMISSION_ERROR; }
-    return null;
+    long t = System.currentTimeMillis();
+    String err = "";
+    Object o = null;
+    String namespace = null;
+    try {
+      namespace = MeasureCollector.getNamespace(request);
+      o = execute(namespace, request, response);
+    }
+    catch (final Exception e) {
+      err = Helper.getExceptionAsString(e);
+      throw e;
+    }
+    finally {
+      t = System.currentTimeMillis() - t;
+      CollectorManager.logger.info(MessageFormat.format("{0}|{1}|{2}|{3}|{4}", name, permission, namespace, t, err));
+    }
+    return o;
   }
+
+  abstract public Object execute(String namespace, final Request request, final Response response) throws Exception;
 
   protected boolean canRun(final Request request) {
     if (permission == null) { return true; }
