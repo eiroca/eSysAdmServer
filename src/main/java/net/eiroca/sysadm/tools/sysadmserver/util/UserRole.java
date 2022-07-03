@@ -21,14 +21,14 @@ import java.util.Set;
 import net.eiroca.library.core.Helper;
 import net.eiroca.library.data.Tags;
 
-public class Role {
+public class UserRole {
 
   private static final String PROP_DESCRIPTION = "description";
   private final Tags permissions = new Tags();
   private final String name;
   private String description;
 
-  public Role(final String name, final Properties config) {
+  public UserRole(final String name, final Properties config) {
     this.name = name;
     readConf(config);
   }
@@ -36,8 +36,8 @@ public class Role {
   private void readConf(final Properties config) {
     final Set<String> keys = config.stringPropertyNames();
     for (final String key : keys) {
-      if (key.equals(Role.PROP_DESCRIPTION)) {
-        description = config.getProperty(Role.PROP_DESCRIPTION);
+      if (key.equals(UserRole.PROP_DESCRIPTION)) {
+        description = config.getProperty(UserRole.PROP_DESCRIPTION);
       }
       if (Helper.getBoolean(config.getProperty(key), true)) {
         addPermission(key);

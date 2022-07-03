@@ -42,6 +42,7 @@ import net.eiroca.sysadm.tools.sysadmserver.manager.CollectorManager;
 import net.eiroca.sysadm.tools.sysadmserver.manager.ISysAdmManager;
 import net.eiroca.sysadm.tools.sysadmserver.manager.MonitorManager;
 import net.eiroca.sysadm.tools.sysadmserver.manager.RoleManager;
+import net.eiroca.sysadm.tools.sysadmserver.manager.TraceManager;
 import net.eiroca.sysadm.tools.sysadmserver.scheduler.MyScheduler;
 import net.eiroca.sysadm.tools.sysadmserver.util.CredentialStore;
 import net.eiroca.sysadm.tools.sysadmserver.util.HostGroups;
@@ -63,12 +64,14 @@ public final class SystemContext {
   public static final ISysAdmManager managers[] = {
       new RoleManager(),
       new CollectorManager(),
-      new MonitorManager()
+      new MonitorManager(),
+      new TraceManager()
   };
 
   public static final RoleManager roleManager = (RoleManager)SystemContext.managers[0];
   public static final CollectorManager collectorManager = (CollectorManager)SystemContext.managers[1];
   public static final MonitorManager monitorManager = (MonitorManager)SystemContext.managers[2];
+  public static final TraceManager traceManager = (TraceManager)SystemContext.managers[3];
 
   public static void init(final String path) throws Exception {
     SystemContext.initLicense();

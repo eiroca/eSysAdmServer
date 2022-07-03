@@ -16,14 +16,10 @@
  **/
 package net.eiroca.sysadm.tools.sysadmserver.manager;
 
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Properties;
-import java.util.stream.Stream;
 import inet.ipaddr.IPAddressString;
 import net.eiroca.library.core.Helper;
 import net.eiroca.library.core.LibStr;
@@ -31,29 +27,21 @@ import net.eiroca.library.csv.CSV;
 import net.eiroca.library.csv.CSVData;
 import net.eiroca.sysadm.tools.sysadmserver.SystemContext;
 import net.eiroca.sysadm.tools.sysadmserver.util.MappingRule;
-import net.eiroca.sysadm.tools.sysadmserver.util.Role;
+import net.eiroca.sysadm.tools.sysadmserver.util.UserRole;
 import spark.Request;
 
-public class RoleManager extends GenericManager {
+public class RoleManager extends GenericRuleBasedManager<UserRole> {
 
   private static final String ESYSADM_TOKEN_HEADER = "X-eSysAdm-TOKEN";
 
   private static final String ANY_VALUE = "*";
 
-  private static final String ROLE_FILEEXT = ".role";
-
-  private final Map<String, Role> roles = new HashMap<>();
   private final List<MappingRule> mapping = new ArrayList<>();
 
   @Override
   public void start() throws Exception {
     super.start();
-    final Stream<Path> roleConfigs = Files.find(SystemContext.config.user_roles_path, 1, (filePath, fileAttr) -> {
-      final boolean ok = fileAttr.isRegularFile() && filePath.toString().endsWith(RoleManager.ROLE_FILEEXT);
-      return ok;
-    });
-    roleConfigs.forEach(path -> createRole(path));
-    roleConfigs.close();
+    loadRules(SystemContext.config.user_roles_path);
     readMapping();
   }
 
@@ -77,27 +65,12 @@ public class RoleManager extends GenericManager {
     }
   }
 
-  private void createRole(final Path confPath) {
-    try {
-      String name = confPath.getFileName().toString();
-      name = name.substring(0, name.length() - RoleManager.ROLE_FILEEXT.length());
-      if (LibStr.isNotEmptyOrNull(name)) {
-        final Properties config = Helper.loadProperties(confPath.toString(), false);
-        final Role role = new Role(name, config);
-        roles.put(name, role);
-      }
-    }
-    catch (final Exception e) {
-      SystemContext.logger.error(confPath + " Error: ", e);
-    }
-  }
-
   @Override
   public void stop() throws Exception {
     super.stop();
   }
 
-  public Role getRole(final Request request) {
+  public UserRole getRole(final Request request) {
     final IPAddressString req_ip = new IPAddressString(request.ip());
     final String req_token = request.headers(RoleManager.ESYSADM_TOKEN_HEADER);
     for (final MappingRule rule : mapping) {
@@ -111,6 +84,22 @@ public class RoleManager extends GenericManager {
       }
     }
     return roles.get(SystemContext.config.user_roles_default);
+  }
+
+  @Override
+  protected void createRule(final Path confPath) {
+    try {
+      String name = confPath.getFileName().toString();
+      name = name.substring(0, name.length() - GenericRuleBasedManager.RULE_FILEEXT.length());
+      if (LibStr.isNotEmptyOrNull(name)) {
+        final Properties config = Helper.loadProperties(confPath.toString(), false);
+        final UserRole role = new UserRole(name, config);
+        roles.put(name, role);
+      }
+    }
+    catch (final Exception e) {
+      SystemContext.logger.error(confPath + " Error: ", e);
+    }
   }
 
 }

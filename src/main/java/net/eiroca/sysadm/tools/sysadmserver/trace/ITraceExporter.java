@@ -14,31 +14,18 @@
  * If not, see <http://www.gnu.org/licenses/>.
  *
  **/
-package net.eiroca.sysadm.tools.sysadmserver.manager;
+package net.eiroca.sysadm.tools.sysadmserver.trace;
 
-import net.eiroca.sysadm.tools.sysadmserver.SystemContext;
+import net.eiroca.library.sysadm.monitoring.api.IContextEnabled;
 
-abstract public class GenericManager implements ISysAdmManager {
+public interface ITraceExporter extends IContextEnabled {
 
-  private boolean started = false;
+  public String getId();
 
-  @Override
-  public void start() throws Exception {
-    if (started) { throw new IllegalStateException(); }
-    SystemContext.logger.info("Star"
-        + "ting " + getClass().getCanonicalName());
-    started = true;
-  }
+  public boolean beginBulk();
 
-  @Override
-  public void stop() throws Exception {
-    if (!started) { throw new IllegalStateException(); }
-    started = false;
-  }
+  public void process(final String trace);
 
-  @Override
-  public boolean isStarted() {
-    return started;
-  }
+  public void endBulk();
 
 }

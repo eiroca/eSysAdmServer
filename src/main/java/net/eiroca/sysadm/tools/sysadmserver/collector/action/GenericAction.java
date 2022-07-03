@@ -20,9 +20,9 @@ import java.text.MessageFormat;
 import net.eiroca.library.core.Helper;
 import net.eiroca.library.server.ServerResponse;
 import net.eiroca.sysadm.tools.sysadmserver.SystemContext;
-import net.eiroca.sysadm.tools.sysadmserver.collector.MeasureCollector;
+import net.eiroca.sysadm.tools.sysadmserver.collector.GenericCollector;
 import net.eiroca.sysadm.tools.sysadmserver.manager.CollectorManager;
-import net.eiroca.sysadm.tools.sysadmserver.util.Role;
+import net.eiroca.sysadm.tools.sysadmserver.util.UserRole;
 import spark.Request;
 import spark.Response;
 import spark.Route;
@@ -49,7 +49,7 @@ public abstract class GenericAction implements Route {
     Object o = null;
     String namespace = null;
     try {
-      namespace = MeasureCollector.getNamespace(request);
+      namespace = GenericCollector.getNamespace(request);
       o = execute(namespace, request, response);
     }
     catch (final Exception e) {
@@ -67,7 +67,7 @@ public abstract class GenericAction implements Route {
 
   protected boolean canRun(final Request request) {
     if (permission == null) { return true; }
-    final Role role = SystemContext.roleManager.getRole(request);
+    final UserRole role = SystemContext.roleManager.getRole(request);
     if (role != null) { return role.isAllowed(permission); }
     return true; // for backward compatibility
   }
