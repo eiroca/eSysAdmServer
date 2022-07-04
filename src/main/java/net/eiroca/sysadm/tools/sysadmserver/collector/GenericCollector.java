@@ -14,31 +14,21 @@
  * If not, see <http://www.gnu.org/licenses/>.
  *
  **/
-package net.eiroca.sysadm.tools.sysadmserver.manager;
+package net.eiroca.sysadm.tools.sysadmserver.collector;
 
-import net.eiroca.sysadm.tools.sysadmserver.SystemContext;
+import spark.Request;
 
-abstract public class GenericManager implements ISysAdmManager {
+public class GenericCollector {
 
-  private boolean started = false;
+  public static final String PARAM_NAMESPACE = ":namespace";
+  public static final String DEFALT_NAMESPACE = "unknown";
 
-  @Override
-  public void start() throws Exception {
-    if (started) { throw new IllegalStateException(); }
-    SystemContext.logger.info("Star"
-        + "ting " + getClass().getCanonicalName());
-    started = true;
-  }
-
-  @Override
-  public void stop() throws Exception {
-    if (!started) { throw new IllegalStateException(); }
-    started = false;
-  }
-
-  @Override
-  public boolean isStarted() {
-    return started;
+  public static final String getNamespace(final Request request) {
+    String namespace = request.params(GenericCollector.PARAM_NAMESPACE);
+    if (namespace == null) {
+      namespace = GenericCollector.DEFALT_NAMESPACE;
+    }
+    return namespace;
   }
 
 }

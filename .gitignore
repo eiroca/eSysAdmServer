@@ -64,3 +64,4 @@ licenses/*.lic
 /prod/*
 /libs/*
 /data/*
+config/eSysAdmServer.lock

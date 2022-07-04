@@ -18,12 +18,8 @@ package net.eiroca.sysadm.tools.sysadmserver.collector;
 
 import java.util.concurrent.ConcurrentHashMap;
 import net.eiroca.library.metrics.Statistic;
-import spark.Request;
 
-public class MeasureCollector {
-
-  public static final String PARAM_NAMESPACE = ":namespace";
-  public static final String DEFALT_NAMESPACE = "unknown";
+public class MeasureCollector extends GenericCollector {
 
   private static MeasureCollector collector = null;
   private ConcurrentHashMap<String, ConcurrentHashMap<String, Statistic>> measures;
@@ -37,14 +33,6 @@ public class MeasureCollector {
 
   private MeasureCollector() {
     measures = new ConcurrentHashMap<>();
-  }
-
-  public static final String getNamespace(final Request request) {
-    String namespace = request.params(MeasureCollector.PARAM_NAMESPACE);
-    if (namespace == null) {
-      namespace = MeasureCollector.DEFALT_NAMESPACE;
-    }
-    return namespace;
   }
 
   public synchronized ConcurrentHashMap<String, Statistic> getMetrics(final String namespace) {
@@ -77,4 +65,5 @@ public class MeasureCollector {
     measures = new ConcurrentHashMap<>();
     return result;
   }
+
 }

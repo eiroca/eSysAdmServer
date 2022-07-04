@@ -21,6 +21,7 @@ import org.slf4j.Logger;
 import net.eiroca.library.core.Registry;
 import net.eiroca.library.system.Logs;
 import net.eiroca.sysadm.tools.sysadmserver.collector.MeasureCollector;
+import net.eiroca.sysadm.tools.sysadmserver.collector.TraceCollector;
 import net.eiroca.sysadm.tools.sysadmserver.collector.action.ActionDef.Method;
 import net.eiroca.sysadm.tools.sysadmserver.collector.action.ActionDef.Mode;
 
@@ -48,12 +49,17 @@ public class Actions extends Registry<ActionDef> {
     Actions.define("/rest/feed", FeedAction.NAME, Method.GET, Mode.JSON);
     Actions.define("/rest/feed", FeedAction.NAME, Method.POST, Mode.JSON);
     //
-    Actions.define("GET /api/v1/metric/" + MeasureCollector.PARAM_NAMESPACE, MetricAction.NAME, Method.GET, Mode.OBJECT);
-    Actions.define("GET /rest/metric/" + MeasureCollector.PARAM_NAMESPACE, MetricAction.NAME, Method.GET, Mode.OBJECT);
-    Actions.define("GET /rest/metric", MetricAction.NAME, Method.GET, Mode.OBJECT);
+    Actions.define("/api/v1/metric/" + MeasureCollector.PARAM_NAMESPACE, MetricAction.NAME, Method.GET, Mode.OBJECT);
+    Actions.define("/rest/metric/" + MeasureCollector.PARAM_NAMESPACE, MetricAction.NAME, Method.GET, Mode.OBJECT);
+    Actions.define("/rest/metric", MetricAction.NAME, Method.GET, Mode.OBJECT);
     //
     Actions.define("/api/v1/ingest", IngestAction.NAME, Method.POST, Mode.JSON);
     Actions.define("/rest/ingest", IngestAction.NAME, Method.POST, Mode.JSON);
+    //
+    Actions.define("/api/v1/log/" + TraceCollector.PARAM_NAMESPACE, TraceAction.NAME, Method.GET, Mode.JSON);
+    Actions.define("/api/v1/log/" + TraceCollector.PARAM_NAMESPACE, TraceAction.NAME, Method.POST, Mode.JSON);
+    Actions.define("/rest/log/" + TraceCollector.PARAM_NAMESPACE, TraceAction.NAME, Method.GET, Mode.JSON);
+    Actions.define("/rest/log/" + TraceCollector.PARAM_NAMESPACE, TraceAction.NAME, Method.POST, Mode.JSON);
   }
 
   public static List<String> getActionNames() {

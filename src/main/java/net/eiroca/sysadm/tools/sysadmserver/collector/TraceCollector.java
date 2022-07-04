@@ -14,31 +14,27 @@
  * If not, see <http://www.gnu.org/licenses/>.
  *
  **/
-package net.eiroca.sysadm.tools.sysadmserver.manager;
+package net.eiroca.sysadm.tools.sysadmserver.collector;
 
-import net.eiroca.sysadm.tools.sysadmserver.SystemContext;
+import net.eiroca.sysadm.tools.sysadmserver.manager.TraceManager;
 
-abstract public class GenericManager implements ISysAdmManager {
+public class TraceCollector extends GenericCollector {
 
-  private boolean started = false;
+  private static TraceCollector collector = null;
 
-  @Override
-  public void start() throws Exception {
-    if (started) { throw new IllegalStateException(); }
-    SystemContext.logger.info("Star"
-        + "ting " + getClass().getCanonicalName());
-    started = true;
+  public static synchronized TraceCollector getCollector() {
+    if (TraceCollector.collector == null) {
+      TraceCollector.collector = new TraceCollector();
+    }
+    return TraceCollector.collector;
   }
 
-  @Override
-  public void stop() throws Exception {
-    if (!started) { throw new IllegalStateException(); }
-    started = false;
+  private TraceCollector() {
   }
 
-  @Override
-  public boolean isStarted() {
-    return started;
+  public boolean process(String body) {
+    TraceManager.traceLogger.info(body);
+    return true;
   }
 
 }

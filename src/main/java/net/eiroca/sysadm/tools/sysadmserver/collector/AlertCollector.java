@@ -35,12 +35,8 @@ import net.eiroca.sysadm.tools.sysadmserver.SystemContext;
 import net.eiroca.sysadm.tools.sysadmserver.event.Alert;
 import net.eiroca.sysadm.tools.sysadmserver.event.EventSeverity;
 import net.eiroca.sysadm.tools.sysadmserver.manager.CollectorManager;
-import spark.Request;
 
-public class AlertCollector {
-
-  public static final String PARAM_NAMESPACE = ":namespace";
-  public static final String DEFALT_NAMESPACE = "unknown";
+public class AlertCollector extends GenericCollector {
 
   private static AlertCollector collector = null;
   private final ConcurrentHashMap<String, List<Alert>> alerts;
@@ -54,14 +50,6 @@ public class AlertCollector {
 
   private AlertCollector() {
     alerts = new ConcurrentHashMap<>();
-  }
-
-  public static final String getNamespace(final Request request) {
-    String namespace = request.params(AlertCollector.PARAM_NAMESPACE);
-    if (namespace == null) {
-      namespace = AlertCollector.DEFALT_NAMESPACE;
-    }
-    return namespace;
   }
 
   public synchronized List<Alert> getAlerts(final String namespace) {
