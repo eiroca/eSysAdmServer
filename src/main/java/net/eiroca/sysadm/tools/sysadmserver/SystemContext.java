@@ -18,6 +18,7 @@ package net.eiroca.sysadm.tools.sysadmserver;
 
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -70,12 +71,13 @@ public final class SystemContext {
   public static final CollectorManager collectorManager = (CollectorManager)SystemContext.managers[1];
   public static final MonitorManager monitorManager = (MonitorManager)SystemContext.managers[2];
 
-  public static void init(final String path) throws Exception {
+  public static void init(final Path configPath) throws Exception {
     SystemContext.initLicense();
     // Configuration
-    SystemContext.properties = LibFile.loadConfiguration(path + SystemConfig.ME + ".config", path + SystemConfig.ME + ".properties");
-    SystemContext.logger.debug("config:" + SystemContext.properties);
-    SystemContext.config.configPath = path;
+    SystemContext.properties = LibFile.loadConfiguration(configPath.toString());
+    SystemContext.config.configPath = configPath.getParent().toString();
+    if (SystemContext.config.configPath == null) SystemContext.config.configPath = "";
+    SystemContext.logger.debug("path: " + SystemContext.config.configPath + " config:" + SystemContext.properties);
     SystemContext.config.setup(SystemContext.properties);
     // Lock file
     SystemContext.logger.info("lockFile: " + SystemContext.config.lockfile.toString());

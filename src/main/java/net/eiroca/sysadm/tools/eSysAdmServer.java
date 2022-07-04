@@ -16,14 +16,17 @@
  **/
 package net.eiroca.sysadm.tools;
 
+import java.io.IOException;
 import java.net.URI;
-import java.nio.file.FileSystems;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import net.eiroca.library.core.Helper;
 import net.eiroca.library.dynatrace.exporter.DynatraceExporter;
 import net.eiroca.library.system.LibFile;
+import net.eiroca.sysadm.tools.sysadmserver.SystemConfig;
 import net.eiroca.sysadm.tools.sysadmserver.SystemContext;
 import net.eiroca.sysadm.tools.sysadmserver.manager.ISysAdmManager;
 
@@ -32,9 +35,10 @@ public class eSysAdmServer {
   private static final int SLEEPTIME = 5 * 1000;
 
   public static void main(final String[] args) {
-    DynatraceExporter.init();
-    final String confPath = eSysAdmServer.getConfigPath(args);
     try {
+      DynatraceExporter.init();
+      final Path confPath = eSysAdmServer.getConfigPath(args);
+      if (confPath == null) throw new IOException("Configuration File Missing");
       eSysAdmServer.listClassPath();
       SystemContext.init(confPath);
       for (final ISysAdmManager manager : SystemContext.managers) {
@@ -74,18 +78,22 @@ public class eSysAdmServer {
     }
   }
 
-  private static String getConfigPath(final String[] args) {
+  private static Path getConfigPath(final String[] args) {
     String confPath;
-    final String sep = FileSystems.getDefault().getSeparator();
+    String defConfFile = SystemConfig.ME + ".config";
     if (args.length > 0) {
       confPath = args[0];
-      if (!confPath.endsWith(sep)) {
-        confPath = confPath + sep;
+      Path path = Paths.get(confPath);
+      if (Files.isRegularFile(path)) return path;
+      if (Files.isDirectory(path)) {
+        path = Paths.get(path.toString(), defConfFile);
+        if (Files.isRegularFile(path)) return path;
       }
     }
     else {
-      confPath = "";
+      Path path = Paths.get(defConfFile);
+      if (Files.isRegularFile(path)) return path;
     }
-    return confPath;
+    return null;
   }
 }

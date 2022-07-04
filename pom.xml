@@ -14,6 +14,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <jdk.version>1.8</jdk.version>
     <eLib.version>0.0.10</eLib.version>
+    <log4j.version>2.17.1</log4j.version>
     <eLicense.version>0.0.10</eLicense.version>
     <eJDBCDrivers.version>0.0.10</eJDBCDrivers.version>
   </properties>
@@ -121,21 +122,20 @@
       <artifactId>eLibDynatrace</artifactId>
       <version>${eLib.version}</version>
     </dependency>
-    <!-- <dependency> <groupId>systemLibs</groupId> <artifactId>OracleJDBC</artifactId> <version>1.0</version> <scope>system</scope> <systemPath>${project.basedir}/libs/ojdbc6.jar</systemPath> </dependency> -->
     <dependency>
       <groupId>org.apache.logging.log4j</groupId>
       <artifactId>log4j-api</artifactId>
-      <version>2.14.1</version>
+      <version>${log4j.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.logging.log4j</groupId>
       <artifactId>log4j-core</artifactId>
-      <version>2.14.1</version>
+      <version>${log4j.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.logging.log4j</groupId>
       <artifactId>log4j-slf4j-impl</artifactId>
-      <version>2.14.1</version>
+      <version>${log4j.version}</version>
     </dependency>
   </dependencies>
 </project>
