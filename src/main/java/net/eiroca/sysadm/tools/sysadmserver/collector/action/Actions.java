@@ -34,9 +34,9 @@ public class Actions extends Registry<ActionDef> {
     Actions.define("/about", AboutAction.NAME, Method.GET, Mode.JSON);
     Actions.define("/rest/about", AboutAction.NAME, Method.GET, Mode.JSON);
     //
-    Actions.define("/api/v1/alert/" + MeasureCollector.PARAM_NAMESPACE, AlertAction.NAME, Method.GET, Mode.OBJECT);
-    Actions.define("/rest/alert/" + MeasureCollector.PARAM_NAMESPACE, AlertAction.NAME, Method.GET, Mode.OBJECT);
-    Actions.define("/rest/alert", AlertAction.NAME, Method.GET, Mode.OBJECT);
+    Actions.define("/api/v1/alert/" + MeasureCollector.PARAM_NAMESPACE, AlertAction.NAME, Method.POST, Mode.OBJECT);
+    Actions.define("/rest/alert/" + MeasureCollector.PARAM_NAMESPACE, AlertAction.NAME, Method.POST, Mode.OBJECT);
+    Actions.define("/rest/alert", AlertAction.NAME, Method.POST, Mode.OBJECT);
     //
     Actions.define("/api/v1/export/" + MeasureCollector.PARAM_NAMESPACE, ExportAction.NAME, Method.GET, Mode.OBJECT);
     Actions.define("/api/v1/export", ExportAction.NAME, Method.GET, Mode.OBJECT);

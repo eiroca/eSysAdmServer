@@ -17,7 +17,7 @@
 package net.eiroca.sysadm.tools.sysadmserver.collector.util;
 
 import net.eiroca.library.core.LibStr;
-import net.eiroca.library.server.ResultResponse;
+import net.eiroca.library.server.ServerResponse;
 import spark.ResponseTransformer;
 
 public class ResultTransformer implements ResponseTransformer {
@@ -30,7 +30,7 @@ public class ResultTransformer implements ResponseTransformer {
 
   @Override
   public String render(final Object model) {
-    final ResultResponse<?> response = (ResultResponse<?>)model;
+    final ServerResponse response = (ServerResponse)model;
     final StringBuilder sb = new StringBuilder(1024);
     sb.append("{");
     sb.append("\"status\":").append(response.status);
@@ -38,7 +38,7 @@ public class ResultTransformer implements ResponseTransformer {
       sb.append(",\"message\":");
       LibStr.encodeJson(sb, response.message);
     }
-    final Object result = response.getResult();
+    final Object result = response.getPayload();
     if (result != null) {
       sb.append(",\"result\":");
       if (quote) {

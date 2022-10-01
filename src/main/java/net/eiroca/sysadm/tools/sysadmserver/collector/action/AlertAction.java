@@ -33,12 +33,26 @@ public class AlertAction extends GenericAction {
 
   @Override
   public Object execute(final String namespace, final Request request, final Response response) throws Exception {
-    final ResultResponse<Object> result = new ResultResponse<>(0);
+    final ResultResponse<Object> result = new ResultResponse<>(-1, "Generic Error");
     final StringBuilder sb = new StringBuilder(1024);
     final String data = request.body();
-    final Alert alert = AlertCollector.getCollector().addAlertFormJson(namespace, data);
-    sb.append('{').append(alert.toString()).append('}');
-    result.setResult(sb.toString());
+    if (data == null) {
+      result.setStatus(-2);
+      result.setMessage("No data");
+    }
+    else {
+      final Alert alert = AlertCollector.getCollector().addAlertFormJson(namespace, data);
+      if (alert != null) {
+        sb.append(alert.toString());
+        result.setResult(sb.toString());
+        result.setStatus(0);
+        result.setMessage("OK");
+      }
+      else {
+        sb.append("{}");
+      }
+
+    }
     return result;
   }
 

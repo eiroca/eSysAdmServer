@@ -25,6 +25,7 @@ import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import net.eiroca.library.core.Helper;
+import net.eiroca.library.core.LibStr;
 import net.eiroca.library.license.api.License;
 import net.eiroca.library.license.api.LicenseManager;
 import net.eiroca.library.scheduler.DelayPolicy;
@@ -79,7 +80,14 @@ public final class SystemContext {
     // Configuration
     SystemContext.properties = LibFile.loadConfiguration(configPath.toString());
     SystemContext.config.configPath = configPath.getParent().toString();
-    if (SystemContext.config.configPath == null) SystemContext.config.configPath = "";
+    if (LibStr.isEmptyOrNull(SystemContext.config.configPath)) {
+      SystemContext.config.configPath = "";
+    }
+    else {
+      if (!SystemContext.config.configPath.endsWith(Helper.FS)) {
+        SystemContext.config.configPath += Helper.FS;
+      }
+    }
     SystemContext.logger.debug("path: " + SystemContext.config.configPath + " config:" + SystemContext.properties);
     SystemContext.config.setup(SystemContext.properties);
     // Lock file

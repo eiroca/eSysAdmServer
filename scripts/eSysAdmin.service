@@ -1,0 +1,25 @@
+[Unit]
+Description=eSysAdmin Agent
+After=syslog.target network.target
+
+[Service]
+
+Type=forking
+
+User=apmmon
+Group=suppappl
+
+# Killing the service using systemd causes Java to exit with status 143. This is OK.
+SuccessExitStatus=143
+
+# Run ExecStartPre with root-permissions
+PermissionsStartOnly=true
+
+Restart=always
+
+# This specifies the command line to use
+ExecStart=/opt/SP/app/ETL/eSysAdm/start.sh
+ExecStop=/bin/kill -15 $MAINPID
+
+[Install]
+WantedBy=multi-user.target

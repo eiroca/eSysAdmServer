@@ -43,7 +43,11 @@ public abstract class GenericAction implements Route {
   @Override
   final public Object handle(final Request request, final Response response) throws Exception {
     if (!SystemContext.isLicenseValid()) { return GenericAction.LICENCE_ERROR; }
-    if (!canRun(request)) { return GenericAction.PERMISSION_ERROR; }
+    UserRole role = canRun(request);
+    if (role == null) { return GenericAction.PERMISSION_ERROR; }
+    String roleName = role.getName();
+    String thread = Thread.currentThread().getName();
+    CollectorManager.logger.debug(MessageFormat.format("{0}|{1}|{2}|START", name, roleName, thread));
     long t = System.currentTimeMillis();
     String err = "";
     Object o = null;
@@ -58,18 +62,23 @@ public abstract class GenericAction implements Route {
     }
     finally {
       t = System.currentTimeMillis() - t;
-      CollectorManager.logger.info(MessageFormat.format("{0}|{1}|{2}|{3}|{4}", name, permission, namespace, t, err));
+      CollectorManager.logger.info(MessageFormat.format("{0}|{1}|{2}|{3}|{4}", name, roleName, namespace, t, err));
+      CollectorManager.logger.debug(MessageFormat.format("{0}|{1}|{2}|END", name, roleName, thread));
     }
     return o;
   }
 
   abstract public Object execute(String namespace, final Request request, final Response response) throws Exception;
 
-  protected boolean canRun(final Request request) {
-    if (permission == null) { return true; }
-    final UserRole role = SystemContext.roleManager.getRole(request);
-    if (role != null) { return role.isAllowed(permission); }
-    return true; // for backward compatibility
+  protected UserRole canRun(final Request request) {
+    if (permission == null) { return null; }
+    UserRole role = SystemContext.roleManager.getRole(request);
+    if (role != null) {
+      if (!role.isAllowed(permission)) {
+        role = null;
+      }
+    }
+    return role;
   }
 
 }

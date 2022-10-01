@@ -1,7 +1,10 @@
 # collector permissions
 description = No privileges
-collector.action.about = true
-collector.action.alert = false
-collector.action.feed = false
+
+collector.action.about  = true
+collector.action.alert  = false
+collector.action.feed   = false
+collector.action.ingest = false
+collector.action.trace  = false
 collector.action.export = false
 collector.action.metric = false

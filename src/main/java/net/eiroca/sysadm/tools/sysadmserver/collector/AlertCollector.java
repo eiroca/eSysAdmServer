@@ -19,6 +19,7 @@ package net.eiroca.sysadm.tools.sysadmserver.collector;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.SQLIntegrityConstraintViolationException;
+import java.text.MessageFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -63,6 +64,7 @@ public class AlertCollector extends GenericCollector {
 
   public synchronized Alert addAlertFormJson(final String namespace, final String data) {
     Alert alert = null;
+    CollectorManager.logger.debug("data: " + data);
     if (data != null) {
       JsonObject json = null;
       try {
@@ -92,7 +94,7 @@ public class AlertCollector extends GenericCollector {
             if (host != null) {
               alert.tag.add("host", host);
             }
-            CollectorManager.logger.trace("alert: " + alert);
+            CollectorManager.logger.trace("alert: {0}", alert);
             try {
               flush(alert);
             }
@@ -191,9 +193,9 @@ public class AlertCollector extends GenericCollector {
           if (conn == null) {
             CollectorManager.logger.debug("Getting a new connection to DB");
             conn = SystemContext.alertCollectorConfig.dbConfig.getConnection();
-            CollectorManager.logger.debug("err=" + SystemContext.alertCollectorConfig.dbConfig.getLastError());
+            CollectorManager.logger.debug("last_error: " + SystemContext.alertCollectorConfig.dbConfig.getLastError());
           }
-          CollectorManager.logger.debug("Inserting: " + sb.toString());
+          CollectorManager.logger.debug(MessageFormat.format("Inserting {0}: {1} ", SystemContext.alertCollectorConfig.tableName, sb.toString()));
           if (conn != null) {
             LibDB.insertRecord(conn, SystemContext.alertCollectorConfig.tableName, fields, vals.toArray(), SystemContext.alertCollectorConfig.maxSize);
           }
