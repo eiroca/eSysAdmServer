@@ -45,4 +45,5 @@ abstract public class GenericRuleBasedManager<RuleType> extends GenericManager {
 
   protected abstract void createRule(Path confPath);
 
-}
+}547
+
