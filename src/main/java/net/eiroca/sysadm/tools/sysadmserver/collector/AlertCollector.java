@@ -193,16 +193,20 @@ public class AlertCollector extends GenericCollector {
           if (conn == null) {
             CollectorManager.logger.debug("Getting a new connection to DB");
             conn = SystemContext.alertCollectorConfig.dbConfig.getConnection();
-            CollectorManager.logger.debug("last_error: " + SystemContext.alertCollectorConfig.dbConfig.getLastError());
+            CollectorManager.logger.debug((conn != null) ? "Connection: OK" : "Connection error: " + SystemContext.alertCollectorConfig.dbConfig.getLastError());
           }
-          CollectorManager.logger.debug(MessageFormat.format("Inserting {0}: {1} ", SystemContext.alertCollectorConfig.tableName, sb.toString()));
           if (conn != null) {
+            CollectorManager.logger.debug(MessageFormat.format("Inserting {0}: {1} ", SystemContext.alertCollectorConfig.tableName, sb.toString()));
             LibDB.insertRecord(conn, SystemContext.alertCollectorConfig.tableName, fields, vals.toArray(), SystemContext.alertCollectorConfig.maxSize);
+          }
+          else {
+            CollectorManager.logger.debug("No connection for inserting");
           }
         }
       }
       catch (final SQLIntegrityConstraintViolationException e) {
         CollectorManager.logger.warn("SQLIntegrityConstraintViolationException");
+        CollectorManager.logger.debug("SQLException", e);
       }
       catch (final SQLException e) {
         CollectorManager.logger.error("SQLException", e);

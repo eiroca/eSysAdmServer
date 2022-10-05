@@ -49,7 +49,7 @@ public abstract class GenericAction implements Route {
     String thread = Thread.currentThread().getName();
     CollectorManager.logger.debug(MessageFormat.format("{0}|{1}|{2}|START", name, roleName, thread));
     long t = System.currentTimeMillis();
-    String err = "";
+    String err = "-";
     Object o = null;
     String namespace = null;
     try {
@@ -62,7 +62,7 @@ public abstract class GenericAction implements Route {
     }
     finally {
       t = System.currentTimeMillis() - t;
-      CollectorManager.logger.info(MessageFormat.format("{0}|{1}|{2}|{3}|{4}", name, roleName, namespace, t, err));
+      CollectorManager.logger.info(MessageFormat.format("{0}|{1}|{2}|{3,number,#}|{4}", name, roleName, namespace, t, err));
       CollectorManager.logger.debug(MessageFormat.format("{0}|{1}|{2}|END", name, roleName, thread));
     }
     return o;
