@@ -38,6 +38,11 @@ public class Event implements Comparable<Event> {
     start = new Date();
   }
 
+  public Event(String id, Date start) {
+    this.id = id;
+    this.start = start;
+  }
+
   @Override
   public String toString() {
     return GsonUtil.toJSON(this);

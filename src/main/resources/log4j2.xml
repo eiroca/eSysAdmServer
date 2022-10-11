@@ -45,6 +45,13 @@
          </Policies>
          <DefaultRolloverStrategy max="20" />
       </RollingFile>
+      <RollingFile name="Alerts" fileName="${logpath}Alerts.log" filePattern="${logpath}Alerts-%i.log.zip">
+         <PatternLayout pattern="%m%n" />
+         <Policies>
+            <SizeBasedTriggeringPolicy size="100MB" />
+         </Policies>
+         <DefaultRolloverStrategy max="20" />
+      </RollingFile>
       <RollingFile name="Traces" fileName="${logpath}Traces.log" filePattern="${logpath}Traces-%i.log.zip">
          <PatternLayout pattern="%m%n" />
          <Policies>
@@ -59,6 +66,9 @@
       </logger>
       <logger name="Metrics" additivity="false" level="info">
          <appender-ref ref="Metrics" />
+      </logger>
+      <logger name="Alerts" additivity="false" level="info">
+         <appender-ref ref="Alerts" />
       </logger>
       <logger name="Traces" additivity="false" level="info">
          <appender-ref ref="Traces" />

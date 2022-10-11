@@ -26,14 +26,17 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
+import org.slf4j.Logger;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import net.eiroca.library.core.Helper;
 import net.eiroca.library.db.LibDB;
+import net.eiroca.library.system.Logs;
 import net.eiroca.sysadm.tools.sysadmserver.SystemContext;
 import net.eiroca.sysadm.tools.sysadmserver.event.Alert;
+import net.eiroca.sysadm.tools.sysadmserver.event.AlertState;
 import net.eiroca.sysadm.tools.sysadmserver.event.EventSeverity;
 import net.eiroca.sysadm.tools.sysadmserver.manager.CollectorManager;
 
@@ -41,6 +44,7 @@ public class AlertCollector extends GenericCollector {
 
   private static AlertCollector collector = null;
   private final ConcurrentHashMap<String, List<Alert>> alerts;
+  public static final Logger alertLogger = Logs.getLogger("Alerts");
 
   public static synchronized AlertCollector getCollector() {
     if (AlertCollector.collector == null) {
@@ -79,20 +83,32 @@ public class AlertCollector extends GenericCollector {
             final Date start = getDate(event, "start", null);
             final Date end = getDate(event, "end", null);
             final String message = get(event, "message", null);
-            final String severity = get(event, "severity", "INFO");
+            final String severity = get(event, "severity", "SEVERE");
             final String host = get(event, "host", null);
+            final String application = get(event, "application", null);
+            final String module = get(event, "module", null);
             alert = new Alert();
             alert.start = start;
             alert.end = end;
+            alert.state = AlertState.NEW;
+            if (end != null) {
+              alert.state = AlertState.CLOSED;
+            }
             alert.message = message;
             try {
-              alert.severity = severity != null ? EventSeverity.valueOf(severity) : EventSeverity.INFO;
+              alert.severity = severity != null ? EventSeverity.valueOf(severity) : EventSeverity.SEVERE;
             }
             catch (final IllegalArgumentException e) {
               alert.severity = EventSeverity.WARN;
             }
             if (host != null) {
               alert.tag.add("host", host);
+            }
+            if (application != null) {
+              alert.tag.add("application", application);
+            }
+            if (module != null) {
+              alert.tag.add("module", module);
             }
             CollectorManager.logger.trace("alert: {0}", alert);
             try {
@@ -146,8 +162,46 @@ public class AlertCollector extends GenericCollector {
   private Connection conn = null;
 
   private void flush(final Alert a) {
-    final List<Object> vals = new ArrayList<>();
     CollectorManager.logger.debug("flushing: " + a);
+    if ((SystemContext.alertCollectorConfig.tableName != null) && (SystemContext.alertCollectorConfig.tableFields != null)) {
+      exportIncidentDB(a);
+    }
+    if (SystemContext.alertCollectorConfig.log) {
+      String fmt = null;
+      switch (a.state) {
+        case NEW:
+          fmt = SystemContext.alertCollectorConfig.newFormat;
+          break;
+        case INPROGRESS:
+          fmt = SystemContext.alertCollectorConfig.inprogressFormat;
+          break;
+        case CLOSED:
+          fmt = SystemContext.alertCollectorConfig.closedFormat;
+          break;
+      }
+      if (fmt != null) {
+        String msg = MessageFormat.format(fmt, a.state, a.start, a.end, a.message, a.tag.tagValue("application"), a.tag.tagValue("host"));
+        switch (a.severity) {
+          case CRITICAL:
+            alertLogger.error(msg);
+            break;
+          case SEVERE:
+            alertLogger.error(msg);
+            break;
+          case WARN:
+            alertLogger.warn(msg);
+            break;
+          case INFO:
+            alertLogger.info(msg);
+            break;
+        }
+      }
+    }
+    count++;
+  }
+
+  private void exportIncidentDB(final Alert a) {
+    final List<Object> vals = new ArrayList<>();
     vals.clear();
     vals.add(System.currentTimeMillis() + "." + count);
     final String state = (a.end != null) ? "CLOSED" : "OPEN";
@@ -170,13 +224,8 @@ public class AlertCollector extends GenericCollector {
         break;
     }
     vals.add(a.tag.tagValue("host"));
-    exportIncident(vals);
-    count++;
-  }
-
-  private void exportIncident(final List<Object> vals) {
     final String[] fields = SystemContext.alertCollectorConfig.tableFields;
-    if ((vals == null) || (fields == null) || (vals.size() != fields.length)) {
+    if (vals.size() != fields.length) {
       final StringBuilder sb = new StringBuilder();
       Helper.writeList(sb, vals);
       CollectorManager.logger.error("Invalid data: " + sb);

@@ -1,5 +1,4 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <name>eSysAdmServer</name>
   <artifactId>eSysAdmServer</artifactId>
@@ -57,13 +56,13 @@
             <exclude>**/placeholder</exclude>
           </excludes>
           <archive>
+            <addMavenDescriptor>true</addMavenDescriptor>
             <manifestEntries>
               <Build-Jdk>${jdk.version}</Build-Jdk>
               <Implementation-Title>${project.name}</Implementation-Title>
               <Implementation-Version>${project.version}</Implementation-Version>
-              <Specification-Title>${project.name} Library</Specification-Title>
+              <Specification-Title>${project.name}</Specification-Title>
               <Specification-Version>${project.version}</Specification-Version>
-              <!-- <Class-Path>libs/ojdbc8-${oracle.version}.jar</Class-Path> -->
             </manifestEntries>
             <manifest>
               <addClasspath>true</addClasspath>
