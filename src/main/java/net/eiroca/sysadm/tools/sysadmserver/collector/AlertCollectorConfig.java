@@ -30,20 +30,21 @@ import net.eiroca.sysadm.tools.sysadmserver.SystemContext;
 public class AlertCollectorConfig {
 
   private static final String PREFIX_ALERT = "alert.export.";
-  private static final String PREFIX_ALERT_DB = "DB";
-  private static final String PREFIX_ALERT_LOG = "LOG";
-  private static final String VAR_PREFIX = null;
+  private static final String PREFIX_ALERT_DB = "DB.";
+  private static final String PREFIX_ALERT_LOG = "LOG.";
+  private static final String VAR_DB_PREFIX = null;
+  private static final String VAR_LOG_PREFIX = "log_";
 
-  protected static ContextParameters config = new ContextParameters();
+  protected static transient ContextParameters config = new ContextParameters();
   //
-  protected static IntegerParameter _maxSize = new IntegerParameter(AlertCollectorConfig.config, "maxSize", 250);
-  protected static StringParameter _tableName = new StringParameter(AlertCollectorConfig.config, "tableName", null);
-  protected static ListParameter _tableFields = new ListParameter(AlertCollectorConfig.config, "tableFields", null);
+  protected static transient IntegerParameter _maxSize = new IntegerParameter(AlertCollectorConfig.config, "maxSize", 250);
+  protected static transient StringParameter _tableName = new StringParameter(AlertCollectorConfig.config, "tableName", null);
+  protected static transient ListParameter _tableFields = new ListParameter(AlertCollectorConfig.config, "tableFields", null);
   //
-  protected static BooleanParameter _logEnabled = new BooleanParameter(AlertCollectorConfig.config, "log", true);
-  protected static StringParameter _newFormat = new StringParameter(AlertCollectorConfig.config, "newFormat", "OPEN");
-  protected static StringParameter _inprogressFormat = new StringParameter(AlertCollectorConfig.config, "inprogressFormat", "OPEN");
-  protected static StringParameter _closedFormat = new StringParameter(AlertCollectorConfig.config, "closedFormat", "CLOSE");
+  protected static transient BooleanParameter _logEnabled = new BooleanParameter(AlertCollectorConfig.config, "enabled", true);
+  protected static transient StringParameter _newFormat = new StringParameter(AlertCollectorConfig.config, "newFormat", "OPEN");
+  protected static transient StringParameter _inprogressFormat = new StringParameter(AlertCollectorConfig.config, "inprogressFormat", "UPDATE");
+  protected static transient StringParameter _closedFormat = new StringParameter(AlertCollectorConfig.config, "closedFormat", "CLOSE");
 
   // DB Export
   public int maxSize;
@@ -52,10 +53,10 @@ public class AlertCollectorConfig {
   public final DBConfig dbConfig = new DBConfig(null);
 
   // Log Export
-  public Boolean log;
-  public String newFormat;
-  public String inprogressFormat;
-  public String closedFormat;
+  public Boolean log_enabled;
+  public String log_newFormat;
+  public String log_inprogressFormat;
+  public String log_closedFormat;
 
   public AlertCollectorConfig() {
   }
@@ -63,14 +64,14 @@ public class AlertCollectorConfig {
   public void setup(final Properties params) throws Exception {
     SystemContext.logger.debug("Context: " + params);
     //
-    AlertCollectorConfig.config.loadConfig(params, AlertCollectorConfig.PREFIX_ALERT + "." + PREFIX_ALERT_DB);
-    AlertCollectorConfig.config.saveConfig(this, AlertCollectorConfig.VAR_PREFIX, true, true);
-    final ServerContext context = new ServerContext(AlertCollectorConfig.PREFIX_ALERT, SystemContext.getSubConfig(params, AlertCollectorConfig.PREFIX_ALERT));
+    AlertCollectorConfig.config.loadConfig(params, AlertCollectorConfig.PREFIX_ALERT + PREFIX_ALERT_DB);
+    AlertCollectorConfig.config.saveConfig(this, AlertCollectorConfig.VAR_DB_PREFIX, true, true);
+    final ServerContext context = new ServerContext(AlertCollectorConfig.PREFIX_ALERT + PREFIX_ALERT_DB, SystemContext.getSubConfig(params, AlertCollectorConfig.PREFIX_ALERT + PREFIX_ALERT_DB));
     context.setCredentialProvider(SystemContext.keyStore);
     dbConfig.setup(context);
     //
-    AlertCollectorConfig.config.loadConfig(params, AlertCollectorConfig.PREFIX_ALERT + "." + PREFIX_ALERT_LOG);
-    AlertCollectorConfig.config.saveConfig(this, AlertCollectorConfig.VAR_PREFIX, true, true);
+    AlertCollectorConfig.config.loadConfig(params, AlertCollectorConfig.PREFIX_ALERT + PREFIX_ALERT_LOG);
+    AlertCollectorConfig.config.saveConfig(this, AlertCollectorConfig.VAR_LOG_PREFIX, true, true);
     //
     SystemContext.logger.info("AlertCollector.config: " + this);
     SystemContext.logger.info("AlertCollector.DBConfig: " + dbConfig);
@@ -79,7 +80,8 @@ public class AlertCollectorConfig {
 
   @Override
   public String toString() {
-    return "AlertCollectorConfig [maxSize=" + maxSize + ", tableName=" + tableName + ", tableFields=" + Arrays.toString(tableFields) + "]";
+    return "AlertCollectorConfig [maxSize=" + maxSize + ", tableName=" + tableName + ", tableFields=" + Arrays.toString(tableFields) + ", dbConfig=" + dbConfig + ", log_enabled=" + log_enabled + ", log_newFormat=" + log_newFormat + ", log_inprogressFormat=" + log_inprogressFormat
+        + ", log_closedFormat=" + log_closedFormat + "]";
   }
 
 }

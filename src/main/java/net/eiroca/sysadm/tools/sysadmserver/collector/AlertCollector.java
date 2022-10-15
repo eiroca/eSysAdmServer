@@ -66,6 +66,10 @@ public class AlertCollector extends GenericCollector {
     return space;
   }
 
+  private static final String[] METADATA = {
+      "application", "module", "component", "host"
+  };
+
   public synchronized Alert addAlertFormJson(final String namespace, final String data) {
     Alert alert = null;
     CollectorManager.logger.debug("data: " + data);
@@ -82,12 +86,11 @@ public class AlertCollector extends GenericCollector {
             CollectorManager.logger.trace("event: " + event);
             final Date start = getDate(event, "start", null);
             final Date end = getDate(event, "end", null);
+            final String id = get(event, "id", null);
             final String message = get(event, "message", null);
             final String severity = get(event, "severity", "SEVERE");
-            final String host = get(event, "host", null);
-            final String application = get(event, "application", null);
-            final String module = get(event, "module", null);
             alert = new Alert();
+            if (id != null) alert.id = id;
             alert.start = start;
             alert.end = end;
             alert.state = AlertState.NEW;
@@ -101,14 +104,12 @@ public class AlertCollector extends GenericCollector {
             catch (final IllegalArgumentException e) {
               alert.severity = EventSeverity.WARN;
             }
-            if (host != null) {
-              alert.tag.add("host", host);
-            }
-            if (application != null) {
-              alert.tag.add("application", application);
-            }
-            if (module != null) {
-              alert.tag.add("module", module);
+            for (String key : METADATA) {
+              final String val = get(event, key, null);
+              if (val != null) {
+                alert.tag.add(key, val);
+              }
+
             }
             CollectorManager.logger.trace("alert: {0}", alert);
             try {
@@ -166,21 +167,31 @@ public class AlertCollector extends GenericCollector {
     if ((SystemContext.alertCollectorConfig.tableName != null) && (SystemContext.alertCollectorConfig.tableFields != null)) {
       exportIncidentDB(a);
     }
-    if (SystemContext.alertCollectorConfig.log) {
+    if (SystemContext.alertCollectorConfig.log_enabled) {
       String fmt = null;
       switch (a.state) {
         case NEW:
-          fmt = SystemContext.alertCollectorConfig.newFormat;
+          fmt = SystemContext.alertCollectorConfig.log_newFormat;
           break;
         case INPROGRESS:
-          fmt = SystemContext.alertCollectorConfig.inprogressFormat;
+          fmt = SystemContext.alertCollectorConfig.log_inprogressFormat;
           break;
         case CLOSED:
-          fmt = SystemContext.alertCollectorConfig.closedFormat;
+          fmt = SystemContext.alertCollectorConfig.log_closedFormat;
           break;
       }
       if (fmt != null) {
-        String msg = MessageFormat.format(fmt, a.state, a.start, a.end, a.message, a.tag.tagValue("application"), a.tag.tagValue("host"));
+        String msg = MessageFormat.format(fmt, //
+            a.id, // 0
+            a.state, // 1
+            a.start, // 2
+            a.end, // 3
+            a.message, // 4
+            a.tag.tagValue(METADATA[0]), // 5 "application"
+            a.tag.tagValue(METADATA[1]), // 6 "module"
+            a.tag.tagValue(METADATA[2]), // 7 "component"
+            a.tag.tagValue(METADATA[3]) //  8 "host"
+        );
         switch (a.severity) {
           case CRITICAL:
             alertLogger.error(msg);
