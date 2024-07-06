@@ -17,6 +17,7 @@
 package net.eiroca.sysadm.tools.sysadmserver.manager;
 
 import java.nio.file.Path;
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
@@ -61,7 +62,9 @@ public class RoleManager extends GenericRuleBasedManager<UserRole> {
         token = str;
       }
       final String role = data[2];
-      mapping.add(new MappingRule(network, token, role));
+      MappingRule rule = new MappingRule(network, token, role);
+      mapping.add(rule);
+      CollectorManager.logger.debug(rule.toString());
     }
   }
 
@@ -76,6 +79,7 @@ public class RoleManager extends GenericRuleBasedManager<UserRole> {
     for (final MappingRule rule : mapping) {
       final IPAddressString network = rule.getNetwork();
       final String token = rule.getToken();
+      CollectorManager.logger.debug(MessageFormat.format("Checking {0}/{1} with {2}/{3}", req_ip, req_token, network, token));
       if ((network == null) || (network.contains(req_ip))) {
         if ((token == null) || (token.equals(req_token))) {
           final String role = rule.getRole();

@@ -44,7 +44,12 @@ public abstract class GenericAction implements Route {
   final public Object handle(final Request request, final Response response) throws Exception {
     if (!SystemContext.isLicenseValid()) { return GenericAction.LICENCE_ERROR; }
     UserRole role = canRun(request);
-    if (role == null) { return GenericAction.PERMISSION_ERROR; }
+    String ip = request.ip();
+    if (ip == null) ip = "-";
+    if (role == null) {
+      CollectorManager.logger.warn(MessageFormat.format("{0}|{1}|-|-|-|PERMISSION_ERROR", name, ip));
+      return GenericAction.PERMISSION_ERROR;
+    }
     String roleName = role.getName();
     String thread = Thread.currentThread().getName();
     CollectorManager.logger.debug(MessageFormat.format("{0}|{1}|{2}|START", name, roleName, thread));
@@ -62,7 +67,7 @@ public abstract class GenericAction implements Route {
     }
     finally {
       t = System.currentTimeMillis() - t;
-      CollectorManager.logger.info(MessageFormat.format("{0}|{1}|{2}|{3,number,#}|{4}", name, roleName, namespace, t, err));
+      CollectorManager.logger.info(MessageFormat.format("{0}|{1}|{2}|{3}|{4,number,#}|{5}", name, ip, roleName, namespace, t, err));
       CollectorManager.logger.debug(MessageFormat.format("{0}|{1}|{2}|END", name, roleName, thread));
     }
     return o;

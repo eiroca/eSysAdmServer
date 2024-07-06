@@ -24,6 +24,11 @@ public class MappingRule {
   String token;
   String role;
 
+  @Override
+  public String toString() {
+    return "MappingRule [network=" + network + ", token=" + token + ", role=" + role + "]";
+  }
+
   public IPAddressString getNetwork() {
     return network;
   }
