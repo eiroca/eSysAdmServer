@@ -65,3 +65,6 @@ licenses/*.lic
 /libs/*
 /data/*
 config/eSysAdmServer.lock
+
+**/.classpath
+**/.project
