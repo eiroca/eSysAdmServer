@@ -164,54 +164,60 @@ public class AlertCollector extends GenericCollector {
 
   private void flush(final Alert a) {
     CollectorManager.logger.debug("flushing: " + a);
-    if ((SystemContext.alertCollectorConfig.tableName != null) && (SystemContext.alertCollectorConfig.tableFields != null)) {
+    if (!SystemContext.alertCollectorConfig.db_enabled) {
       exportIncidentDB(a);
     }
     if (SystemContext.alertCollectorConfig.log_enabled) {
-      String fmt = null;
-      switch (a.state) {
-        case NEW:
-          fmt = SystemContext.alertCollectorConfig.log_newFormat;
-          break;
-        case INPROGRESS:
-          fmt = SystemContext.alertCollectorConfig.log_inprogressFormat;
-          break;
-        case CLOSED:
-          fmt = SystemContext.alertCollectorConfig.log_closedFormat;
-          break;
-      }
-      if (fmt != null) {
-        String msg = MessageFormat.format(fmt, //
-            a.id, // 0
-            a.state, // 1
-            a.start, // 2
-            a.end, // 3
-            a.message, // 4
-            a.tag.tagValue(METADATA[0]), // 5 "application"
-            a.tag.tagValue(METADATA[1]), // 6 "module"
-            a.tag.tagValue(METADATA[2]), // 7 "component"
-            a.tag.tagValue(METADATA[3]) //  8 "host"
-        );
-        switch (a.severity) {
-          case CRITICAL:
-            alertLogger.error(msg);
-            break;
-          case SEVERE:
-            alertLogger.error(msg);
-            break;
-          case WARN:
-            alertLogger.warn(msg);
-            break;
-          case INFO:
-            alertLogger.info(msg);
-            break;
-        }
-      }
+      exporIncidentLog(a);
     }
     count++;
   }
 
+  private void exporIncidentLog(Alert a) {
+    String fmt = null;
+    switch (a.state) {
+      case NEW:
+        fmt = SystemContext.alertCollectorConfig.log_newFormat;
+        break;
+      case INPROGRESS:
+        fmt = SystemContext.alertCollectorConfig.log_inprogressFormat;
+        break;
+      case CLOSED:
+        fmt = SystemContext.alertCollectorConfig.log_closedFormat;
+        break;
+    }
+    if (fmt != null) {
+      String msg = MessageFormat.format(fmt, //
+          a.id, // 0
+          a.state, // 1
+          a.start, // 2
+          a.end, // 3
+          a.message, // 4
+          a.tag.tagValue(METADATA[0]), // 5 "application"
+          a.tag.tagValue(METADATA[1]), // 6 "module"
+          a.tag.tagValue(METADATA[2]), // 7 "component"
+          a.tag.tagValue(METADATA[3]) //  8 "host"
+      );
+      switch (a.severity) {
+        case CRITICAL:
+          alertLogger.error(msg);
+          break;
+        case SEVERE:
+          alertLogger.error(msg);
+          break;
+        case WARN:
+          alertLogger.warn(msg);
+          break;
+        case INFO:
+          alertLogger.info(msg);
+          break;
+      }
+    }
+  }
+
   private void exportIncidentDB(final Alert a) {
+    if ((SystemContext.alertCollectorConfig.db_tableName == null) || (SystemContext.alertCollectorConfig.db_tableFields == null)) return;
+
     final List<Object> vals = new ArrayList<>();
     vals.clear();
     vals.add(System.currentTimeMillis() + "." + count);
@@ -235,7 +241,7 @@ public class AlertCollector extends GenericCollector {
         break;
     }
     vals.add(a.tag.tagValue("host"));
-    final String[] fields = SystemContext.alertCollectorConfig.tableFields;
+    final String[] fields = SystemContext.alertCollectorConfig.db_tableFields;
     if (vals.size() != fields.length) {
       final StringBuilder sb = new StringBuilder();
       Helper.writeList(sb, vals);
@@ -256,8 +262,8 @@ public class AlertCollector extends GenericCollector {
             CollectorManager.logger.debug((conn != null) ? "Connection: OK" : "Connection error: " + SystemContext.alertCollectorConfig.dbConfig.getLastError());
           }
           if (conn != null) {
-            CollectorManager.logger.debug(MessageFormat.format("Inserting {0}: {1} ", SystemContext.alertCollectorConfig.tableName, sb.toString()));
-            LibDB.insertRecord(conn, SystemContext.alertCollectorConfig.tableName, fields, vals.toArray(), SystemContext.alertCollectorConfig.maxSize);
+            CollectorManager.logger.debug(MessageFormat.format("Inserting {0}: {1} ", SystemContext.alertCollectorConfig.db_tableName, sb.toString()));
+            LibDB.insertRecord(conn, SystemContext.alertCollectorConfig.db_tableName, fields, vals.toArray(), SystemContext.alertCollectorConfig.db_maxSize);
           }
           else {
             CollectorManager.logger.debug("No connection for inserting");
@@ -275,4 +281,5 @@ public class AlertCollector extends GenericCollector {
       }
     }
   }
+
 }

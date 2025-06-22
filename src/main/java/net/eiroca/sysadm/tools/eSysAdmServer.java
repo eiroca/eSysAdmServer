@@ -24,7 +24,6 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import net.eiroca.library.core.Helper;
-import net.eiroca.library.dynatrace.exporter.DynatraceExporter;
 import net.eiroca.library.system.LibFile;
 import net.eiroca.sysadm.tools.sysadmserver.SystemConfig;
 import net.eiroca.sysadm.tools.sysadmserver.SystemContext;
@@ -36,7 +35,6 @@ public class eSysAdmServer {
 
   public static void main(final String[] args) {
     try {
-      DynatraceExporter.init();
       final Path confPath = eSysAdmServer.getConfigPath(args);
       if (confPath == null) throw new IOException("Configuration File Missing");
       eSysAdmServer.listClassPath();

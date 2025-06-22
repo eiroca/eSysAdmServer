@@ -37,7 +37,7 @@ public class ElasticTraceExporter extends GenericTraceExporter {
   public static StringParameter _elasticURL = new StringParameter(ElasticTraceExporter.config, "elasticURL", null);
   public static StringParameter _elasticUsername = new StringParameter(ElasticTraceExporter.config, "elasticUsername", null);
   public static StringParameter _elasticPassword = new StringParameter(ElasticTraceExporter.config, "elasticPassword", null);
-  public static StringParameter _elasticIndex = new StringParameter(ElasticTraceExporter.config, "elasticIndex", "metrics-");
+  public static StringParameter _elasticIndex = new StringParameter(ElasticTraceExporter.config, "elasticIndex", "flume-");
   public static StringParameter _indexDateFormat = new StringParameter(ElasticTraceExporter.config, "indexDateFormat", "yyyy.MM.dd");
   public static StringParameter _elasticType = new StringParameter(ElasticTraceExporter.config, "elasticType", "metric");
   public static IntegerParameter _elasticVersion = new IntegerParameter(ElasticTraceExporter.config, "elasticVersion", 7);

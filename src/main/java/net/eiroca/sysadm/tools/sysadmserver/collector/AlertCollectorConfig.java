@@ -30,13 +30,16 @@ import net.eiroca.sysadm.tools.sysadmserver.SystemContext;
 public class AlertCollectorConfig {
 
   private static final String PREFIX_ALERT = "alert.export.";
+
   private static final String PREFIX_ALERT_DB = "DB.";
   private static final String PREFIX_ALERT_LOG = "LOG.";
-  private static final String VAR_DB_PREFIX = null;
+  
+  private static final String VAR_DB_PREFIX = "db_";
   private static final String VAR_LOG_PREFIX = "log_";
 
   protected static transient ContextParameters config = new ContextParameters();
   //
+  protected static transient BooleanParameter _dbEnabled = new BooleanParameter(AlertCollectorConfig.config, "enabled", false);
   protected static transient IntegerParameter _maxSize = new IntegerParameter(AlertCollectorConfig.config, "maxSize", 250);
   protected static transient StringParameter _tableName = new StringParameter(AlertCollectorConfig.config, "tableName", null);
   protected static transient ListParameter _tableFields = new ListParameter(AlertCollectorConfig.config, "tableFields", null);
@@ -47,9 +50,10 @@ public class AlertCollectorConfig {
   protected static transient StringParameter _closedFormat = new StringParameter(AlertCollectorConfig.config, "closedFormat", "CLOSE");
 
   // DB Export
-  public int maxSize;
-  public String tableName;
-  public String[] tableFields;
+  public Boolean db_enabled;
+  public int db_maxSize;
+  public String db_tableName;
+  public String[] db_tableFields;
   public final DBConfig dbConfig = new DBConfig(null);
 
   // Log Export
@@ -80,8 +84,13 @@ public class AlertCollectorConfig {
 
   @Override
   public String toString() {
-    return "AlertCollectorConfig [maxSize=" + maxSize + ", tableName=" + tableName + ", tableFields=" + Arrays.toString(tableFields) + ", dbConfig=" + dbConfig + ", log_enabled=" + log_enabled + ", log_newFormat=" + log_newFormat + ", log_inprogressFormat=" + log_inprogressFormat
-        + ", log_closedFormat=" + log_closedFormat + "]";
+    StringBuffer sb = new StringBuffer();
+    sb.append("AlertCollectorConfig [");
+    sb.append("{DB :" + "enabled=" + db_enabled + "maxSize=" + db_maxSize + ", tableName=" + db_tableName + ", tableFields=" + Arrays.toString(db_tableFields) + ", dbConfig=" + dbConfig + "}");
+    sb.append(",");
+    sb.append("{LOG:" + "enabled=" + log_enabled + ", newFormat=" + log_newFormat + ", inprogressFormat=" + log_inprogressFormat + ", closedFormat=" + log_closedFormat + "}");
+    sb.append("]");
+    return sb.toString();
   }
 
 }

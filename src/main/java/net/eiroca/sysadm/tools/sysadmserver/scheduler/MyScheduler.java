@@ -64,7 +64,7 @@ final public class MyScheduler extends Scheduler {
       MyScheduler.logger.debug("Scheduler nextRun = " + MyScheduler.SDF.format(new Date(schedulerThread.getNextRun())));
       MyScheduler.logger.debug("Executed Task = " + executedTask);
       for (final Task t : schedulerThread.getTaskList()) {
-        MyScheduler.logger.debug(t.getName() + " " + t.getState() + " " + MyScheduler.SDF.format(new Date(t.nextRun())));
+        MyScheduler.logger.debug(t.getId() + " " + t.getName() + " " + t.getState() + " " + MyScheduler.SDF.format(new Date(t.nextRun())));
       }
     }
     catch (final ConcurrentModificationException e) {
