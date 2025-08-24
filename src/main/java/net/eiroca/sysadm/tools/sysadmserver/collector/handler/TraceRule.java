@@ -14,26 +14,32 @@
  * If not, see <http://www.gnu.org/licenses/>.
  *
  **/
-package net.eiroca.sysadm.tools.sysadmserver.collector;
+package net.eiroca.sysadm.tools.sysadmserver.collector.handler;
 
-import net.eiroca.sysadm.tools.sysadmserver.manager.TraceManager;
+import java.util.Properties;
+import org.slf4j.Logger;
+import net.eiroca.library.system.Logs;
+import net.eiroca.sysadm.tools.sysadmserver.collector.GenericRule;
 
-public class TraceCollector extends GenericCollector {
+public class TraceRule extends GenericRule {
 
-  private static TraceCollector collector = null;
+  private static final String DEF_LOGGER = "Traces";
+  private static final String PROP_LOGGER = "logger";
 
-  public static synchronized TraceCollector getCollector() {
-    if (TraceCollector.collector == null) {
-      TraceCollector.collector = new TraceCollector();
-    }
-    return TraceCollector.collector;
+  private Logger traceLogger;
+
+  public TraceRule(final String name, final Properties config) {
+    super(name, config);
   }
 
-  private TraceCollector() {
+  @Override
+  protected void readConf(final Properties config) {
+    String logger = config.getProperty(PROP_LOGGER, DEF_LOGGER);
+    traceLogger = Logs.getLogger(logger);
   }
 
-  public boolean process(String body) {
-    TraceManager.traceLogger.info(body);
+  public boolean process(final String body) {
+    traceLogger.info(body);
     return true;
   }
 

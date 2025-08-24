@@ -17,14 +17,14 @@
 package net.eiroca.sysadm.tools.sysadmserver.collector.action;
 
 import net.eiroca.library.server.ResultResponse;
-import net.eiroca.sysadm.tools.sysadmserver.collector.AlertCollector;
+import net.eiroca.sysadm.tools.sysadmserver.SystemContext;
+import net.eiroca.sysadm.tools.sysadmserver.collector.GenericAction;
 import net.eiroca.sysadm.tools.sysadmserver.event.Alert;
 import spark.Request;
 import spark.Response;
 
 public class AlertAction extends GenericAction {
 
-  public final static String NAME = AlertAction.class.getName();
   public final static String PERM = "collector.action.alert";
 
   public AlertAction() {
@@ -41,7 +41,7 @@ public class AlertAction extends GenericAction {
       result.setMessage("No data");
     }
     else {
-      final Alert alert = AlertCollector.getCollector().addAlertFormJson(namespace, data);
+      final Alert alert = SystemContext.alertHandler.addAlertFormJson(namespace, data);
       if (alert != null) {
         sb.append(alert.toString());
         result.setResult(sb.toString());

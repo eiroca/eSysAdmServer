@@ -1,0 +1,41 @@
+/**
+ *
+ * Copyright (C) 1999-2021 Enrico Croce - AGPL >= 3.0
+ *
+ * This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU Affero General Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see <http://www.gnu.org/licenses/>.
+ *
+ **/
+package net.eiroca.sysadm.tools.sysadmserver.collector;
+
+import java.util.List;
+import net.eiroca.library.core.Registry;
+import net.eiroca.sysadm.tools.sysadmserver.collector.task.ForwardTask;
+import net.eiroca.sysadm.tools.sysadmserver.collector.task.HttpTask;
+import net.eiroca.sysadm.tools.sysadmserver.collector.task.QueryTask;
+import net.eiroca.sysadm.tools.sysadmserver.collector.task.TraceTask;
+
+public class Tasks extends Registry<String> {
+
+  public static final Tasks registry = new Tasks();
+
+  static {
+    Tasks.registry.addEntry("trace", TraceTask.class.getName());
+    Tasks.registry.addEntry("query", QueryTask.class.getName());
+    Tasks.registry.addEntry("http", HttpTask.class.getName());
+    Tasks.registry.addEntry("forward", ForwardTask.class.getName());
+  }
+
+  public static List<String> getActionNames() {
+    return Tasks.registry.getNames();
+  }
+
+}

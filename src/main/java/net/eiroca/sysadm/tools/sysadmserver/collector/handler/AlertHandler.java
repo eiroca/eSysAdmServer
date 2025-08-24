@@ -14,7 +14,7 @@
  * If not, see <http://www.gnu.org/licenses/>.
  *
  **/
-package net.eiroca.sysadm.tools.sysadmserver.collector;
+package net.eiroca.sysadm.tools.sysadmserver.collector.handler;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -25,6 +25,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 import org.slf4j.Logger;
 import com.google.gson.JsonArray;
@@ -35,25 +36,20 @@ import net.eiroca.library.core.Helper;
 import net.eiroca.library.db.LibDB;
 import net.eiroca.library.system.Logs;
 import net.eiroca.sysadm.tools.sysadmserver.SystemContext;
+import net.eiroca.sysadm.tools.sysadmserver.collector.GenericHandler;
 import net.eiroca.sysadm.tools.sysadmserver.event.Alert;
 import net.eiroca.sysadm.tools.sysadmserver.event.AlertState;
 import net.eiroca.sysadm.tools.sysadmserver.event.EventSeverity;
 import net.eiroca.sysadm.tools.sysadmserver.manager.CollectorManager;
 
-public class AlertCollector extends GenericCollector {
+public class AlertHandler extends GenericHandler {
 
-  private static AlertCollector collector = null;
+  private final AlertConfig config = new AlertConfig();
+
   private final ConcurrentHashMap<String, List<Alert>> alerts;
   public static final Logger alertLogger = Logs.getLogger("Alerts");
 
-  public static synchronized AlertCollector getCollector() {
-    if (AlertCollector.collector == null) {
-      AlertCollector.collector = new AlertCollector();
-    }
-    return AlertCollector.collector;
-  }
-
-  private AlertCollector() {
+  public AlertHandler() {
     alerts = new ConcurrentHashMap<>();
   }
 
@@ -164,10 +160,10 @@ public class AlertCollector extends GenericCollector {
 
   private void flush(final Alert a) {
     CollectorManager.logger.debug("flushing: " + a);
-    if (!SystemContext.alertCollectorConfig.db_enabled) {
+    if (!config.db_enabled) {
       exportIncidentDB(a);
     }
-    if (SystemContext.alertCollectorConfig.log_enabled) {
+    if (config.log_enabled) {
       exporIncidentLog(a);
     }
     count++;
@@ -177,13 +173,13 @@ public class AlertCollector extends GenericCollector {
     String fmt = null;
     switch (a.state) {
       case NEW:
-        fmt = SystemContext.alertCollectorConfig.log_newFormat;
+        fmt = config.log_newFormat;
         break;
       case INPROGRESS:
-        fmt = SystemContext.alertCollectorConfig.log_inprogressFormat;
+        fmt = config.log_inprogressFormat;
         break;
       case CLOSED:
-        fmt = SystemContext.alertCollectorConfig.log_closedFormat;
+        fmt = config.log_closedFormat;
         break;
     }
     if (fmt != null) {
@@ -216,7 +212,7 @@ public class AlertCollector extends GenericCollector {
   }
 
   private void exportIncidentDB(final Alert a) {
-    if ((SystemContext.alertCollectorConfig.db_tableName == null) || (SystemContext.alertCollectorConfig.db_tableFields == null)) return;
+    if ((config.db_tableName == null) || (config.db_tableFields == null)) return;
 
     final List<Object> vals = new ArrayList<>();
     vals.clear();
@@ -241,7 +237,7 @@ public class AlertCollector extends GenericCollector {
         break;
     }
     vals.add(a.tag.tagValue("host"));
-    final String[] fields = SystemContext.alertCollectorConfig.db_tableFields;
+    final String[] fields = config.db_tableFields;
     if (vals.size() != fields.length) {
       final StringBuilder sb = new StringBuilder();
       Helper.writeList(sb, vals);
@@ -258,12 +254,12 @@ public class AlertCollector extends GenericCollector {
         else {
           if (conn == null) {
             CollectorManager.logger.debug("Getting a new connection to DB");
-            conn = SystemContext.alertCollectorConfig.dbConfig.getConnection();
-            CollectorManager.logger.debug((conn != null) ? "Connection: OK" : "Connection error: " + SystemContext.alertCollectorConfig.dbConfig.getLastError());
+            conn = config.dbConfig.getConnection();
+            CollectorManager.logger.debug((conn != null) ? "Connection: OK" : "Connection error: " + config.dbConfig.getLastError());
           }
           if (conn != null) {
-            CollectorManager.logger.debug(MessageFormat.format("Inserting {0}: {1} ", SystemContext.alertCollectorConfig.db_tableName, sb.toString()));
-            LibDB.insertRecord(conn, SystemContext.alertCollectorConfig.db_tableName, fields, vals.toArray(), SystemContext.alertCollectorConfig.db_maxSize);
+            CollectorManager.logger.debug(MessageFormat.format("Inserting {0}: {1} ", config.db_tableName, sb.toString()));
+            LibDB.insertRecord(conn, config.db_tableName, fields, vals.toArray(), config.db_maxSize);
           }
           else {
             CollectorManager.logger.debug("No connection for inserting");
@@ -280,6 +276,11 @@ public class AlertCollector extends GenericCollector {
         conn = null;
       }
     }
+  }
+
+  @Override
+  public void init(Properties conf) throws Exception {
+    this.config.setup(conf);
   }
 
 }

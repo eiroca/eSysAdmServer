@@ -14,24 +14,18 @@
  * If not, see <http://www.gnu.org/licenses/>.
  *
  **/
-package net.eiroca.sysadm.tools.sysadmserver.collector;
+package net.eiroca.sysadm.tools.sysadmserver.collector.handler;
 
+import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 import net.eiroca.library.metrics.Statistic;
+import net.eiroca.sysadm.tools.sysadmserver.collector.GenericHandler;
 
-public class MeasureCollector extends GenericCollector {
+public class MeasureHandler extends GenericHandler {
 
-  private static MeasureCollector collector = null;
   private ConcurrentHashMap<String, ConcurrentHashMap<String, Statistic>> measures;
 
-  public static synchronized MeasureCollector getCollector() {
-    if (MeasureCollector.collector == null) {
-      MeasureCollector.collector = new MeasureCollector();
-    }
-    return MeasureCollector.collector;
-  }
-
-  private MeasureCollector() {
+  public MeasureHandler() {
     measures = new ConcurrentHashMap<>();
   }
 
@@ -64,6 +58,11 @@ public class MeasureCollector extends GenericCollector {
     final ConcurrentHashMap<String, ConcurrentHashMap<String, Statistic>> result = measures;
     measures = new ConcurrentHashMap<>();
     return result;
+  }
+
+  @Override
+  public void init(Properties config) throws Exception {
+    // TODO Auto-generated method stub
   }
 
 }

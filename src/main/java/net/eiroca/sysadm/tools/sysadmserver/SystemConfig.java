@@ -63,7 +63,9 @@ public final class SystemConfig {
   // Consumers
   protected static IntegerParameter _consumers_sleeptime = new IntegerParameter(SystemConfig.config, "consumers.sleeptime", 10);
   // Traces
-  protected static PathParameter _trace_roles_path = new LocalPathParameter(SystemConfig.config, "trace-roles.path", "traces");
+  protected static PathParameter _trace_rules_path = new LocalPathParameter(SystemConfig.config, "trace-rules.path", "traces");
+  // Tasks
+  protected static PathParameter _task_rules_path = new LocalPathParameter(SystemConfig.config, "task-rules.path", "tasks");
 
   public String configPath = "";
 
@@ -80,7 +82,8 @@ public final class SystemConfig {
   public Path rule_engine_path;
   public Path user_roles_path;
   public Path user_roles_mapping_path;
-  public Path trace_roles_path;
+  public Path trace_rules_path;
+  public Path task_rules_path;
   public String user_roles_default;
   public Path monitors_path;
   public Path monitors_default_path;

@@ -14,38 +14,24 @@
  * If not, see <http://www.gnu.org/licenses/>.
  *
  **/
-package net.eiroca.sysadm.tools.sysadmserver.util;
+package net.eiroca.sysadm.tools.sysadmserver.collector;
 
-import inet.ipaddr.IPAddressString;
+import java.util.Properties;
+import spark.Request;
 
-public class MappingRule {
+abstract public class GenericHandler {
 
-  IPAddressString network;
-  String token;
-  String role;
+  public static final String PARAM_NAMESPACE = ":namespace";
+  public static final String DEFALT_NAMESPACE = "unknown";
 
-  @Override
-  public String toString() {
-    return "MappingRule [network=" + network + ", token=" + token + ", role=" + role + "]";
+  public static final String getNamespace(final Request request) {
+    String namespace = request.params(GenericHandler.PARAM_NAMESPACE);
+    if (namespace == null) {
+      namespace = GenericHandler.DEFALT_NAMESPACE;
+    }
+    return namespace;
   }
 
-  public IPAddressString getNetwork() {
-    return network;
-  }
-
-  public String getToken() {
-    return token;
-  }
-
-  public String getRole() {
-    return role;
-  }
-
-  public MappingRule(final IPAddressString network, final String token, final String role) {
-    super();
-    this.network = network;
-    this.token = token;
-    this.role = role;
-  }
+  abstract public void init(Properties config) throws Exception;
 
 }

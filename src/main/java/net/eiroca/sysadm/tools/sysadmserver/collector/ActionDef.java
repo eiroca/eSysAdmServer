@@ -14,7 +14,7 @@
  * If not, see <http://www.gnu.org/licenses/>.
  *
  **/
-package net.eiroca.sysadm.tools.sysadmserver.collector.action;
+package net.eiroca.sysadm.tools.sysadmserver.collector;
 
 public class ActionDef {
 

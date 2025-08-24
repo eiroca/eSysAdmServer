@@ -16,19 +16,22 @@
  **/
 package net.eiroca.sysadm.tools.sysadmserver.collector;
 
-import spark.Request;
+import java.util.Properties;
 
-public class GenericCollector {
+public abstract class GenericRule {
 
-  public static final String PARAM_NAMESPACE = ":namespace";
-  public static final String DEFALT_NAMESPACE = "unknown";
+  private final String name;
 
-  public static final String getNamespace(final Request request) {
-    String namespace = request.params(GenericCollector.PARAM_NAMESPACE);
-    if (namespace == null) {
-      namespace = GenericCollector.DEFALT_NAMESPACE;
-    }
-    return namespace;
+  public GenericRule(final String name, final Properties config) {
+    this.name = name;
+    readConf(config);
+  }
+
+  protected void readConf(final Properties config) {
+  }
+
+  public String getName() {
+    return name;
   }
 
 }

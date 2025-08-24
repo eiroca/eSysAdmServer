@@ -16,6 +16,7 @@
  **/
 package net.eiroca.sysadm.tools.sysadmserver.collector.action;
 
+import static net.eiroca.sysadm.tools.sysadmserver.SystemContext.measureHandler;
 import java.text.MessageFormat;
 import java.util.SortedMap;
 import java.util.TreeMap;
@@ -28,7 +29,7 @@ import net.eiroca.library.sysadm.monitoring.sdk.MeasureFields;
 import net.eiroca.library.sysadm.monitoring.sdk.MeasureProducer;
 import net.eiroca.sysadm.tools.sysadmserver.SystemConfig;
 import net.eiroca.sysadm.tools.sysadmserver.SystemContext;
-import net.eiroca.sysadm.tools.sysadmserver.collector.MeasureCollector;
+import net.eiroca.sysadm.tools.sysadmserver.collector.GenericAction;
 import net.eiroca.sysadm.tools.sysadmserver.manager.CollectorManager;
 import spark.Request;
 import spark.Response;
@@ -88,7 +89,6 @@ public class FeedAction extends GenericAction {
   private static final String REGEX_NL = "(\n|\r)+";
   private static final String POST = "POST";
 
-  public final static String NAME = FeedAction.class.getName();
   public final static String PERM = "collector.action.feed";
 
   public FeedAction() {
@@ -129,7 +129,6 @@ public class FeedAction extends GenericAction {
   public int processRequestParameter(final String namespace, final String[] valuePairs, final SortedMap<String, Object> meta) {
     int rows = 0;
     if (valuePairs == null) { return rows; }
-    final MeasureCollector collector = MeasureCollector.getCollector();
     for (String valuePair : valuePairs) {
       if (valuePair == null) {
         continue;
@@ -172,7 +171,7 @@ public class FeedAction extends GenericAction {
         else {
           metric = subMeasureName;
         }
-        Statistic m = collector.getMetric(namespace, metric);
+        Statistic m = measureHandler.getMetric(namespace, metric);
         m.addValue(doubleValue);
         if (splitName != null) {
           m = (Statistic)m.getSplitting(splitName);

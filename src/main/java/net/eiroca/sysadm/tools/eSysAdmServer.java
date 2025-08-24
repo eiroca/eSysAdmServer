@@ -27,7 +27,6 @@ import net.eiroca.library.core.Helper;
 import net.eiroca.library.system.LibFile;
 import net.eiroca.sysadm.tools.sysadmserver.SystemConfig;
 import net.eiroca.sysadm.tools.sysadmserver.SystemContext;
-import net.eiroca.sysadm.tools.sysadmserver.manager.ISysAdmManager;
 
 public class eSysAdmServer {
 
@@ -35,13 +34,10 @@ public class eSysAdmServer {
 
   public static void main(final String[] args) {
     try {
-      final Path confPath = eSysAdmServer.getConfigPath(args);
-      if (confPath == null) throw new IOException("Configuration File Missing");
       eSysAdmServer.listClassPath();
+      final Path confPath = eSysAdmServer.getConfigPath(args);
+      if (confPath == null) { throw new IOException("Configuration File Missing"); }
       SystemContext.init(confPath);
-      for (final ISysAdmManager manager : SystemContext.managers) {
-        manager.start();
-      }
       while (true) {
         SystemContext.scheduler.logStat();
         Helper.sleep(eSysAdmServer.SLEEPTIME);
@@ -54,16 +50,6 @@ public class eSysAdmServer {
       SystemContext.logger.error(Helper.getExceptionAsString("Fatal error: ", e, false), e);
     }
     finally {
-      for (final ISysAdmManager manager : SystemContext.managers) {
-        if (manager.isStarted()) {
-          try {
-            manager.stop();
-          }
-          catch (final Exception e) {
-            SystemContext.logger.warn(Helper.getExceptionAsString(e));
-          }
-        }
-      }
       SystemContext.done();
     }
   }
@@ -78,19 +64,19 @@ public class eSysAdmServer {
 
   private static Path getConfigPath(final String[] args) {
     String confPath;
-    String defConfFile = SystemConfig.ME + ".config";
+    final String defConfFile = SystemConfig.ME + ".config";
     if (args.length > 0) {
       confPath = args[0];
       Path path = Paths.get(confPath);
-      if (Files.isRegularFile(path)) return path;
+      if (Files.isRegularFile(path)) { return path; }
       if (Files.isDirectory(path)) {
         path = Paths.get(path.toString(), defConfFile);
-        if (Files.isRegularFile(path)) return path;
+        if (Files.isRegularFile(path)) { return path; }
       }
     }
     else {
-      Path path = Paths.get(defConfFile);
-      if (Files.isRegularFile(path)) return path;
+      final Path path = Paths.get(defConfFile);
+      if (Files.isRegularFile(path)) { return path; }
     }
     return null;
   }

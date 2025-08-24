@@ -19,13 +19,13 @@ package net.eiroca.sysadm.tools.sysadmserver.collector.action;
 import net.eiroca.ext.library.gson.GsonCursor;
 import net.eiroca.ext.library.gson.SimpleGson;
 import net.eiroca.library.server.ResultResponse;
-import net.eiroca.sysadm.tools.sysadmserver.collector.TraceCollector;
+import net.eiroca.sysadm.tools.sysadmserver.SystemContext;
+import net.eiroca.sysadm.tools.sysadmserver.collector.GenericAction;
 import spark.Request;
 import spark.Response;
 
 public class TraceAction extends GenericAction {
 
-  public final static String NAME = TraceAction.class.getName();
   public final static String PERM = "collector.action.trace";
 
   public TraceAction() {
@@ -35,7 +35,6 @@ public class TraceAction extends GenericAction {
   @Override
   public Object execute(final String namespace, final Request request, final Response response) throws Exception {
     final ResultResponse<Object> result = new ResultResponse<>(0);
-    final TraceCollector collector = TraceCollector.getCollector();
     String body;
     if ("GET".equals(request.requestMethod())) {
       SimpleGson data = new SimpleGson(true);
@@ -49,7 +48,7 @@ public class TraceAction extends GenericAction {
     else {
       body = request.body();
     }
-    boolean ok = collector.process(body);
+    boolean ok = SystemContext.traceHandler.process(namespace, body);
     if (!ok) {
       result.setMessage("KO");
       result.setStatus(1);

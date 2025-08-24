@@ -14,15 +14,14 @@
  * If not, see <http://www.gnu.org/licenses/>.
  *
  **/
-package net.eiroca.sysadm.tools.sysadmserver.collector.action;
+package net.eiroca.sysadm.tools.sysadmserver.collector;
 
 import java.text.MessageFormat;
 import net.eiroca.library.core.Helper;
 import net.eiroca.library.server.ServerResponse;
 import net.eiroca.sysadm.tools.sysadmserver.SystemContext;
-import net.eiroca.sysadm.tools.sysadmserver.collector.GenericCollector;
+import net.eiroca.sysadm.tools.sysadmserver.collector.handler.UserRoleConfig;
 import net.eiroca.sysadm.tools.sysadmserver.manager.CollectorManager;
-import net.eiroca.sysadm.tools.sysadmserver.util.UserRole;
 import spark.Request;
 import spark.Response;
 import spark.Route;
@@ -43,7 +42,7 @@ public abstract class GenericAction implements Route {
   @Override
   final public Object handle(final Request request, final Response response) throws Exception {
     if (!SystemContext.isLicenseValid()) { return GenericAction.LICENCE_ERROR; }
-    UserRole role = canRun(request);
+    UserRoleConfig role = canRun(request);
     String ip = request.ip();
     if (ip == null) ip = "-";
     if (role == null) {
@@ -58,7 +57,7 @@ public abstract class GenericAction implements Route {
     Object o = null;
     String namespace = null;
     try {
-      namespace = GenericCollector.getNamespace(request);
+      namespace = GenericHandler.getNamespace(request);
       o = execute(namespace, request, response);
     }
     catch (final Exception e) {
@@ -75,9 +74,9 @@ public abstract class GenericAction implements Route {
 
   abstract public Object execute(String namespace, final Request request, final Response response) throws Exception;
 
-  protected UserRole canRun(final Request request) {
+  protected UserRoleConfig canRun(final Request request) {
     if (permission == null) { return null; }
-    UserRole role = SystemContext.roleManager.getRole(request);
+    UserRoleConfig role = SystemContext.userRoleHandler.getRole(request);
     if (role != null) {
       if (!role.isAllowed(permission)) {
         role = null;

@@ -17,13 +17,13 @@
 package net.eiroca.sysadm.tools.sysadmserver.collector.action;
 
 import net.eiroca.library.server.ServerResponse;
+import net.eiroca.sysadm.tools.sysadmserver.collector.GenericAction;
 import net.eiroca.sysadm.tools.sysadmserver.manager.CollectorManager;
 import spark.Request;
 import spark.Response;
 
 public class AboutAction extends GenericAction {
 
-  public final static String NAME = AboutAction.class.getName();
   public final static String PERM = "collector.action.about";
 
   private final static ServerResponse ABOUT = new ServerResponse(0, CollectorManager.SERVER_APINAME + " " + CollectorManager.SERVER_APIVERS);

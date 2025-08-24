@@ -14,30 +14,38 @@
  * If not, see <http://www.gnu.org/licenses/>.
  *
  **/
-package net.eiroca.sysadm.tools.sysadmserver.manager;
+package net.eiroca.sysadm.tools.sysadmserver.collector.handler;
 
-import net.eiroca.sysadm.tools.sysadmserver.SystemContext;
+import inet.ipaddr.IPAddressString;
 
-abstract public class GenericManager implements ISysAdmManager {
+public class UserRoleMapping {
 
-  private boolean started = false;
+  IPAddressString network;
+  String token;
+  String role;
 
   @Override
-  public void start() throws Exception {
-    if (started) { throw new IllegalStateException(); }
-    SystemContext.logger.info("Starting " + getClass().getCanonicalName());
-    started = true;
+  public String toString() {
+    return "MappingRule [network=" + network + ", token=" + token + ", role=" + role + "]";
   }
 
-  @Override
-  public void stop() throws Exception {
-    if (!started) { throw new IllegalStateException(); }
-    started = false;
+  public IPAddressString getNetwork() {
+    return network;
   }
 
-  @Override
-  public boolean isStarted() {
-    return started;
+  public String getToken() {
+    return token;
+  }
+
+  public String getRole() {
+    return role;
+  }
+
+  public UserRoleMapping(final IPAddressString network, final String token, final String role) {
+    super();
+    this.network = network;
+    this.token = token;
+    this.role = role;
   }
 
 }

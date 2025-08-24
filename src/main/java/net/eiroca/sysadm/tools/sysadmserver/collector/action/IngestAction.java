@@ -34,7 +34,8 @@ import net.eiroca.library.sysadm.monitoring.sdk.MeasureFields;
 import net.eiroca.library.sysadm.monitoring.sdk.MeasureProducer;
 import net.eiroca.sysadm.tools.sysadmserver.SystemConfig;
 import net.eiroca.sysadm.tools.sysadmserver.SystemContext;
-import net.eiroca.sysadm.tools.sysadmserver.collector.MeasureCollector;
+import net.eiroca.sysadm.tools.sysadmserver.collector.GenericAction;
+import net.eiroca.sysadm.tools.sysadmserver.collector.handler.MeasureHandler;
 import net.eiroca.sysadm.tools.sysadmserver.manager.CollectorManager;
 import spark.Request;
 import spark.Response;
@@ -45,7 +46,6 @@ import spark.Response;
  */
 public class IngestAction extends GenericAction {
 
-  public final static String NAME = IngestAction.class.getName();
   public final static String PERM = "collector.action.ingest";
 
   public IngestAction() {
@@ -67,14 +67,13 @@ public class IngestAction extends GenericAction {
       meta.put(MeasureFields.FLD_SOURCE, SystemConfig.ME);
       meta.put(MeasureFields.FLD_HOST, ip);
       // process the request string
-      final MeasureCollector collector = MeasureCollector.getCollector();
-      rows = processRequestParameter(collector, body, meta);
+      rows = processRequestParameter(SystemContext.measureHandler, body, meta);
     }
     result.message = MessageFormat.format("Processed: {0} measure(s).", rows);
     return result;
   }
 
-  public int processRequestParameter(final MeasureCollector collector, final String data, final SortedMap<String, Object> meta) {
+  public int processRequestParameter(final MeasureHandler collector, final String data, final SortedMap<String, Object> meta) {
     int rows = 0;
     if (data == null) { return rows; }
     final JsonElement json = JsonParser.parseString(data);
@@ -99,7 +98,7 @@ public class IngestAction extends GenericAction {
     return rows;
   }
 
-  private boolean processMetric(final MeasureCollector collector, final SortedMap<String, Object> baseMeta, final JsonObject json) {
+  private boolean processMetric(final MeasureHandler collector, final SortedMap<String, Object> baseMeta, final JsonObject json) {
     final SortedMap<String, Object> meta = new TreeMap<>();
     meta.putAll(baseMeta);
     try {

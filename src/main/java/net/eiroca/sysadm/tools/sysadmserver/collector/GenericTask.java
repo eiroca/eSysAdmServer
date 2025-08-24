@@ -14,37 +14,22 @@
  * If not, see <http://www.gnu.org/licenses/>.
  *
  **/
-package net.eiroca.sysadm.tools.sysadmserver.util;
+package net.eiroca.sysadm.tools.sysadmserver.collector;
 
 import java.util.Properties;
-import java.util.Set;
+import org.slf4j.Logger;
+import com.google.gson.JsonObject;
+import net.eiroca.library.system.Logs;
 
-public class TraceRule {
+public abstract class GenericTask {
 
-  private static final String PROP_DESCRIPTION = "description";
-  private final String name;
-  private String description;
+  protected Logger logger = Logs.getLogger();
 
-  public TraceRule(final String name, final Properties config) {
-    this.name = name;
-    readConf(config);
+  public GenericTask() {
   }
 
-  private void readConf(final Properties config) {
-    final Set<String> keys = config.stringPropertyNames();
-    for (final String key : keys) {
-      if (key.equals(TraceRule.PROP_DESCRIPTION)) {
-        description = config.getProperty(TraceRule.PROP_DESCRIPTION);
-      }
-    }
-  }
+  abstract public void init(Properties config) throws Exception;
 
-  public String getName() {
-    return name;
-  }
-
-  public String getDescription() {
-    return description;
-  }
+  abstract public JsonObject run(JsonObject request);
 
 }

@@ -1,6 +1,6 @@
 /**
  *
- * Copyright (C) 1999-2021 Enrico Croce - AGPL >= 3.0
+  * Copyright (C) 1999-2021 Enrico Croce - AGPL >= 3.0
  *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
@@ -14,30 +14,30 @@
  * If not, see <http://www.gnu.org/licenses/>.
  *
  **/
-package net.eiroca.sysadm.tools.sysadmserver.util;
+package net.eiroca.sysadm.tools.sysadmserver.collector.handler;
 
 import java.util.Properties;
 import java.util.Set;
 import net.eiroca.library.core.Helper;
 import net.eiroca.library.data.Tags;
+import net.eiroca.sysadm.tools.sysadmserver.collector.GenericRule;
 
-public class UserRole {
+public class UserRoleConfig extends GenericRule {
 
   private static final String PROP_DESCRIPTION = "description";
-  private final Tags permissions = new Tags();
-  private final String name;
   private String description;
+  private final Tags permissions = new Tags();
 
-  public UserRole(final String name, final Properties config) {
-    this.name = name;
-    readConf(config);
+  public UserRoleConfig(final String name, final Properties config) {
+    super(name, config);
   }
 
-  private void readConf(final Properties config) {
+  @Override
+  protected void readConf(final Properties config) {
     final Set<String> keys = config.stringPropertyNames();
     for (final String key : keys) {
-      if (key.equals(UserRole.PROP_DESCRIPTION)) {
-        description = config.getProperty(UserRole.PROP_DESCRIPTION);
+      if (key.equals(UserRoleConfig.PROP_DESCRIPTION)) {
+        description = config.getProperty(UserRoleConfig.PROP_DESCRIPTION);
       }
       if (Helper.getBoolean(config.getProperty(key), true)) {
         addPermission(key);
@@ -55,10 +55,6 @@ public class UserRole {
 
   public boolean isAllowed(final String name) {
     return permissions.contains(name);
-  }
-
-  public String getName() {
-    return name;
   }
 
   public String getDescription() {

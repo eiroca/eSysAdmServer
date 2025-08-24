@@ -14,30 +14,24 @@
  * If not, see <http://www.gnu.org/licenses/>.
  *
  **/
-package net.eiroca.sysadm.tools.sysadmserver.manager;
+package net.eiroca.sysadm.tools.sysadmserver.collector.task;
 
-import net.eiroca.sysadm.tools.sysadmserver.SystemContext;
+import java.util.Properties;
+import com.google.gson.JsonObject;
+import net.eiroca.sysadm.tools.sysadmserver.collector.GenericTask;
 
-abstract public class GenericManager implements ISysAdmManager {
+public class QueryTask extends GenericTask {
 
-  private boolean started = false;
-
-  @Override
-  public void start() throws Exception {
-    if (started) { throw new IllegalStateException(); }
-    SystemContext.logger.info("Starting " + getClass().getCanonicalName());
-    started = true;
+  public QueryTask() {
   }
 
   @Override
-  public void stop() throws Exception {
-    if (!started) { throw new IllegalStateException(); }
-    started = false;
+  public JsonObject run(final JsonObject request) {
+    return request;
   }
 
   @Override
-  public boolean isStarted() {
-    return started;
+  public void init(final Properties config) throws Exception {
   }
 
 }

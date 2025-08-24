@@ -14,30 +14,34 @@
  * If not, see <http://www.gnu.org/licenses/>.
  *
  **/
-package net.eiroca.sysadm.tools.sysadmserver.manager;
+package net.eiroca.sysadm.tools.sysadmserver.collector.task;
 
-import net.eiroca.sysadm.tools.sysadmserver.SystemContext;
+import java.util.Properties;
+import org.slf4j.Logger;
+import com.google.gson.JsonObject;
+import net.eiroca.library.system.Logs;
+import net.eiroca.sysadm.tools.sysadmserver.collector.GenericTask;
 
-abstract public class GenericManager implements ISysAdmManager {
+public class TraceTask extends GenericTask {
 
-  private boolean started = false;
+  private static final String DEF_LOGGER = "Traces";
+  private static final String PROP_LOGGER = "logger";
 
-  @Override
-  public void start() throws Exception {
-    if (started) { throw new IllegalStateException(); }
-    SystemContext.logger.info("Starting " + getClass().getCanonicalName());
-    started = true;
+  private Logger traceLogger;
+
+  public TraceTask() {
   }
 
   @Override
-  public void stop() throws Exception {
-    if (!started) { throw new IllegalStateException(); }
-    started = false;
+  public JsonObject run(final JsonObject request) {
+    traceLogger.info(request.toString());
+    return request;
   }
 
   @Override
-  public boolean isStarted() {
-    return started;
+  public void init(final Properties config) throws Exception {
+    final String logger = config.getProperty(TraceTask.PROP_LOGGER, TraceTask.DEF_LOGGER);
+    traceLogger = Logs.getLogger(logger);
   }
 
 }

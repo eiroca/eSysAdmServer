@@ -39,12 +39,15 @@ import net.eiroca.library.system.Context;
 import net.eiroca.library.system.IContext;
 import net.eiroca.library.system.LibFile;
 import net.eiroca.library.system.Logs;
-import net.eiroca.sysadm.tools.sysadmserver.collector.AlertCollectorConfig;
+import net.eiroca.sysadm.tools.sysadmserver.collector.GenericHandler;
+import net.eiroca.sysadm.tools.sysadmserver.collector.handler.AlertHandler;
+import net.eiroca.sysadm.tools.sysadmserver.collector.handler.MeasureHandler;
+import net.eiroca.sysadm.tools.sysadmserver.collector.handler.TaskHandler;
+import net.eiroca.sysadm.tools.sysadmserver.collector.handler.TraceHandler;
+import net.eiroca.sysadm.tools.sysadmserver.collector.handler.UserRoleHandler;
 import net.eiroca.sysadm.tools.sysadmserver.manager.CollectorManager;
 import net.eiroca.sysadm.tools.sysadmserver.manager.ISysAdmManager;
 import net.eiroca.sysadm.tools.sysadmserver.manager.MonitorManager;
-import net.eiroca.sysadm.tools.sysadmserver.manager.RoleManager;
-import net.eiroca.sysadm.tools.sysadmserver.manager.TraceManager;
 import net.eiroca.sysadm.tools.sysadmserver.scheduler.MyScheduler;
 import net.eiroca.sysadm.tools.sysadmserver.util.CredentialStore;
 import net.eiroca.sysadm.tools.sysadmserver.util.HostGroups;
@@ -54,7 +57,6 @@ public final class SystemContext {
   public static final Logger logger = Logs.getLogger(SystemConfig.ME);
 
   public static final SystemConfig config = new SystemConfig();
-  public static final AlertCollectorConfig alertCollectorConfig = new AlertCollectorConfig();
 
   public static License license;
   public static Properties properties;
@@ -63,17 +65,55 @@ public final class SystemContext {
   public static HostGroups hostGroups;
   public static ICredentialProvider keyStore;
 
+  public static final CollectorManager collectorManager = new CollectorManager();
+  public static final MonitorManager monitorManager = new MonitorManager();
+
+  public static final AlertHandler alertHandler = new AlertHandler();
+  public static final MeasureHandler measureHandler = new MeasureHandler();
+  public static final UserRoleHandler userRoleHandler = new UserRoleHandler();
+  public static final TraceHandler traceHandler = new TraceHandler();
+  public static final TaskHandler taskHandler = new TaskHandler();
+
   public static final ISysAdmManager managers[] = {
-      new RoleManager(),
-      new CollectorManager(),
-      new MonitorManager(),
-      new TraceManager()
+      SystemContext.collectorManager,
+      SystemContext.monitorManager
   };
 
-  public static final RoleManager roleManager = (RoleManager)SystemContext.managers[0];
-  public static final CollectorManager collectorManager = (CollectorManager)SystemContext.managers[1];
-  public static final MonitorManager monitorManager = (MonitorManager)SystemContext.managers[2];
-  public static final TraceManager traceManager = (TraceManager)SystemContext.managers[3];
+  public static final GenericHandler handlers[] = {
+      SystemContext.alertHandler,
+      SystemContext.measureHandler,
+      SystemContext.userRoleHandler,
+      SystemContext.traceHandler,
+      SystemContext.taskHandler
+  };
+
+  private static void startManagers() throws Exception {
+    SystemContext.logger.info("Starting managers");
+    for (final ISysAdmManager manager : SystemContext.managers) {
+      manager.start();
+    }
+  }
+
+  private static void stopManagers() throws Exception {
+    SystemContext.logger.info("Stopping managers");
+    for (final ISysAdmManager manager : SystemContext.managers) {
+      if (manager.isStarted()) {
+        try {
+          manager.stop();
+        }
+        catch (final Exception e) {
+          SystemContext.logger.warn(Helper.getExceptionAsString(e));
+        }
+      }
+    }
+  }
+
+  private static void initHandlers(Properties config) throws Exception {
+    SystemContext.logger.info("Init handlers");
+    for (final GenericHandler handler : SystemContext.handlers) {
+      handler.init(config);
+    }
+  }
 
   public static void init(final Path configPath) throws Exception {
     SystemContext.initLicense();
@@ -121,7 +161,9 @@ public final class SystemContext {
     SystemContext.hostGroups = new HostGroups(SystemContext.config.hostgroups_path, SystemContext.config.hostgroups_tag_prefix);
     // Keystore
     SystemContext.keyStore = new CredentialStore(SystemContext.config.keystore_path);
-    SystemContext.alertCollectorConfig.setup(SystemContext.properties);
+    // Init Managers & handlers
+    SystemContext.startManagers();
+    SystemContext.initHandlers(SystemContext.properties);
   }
 
   public static Properties getSubConfig(final Properties config, final String prefix) {
@@ -158,6 +200,7 @@ public final class SystemContext {
     try {
       SystemContext.logger.info("Stopping consumer");
       SystemContext.consumer_metrics.teardown();
+      SystemContext.stopManagers();
     }
     catch (final Exception e) {
       SystemContext.logger.error("SystemError: ", e);

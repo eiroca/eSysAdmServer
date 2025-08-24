@@ -16,31 +16,41 @@
  **/
 package net.eiroca.sysadm.tools.sysadmserver.collector.action;
 
-import java.text.MessageFormat;
 import net.eiroca.library.server.ResultResponse;
 import net.eiroca.sysadm.tools.sysadmserver.SystemContext;
 import net.eiroca.sysadm.tools.sysadmserver.collector.GenericAction;
-import net.eiroca.sysadm.tools.sysadmserver.collector.util.RestUtils;
+import net.eiroca.sysadm.tools.sysadmserver.collector.GenericHandler;
+import net.eiroca.sysadm.tools.sysadmserver.collector.handler.TaskHandler;
 import spark.Request;
 import spark.Response;
 
-public class MetricAction extends GenericAction {
+public class TaskAction extends GenericAction {
 
-  public final static String PERM = "collector.action.metric";
+  public final static String PERM = "collector.action.task";
 
-  public MetricAction() {
-    super(MetricAction.PERM);
+  public static final String getNamespace(final Request request) {
+    String namespace = request.params(GenericHandler.PARAM_NAMESPACE);
+    if (namespace == null) {
+      namespace = GenericHandler.DEFALT_NAMESPACE;
+    }
+    return namespace;
+  }
+
+  public TaskAction() {
+    super(TaskAction.PERM);
   }
 
   @Override
   public Object execute(final String namespace, final Request request, final Response response) throws Exception {
     final ResultResponse<Object> result = new ResultResponse<>(0);
-    result.message = MessageFormat.format("Namespace: {0}", namespace);
-    final StringBuilder sb = new StringBuilder(1024);
-    sb.append('{');
-    RestUtils.measures2json(sb, SystemContext.measureHandler.getMetrics(namespace));
-    sb.append('}');
-    result.setResult(sb.toString());
+    if (!"POST".equals(request.requestMethod())) {
+      result.setMessage("Invalid Method");
+      result.setStatus(1);
+      return result;
+    }
+    String id = request.params(TaskHandler.PARAM_ID);
+    String body = request.body();
+    SystemContext.taskHandler.run(namespace, id, body, result);
     return result;
   }
 

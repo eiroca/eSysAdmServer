@@ -18,14 +18,14 @@ package net.eiroca.sysadm.tools.sysadmserver.collector.action;
 
 import java.text.MessageFormat;
 import net.eiroca.library.server.ResultResponse;
-import net.eiroca.sysadm.tools.sysadmserver.collector.MeasureCollector;
+import net.eiroca.sysadm.tools.sysadmserver.SystemContext;
+import net.eiroca.sysadm.tools.sysadmserver.collector.GenericAction;
 import net.eiroca.sysadm.tools.sysadmserver.collector.util.RestUtils;
 import spark.Request;
 import spark.Response;
 
 public class ExportAction extends GenericAction {
 
-  public final static String NAME = ExportAction.class.getName();
   public final static String PERM = "collector.action.export";
 
   public ExportAction() {
@@ -38,11 +38,11 @@ public class ExportAction extends GenericAction {
     final StringBuilder sb = new StringBuilder(1024);
     sb.append('{');
     if (namespace == null) {
-      RestUtils.namespaces2json(sb, MeasureCollector.getCollector().exportMeasures());
+      RestUtils.namespaces2json(sb, SystemContext.measureHandler.exportMeasures());
     }
     else {
       result.message = MessageFormat.format("Namespace: {0}", namespace);
-      RestUtils.measures2json(sb, MeasureCollector.getCollector().exportMeasures(namespace));
+      RestUtils.measures2json(sb, SystemContext.measureHandler.exportMeasures(namespace));
     }
     sb.append('}');
     result.setResult(sb.toString());

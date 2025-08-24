@@ -14,30 +14,32 @@
  * If not, see <http://www.gnu.org/licenses/>.
  *
  **/
-package net.eiroca.sysadm.tools.sysadmserver.manager;
+package net.eiroca.sysadm.tools.sysadmserver.collector.handler;
 
+import java.util.Properties;
+import org.slf4j.Logger;
+import net.eiroca.library.system.Logs;
 import net.eiroca.sysadm.tools.sysadmserver.SystemContext;
+import net.eiroca.sysadm.tools.sysadmserver.collector.GenericRuleBasedHandler;
 
-abstract public class GenericManager implements ISysAdmManager {
+public class TraceHandler extends GenericRuleBasedHandler<TraceRule> {
 
-  private boolean started = false;
+  public static final Logger traceLogger = Logs.getLogger("Traces");
 
   @Override
-  public void start() throws Exception {
-    if (started) { throw new IllegalStateException(); }
-    SystemContext.logger.info("Starting " + getClass().getCanonicalName());
-    started = true;
+  public void init(Properties config) throws Exception {
+    loadRules(RULE_FILEEXT, SystemContext.config.trace_rules_path);
   }
 
   @Override
-  public void stop() throws Exception {
-    if (!started) { throw new IllegalStateException(); }
-    started = false;
+  protected TraceRule createRule(final String name, final Properties config) {
+    return new TraceRule(name, config);
   }
 
-  @Override
-  public boolean isStarted() {
-    return started;
+  public boolean process(final String namespace, final String body) {
+    TraceRule rule = getRule(namespace);
+    if (rule != null) { return rule.process(body); }
+    return true;
   }
 
 }
