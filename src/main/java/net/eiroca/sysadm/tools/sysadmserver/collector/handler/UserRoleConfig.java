@@ -1,6 +1,6 @@
 /**
  *
-  * Copyright (C) 1999-2021 Enrico Croce - AGPL >= 3.0
+ * Copyright (C) 1999-2021 Enrico Croce - AGPL >= 3.0
  *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
@@ -30,9 +30,9 @@ public class UserRoleConfig extends GenericRule {
 
   public UserRoleConfig(final String name, final Properties config) {
     super(name, config);
+    readConf(config);
   }
 
-  @Override
   protected void readConf(final Properties config) {
     final Set<String> keys = config.stringPropertyNames();
     for (final String key : keys) {

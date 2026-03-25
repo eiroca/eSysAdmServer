@@ -68,3 +68,5 @@ config/eSysAdmServer.lock
 
 **/.classpath
 **/.project
+src/test/java/net/eiroca/sysadm/tools/Test1.java
+src/test/java/net/eiroca/sysadm/tools/Test2.java

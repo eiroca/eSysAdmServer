@@ -17,5 +17,5 @@
 package net.eiroca.sysadm.tools.sysadmserver.event;
 
 public enum EventSeverity {
-  INFO, WARN, SEVERE, CRITICAL
+  INFO, WARN, ERROR, SEVERE, CRITICAL
 }

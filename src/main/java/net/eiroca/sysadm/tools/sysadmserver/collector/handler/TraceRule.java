@@ -30,11 +30,11 @@ public class TraceRule extends GenericRule {
 
   public TraceRule(final String name, final Properties config) {
     super(name, config);
+    readConf(config);
   }
 
-  @Override
   protected void readConf(final Properties config) {
-    String logger = config.getProperty(PROP_LOGGER, DEF_LOGGER);
+    final String logger = config.getProperty(TraceRule.PROP_LOGGER, TraceRule.DEF_LOGGER);
     traceLogger = Logs.getLogger(logger);
   }
 

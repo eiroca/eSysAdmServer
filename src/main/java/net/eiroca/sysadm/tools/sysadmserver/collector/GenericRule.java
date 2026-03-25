@@ -24,10 +24,6 @@ public abstract class GenericRule {
 
   public GenericRule(final String name, final Properties config) {
     this.name = name;
-    readConf(config);
-  }
-
-  protected void readConf(final Properties config) {
   }
 
   public String getName() {

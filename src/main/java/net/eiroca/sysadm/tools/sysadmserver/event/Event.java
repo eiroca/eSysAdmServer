@@ -17,16 +17,17 @@
 package net.eiroca.sysadm.tools.sysadmserver.event;
 
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 import net.eiroca.ext.library.gson.GsonUtil;
-import net.eiroca.library.data.Tags;
 
 public class Event implements Comparable<Event> {
 
   public String id;
   public Date start;
   public EventSeverity severity;
-  public Tags tag = new Tags();
+  public Map<String, String> tags = new HashMap<>();
 
   public Event(final String id) {
     this.id = id;
