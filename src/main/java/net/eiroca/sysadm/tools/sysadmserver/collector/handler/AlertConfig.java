@@ -50,7 +50,7 @@ public class AlertConfig {
   //
   protected static transient IntegerParameter _validationLevel = new IntegerParameter(AlertConfig.config, "validationLevel", -1);
   protected static transient LocalPathParameter _defaultTagPath = new LocalPathParameter(AlertConfig.config, "defaultTagPath", null);
-  protected static transient LocalPathParameter _dynatraceTagMappingPath = new LocalPathParameter(AlertConfig.config, "dynatraceTagMappingPath", null);
+  protected static transient LocalPathParameter _templatesPath = new LocalPathParameter(AlertConfig.config, "templatesPath", "&templates");
   //
   protected static transient BooleanParameter _dbEnabled = new BooleanParameter(AlertConfig.configDB, "enabled", false);
   protected static transient IntegerParameter _maxSize = new IntegerParameter(AlertConfig.configDB, "maxSize", 250);
@@ -58,16 +58,16 @@ public class AlertConfig {
   protected static transient ListParameter _tableFields = new ListParameter(AlertConfig.configDB, "tableFields", null);
   //
   protected static transient BooleanParameter _logEnabled = new BooleanParameter(AlertConfig.configLog, "enabled", true);
-  protected static transient StringParameter _newFormat = new StringParameter(AlertConfig.configLog, "newFormat", "OPEN");
-  protected static transient StringParameter _inprogressFormat = new StringParameter(AlertConfig.configLog, "inprogressFormat", "UPDATE");
-  protected static transient StringParameter _closedFormat = new StringParameter(AlertConfig.configLog, "closedFormat", "CLOSE");
+  protected static transient StringParameter _outputTemplate = new StringParameter(AlertConfig.configLog, "template", null);
+  protected static transient BooleanParameter _prettyJson = new BooleanParameter(AlertConfig.configLog, "prettyJson", false);
 
   public static final char KEY_SEP = '#';
 
   //
   public Integer validationLevel;
   public transient Path defaultTagPath;
-  public transient Path dynatraceTagMappingPath;
+  public transient Path templatesPath;
+
   // DB Export
   public Boolean db_enabled;
   public int db_maxSize;
@@ -77,9 +77,8 @@ public class AlertConfig {
 
   // Log Export
   public Boolean log_enabled;
-  public String log_newFormat;
-  public String log_inprogressFormat;
-  public String log_closedFormat;
+  public transient String template;
+  public Boolean prettyJson;
 
   public Map<String, String> def = new HashMap<>();
   public Map<String, String> mapping = new HashMap<>();
@@ -107,9 +106,6 @@ public class AlertConfig {
       loadDefault(defaultTagPath.toString());
     }
     mapping.clear();
-    if ((dynatraceTagMappingPath != null) && (Files.exists(dynatraceTagMappingPath))) {
-      loadMapping(dynatraceTagMappingPath.toString());
-    }
     SystemContext.logger.info("AlertCollector.config: " + this);
   }
 
@@ -124,23 +120,6 @@ public class AlertConfig {
         final String key = data[0];
         final String val = data[1];
         def.put(key, val);
-      }
-    }
-  }
-
-  private void loadMapping(final String path) {
-    final CSVData csv = new CSVData(path);
-    if (csv.size() > 0) {
-      for (int i = 0; i < csv.size(); i++) {
-        final String[] data = csv.getData(i);
-        if ((data == null) || (data.length != 4)) {
-          continue;
-        }
-        final String key1 = data[0];
-        final String val1 = data[1];
-        final String key2 = data[2];
-        final String val2 = data[3];
-        mapping.put(key1 + AlertConfig.KEY_SEP + val1, key2 + AlertConfig.KEY_SEP + val2);
       }
     }
   }

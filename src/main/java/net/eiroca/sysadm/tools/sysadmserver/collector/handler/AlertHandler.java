@@ -16,6 +16,8 @@
  **/
 package net.eiroca.sysadm.tools.sysadmserver.collector.handler;
 
+import java.io.IOException;
+import java.io.StringWriter;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.SQLIntegrityConstraintViolationException;
@@ -25,18 +27,25 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.Set;
 import org.slf4j.Logger;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import freemarker.template.Configuration;
+import freemarker.template.Template;
+import freemarker.template.TemplateException;
 import net.eiroca.library.core.Helper;
+import net.eiroca.library.core.LibStr;
 import net.eiroca.library.db.LibDB;
+import net.eiroca.library.system.LibFile;
 import net.eiroca.library.system.Logs;
 import net.eiroca.sysadm.tools.sysadmserver.SystemContext;
 import net.eiroca.sysadm.tools.sysadmserver.collector.GenericHandler;
@@ -49,85 +58,75 @@ import spark.Request;
 public class AlertHandler extends GenericHandler {
 
   private static final Logger alertLogger = Logs.getLogger("Alerts");
-  private static final String SPLIT_REG = "[" + AlertConfig.KEY_SEP + "]";
 
   private final AlertConfig config = new AlertConfig();
-  private final ConcurrentHashMap<String, List<Alert>> alerts;
+  private final ObjectMapper mapper = new ObjectMapper();
 
   private long count = 0;
   private Connection conn = null;
 
-  public AlertHandler() {
-    alerts = new ConcurrentHashMap<>();
-  }
-
-  public synchronized List<Alert> getAlerts(final String namespace) {
-    List<Alert> space = alerts.get(namespace);
-    if (space == null) {
-      space = new ArrayList<>();
-      alerts.put(namespace, space);
-    }
-    return space;
-  }
-
-  private static final String[] METADATA = {
+  private static final String[] QUERYDATA = {
       "application", "module", "component", "host"
   };
-
-  private Map<String, String> readTags(final JsonObject json) {
-    final Map<String, String> tags = new HashMap<>();
-    final JsonArray arr = json.getAsJsonArray("entityTags");
-    for (final JsonElement e : arr) {
-      final String key = get(e, "key", null);
-      final String val = get(e, "value", null);
-      if ((key != null) && (val != null)) {
-        tags.put(key, val);
-      }
-    }
-    return tags;
+  private static final Set<String> SKIP_DATA = new HashSet<>();
+  static {
+    AlertHandler.SKIP_DATA.add("id");
+    AlertHandler.SKIP_DATA.add("start");
+    AlertHandler.SKIP_DATA.add("end");
+    AlertHandler.SKIP_DATA.add("state");
+    AlertHandler.SKIP_DATA.add("message");
   }
 
-  public synchronized int addAlertFormJson(final String namespace, final Request request, final String data) {
+  private static void logInvalidJSon(final String data, final Exception e) {
+    CollectorManager.logger.warn("Invalid alert json: " + e.getMessage());
+    CollectorManager.logger.info("Invalid alert json: " + data);
+  }
+
+  public synchronized int processAlertsFormJson(final String namespace, final Request request, String data) {
     final List<Alert> alerts = new ArrayList<>();
     int cnt = 0;
     CollectorManager.logger.debug("alert json: " + data);
-    if (data != null) {
-      JsonObject json = null;
+    if (LibStr.isEmptyOrNull(data)) { return cnt; }
+    // Input transformation via Freemaker Template
+    final String templateName = namespace + "_format.ftl";
+    Template srcTemplate = null;
+    srcTemplate = getTemplate(templateName);
+    if (srcTemplate != null) {
       try {
-        json = JsonParser.parseString(data).getAsJsonObject();
-        if ("dynatrace".equalsIgnoreCase(namespace)) {
-          dynatraceAlert(alerts, json);
-        }
-        else {
-          defaultAlert(alerts, json);
-        }
+        @SuppressWarnings("unchecked")
+        final Map<String, Object> model = mapper.readValue(data, Map.class);
+        final StringWriter out = new StringWriter();
+        srcTemplate.process(model, out);
+        data = out.getBuffer().toString();
       }
-      catch (final Exception e) {
-        CollectorManager.logger.warn("Invalid json: " + e.getMessage());
-        CollectorManager.logger.info("Invalid json: " + data);
+      catch (IOException | TemplateException e) {
+        AlertHandler.logInvalidJSon(data, e);
+        return 0;
       }
     }
+    readAlerts(alerts, data);
     for (Alert alert : alerts) {
-      if (alert != null) {
-        cnt++;
-        for (final String key : AlertHandler.METADATA) {
-          final String val = request.queryParams(key);
-          if (val != null) {
-            alert.tags.put(key, val);
-          }
+      if (alert == null) {
+        continue;
+      }
+      for (final String key : AlertHandler.QUERYDATA) {
+        final String val = request.queryParams(key);
+        if (val != null) {
+          alert.tags.put(key, val);
         }
-        if (config.validationLevel >= 0) {
-          for (int i = 0; i < (config.validationLevel + 1); i++) {
-            if (alert.tags.get(AlertHandler.METADATA[i]) == null) {
-              alert = null;
-              break;
-            }
+      }
+      if (config.validationLevel >= 0) {
+        for (int i = 0; i < (config.validationLevel + 1); i++) {
+          if (alert.tags.get(AlertHandler.QUERYDATA[i]) == null) {
+            alert = null;
+            break;
           }
         }
       }
       CollectorManager.logger.trace("alert: {0}", alert);
       try {
         if (alert != null) {
+          cnt++;
           flush(alert);
         }
       }
@@ -138,95 +137,70 @@ public class AlertHandler extends GenericHandler {
     return cnt;
   }
 
-  private void dynatraceAlert(final List<Alert> alerts, final JsonObject json) {
-    final Alert alert;
-    final Date start = getDynatraceDate(json, "startTime", null);
-    final Date end = getDynatraceDate(json, "endTime", null);
-    final String id = get(json, "displayId", null);
-    final String message = get(json, "title", null);
-    final String severity = get(json, "severityLevel", "SEVERE");
-    alert = build(id, start, end, message, severity);
-    if (alert != null) {
-      final String state = get(json, "status", null);
-      switch (state) {
-        case "CLOSED":
-          alert.state = AlertState.CLOSED;
-          break;
-        default:
-          alert.state = AlertState.INPROGRESS;
-          break;
-      }
-      final Map<String, String> tags = readTags(json);
-      CollectorManager.logger.debug("DT tags: " + tags);
-      for (final Entry<String, String> e : tags.entrySet()) {
-        final String oldtag = e.getKey() + AlertConfig.KEY_SEP + e.getValue();
-        final String newtag = config.mapping.get(oldtag);
-        if (newtag != null) {
-          final String[] t = newtag.split(AlertHandler.SPLIT_REG);
-          if (t.length == 2) {
-            alert.tags.put(t[0], t[1]);
-          }
+  private final Map<String, Template> templates = new HashMap<>();
+  Configuration cfg = new Configuration(Configuration.VERSION_2_3_34);
+
+  private Template getTemplate(final String templateName) {
+    Template t = null;
+    synchronized (templates) {
+      if (templates.containsKey(templateName)) { return templates.get(templateName); }
+      final String template = LibFile.readString(config.templatesPath + Helper.FS + templateName);
+      if (LibStr.isNotEmptyOrNull(template)) {
+        try {
+          t = new Template(templateName, template, cfg);
+        }
+        catch (final IOException e) {
         }
       }
-      String host = findHost(json, "affectedEntities");
-      if (host == null) findHost(json, "impactedEntities");
-      if (host != null) {
-        alert.tags.put(METADATA[3], host);
-      }
-      alerts.add(alert);
+      templates.put(templateName, t);
     }
+    return t;
   }
 
-  private String findHost(JsonObject json, String section) {
-    String host = null;
-    final JsonArray entities = json.getAsJsonArray(section);
-    if (entities != null) {
-      for (int i = 0; i < entities.size(); i++) {
-        final JsonObject entity = entities.get(i).getAsJsonObject();
-        if (entity != null) {
-          String name = get(entity, "name", null);
-          if (name != null) {
-            JsonElement id = entity.get("entityId");
-            if (id != null) {
-              String hostId = get(id, "id", null);
-              if ((hostId != null) && (hostId.startsWith("HOST-"))) {
-                host = name;
-                break;
-              }
-            }
-          }
-        }
-      }
+  private JsonObject getJson(final String data) {
+    JsonObject json = null;
+    try {
+      json = JsonParser.parseString(data).getAsJsonObject();
     }
-    CollectorManager.logger.debug("find host in " + section + ": " + host);
-    return host;
+    catch (final Exception e) {
+      AlertHandler.logInvalidJSon(data, e);
+    }
+    return json;
   }
 
-  public void defaultAlert(final List<Alert> alerts, final JsonObject json) {
-    Alert alert = null;
+  public void readAlerts(final List<Alert> alerts, final String data) {
+    final JsonObject json = getJson(data);
+    if (json == null) { return; }
     final JsonElement events = json.get("events");
     CollectorManager.logger.debug("events: " + events);
     if (events != null) {
+      Alert alert = null;
       final JsonArray entries = events.getAsJsonArray();
       for (int i = 0; i < entries.size(); i++) {
         final JsonObject event = entries.get(i).getAsJsonObject().getAsJsonObject("event");
         CollectorManager.logger.trace("event: " + event);
-        final Date start = getDate(event, "start", null);
-        final Date end = getDate(event, "end", null);
-        final String id = get(event, "id", null);
-        final String message = get(event, "message", null);
-        final String severity = get(event, "severity", "SEVERE");
+        final Date start = AlertHandler.getDate(event, "start", null);
+        final Date end = AlertHandler.getDate(event, "end", null);
+        final String id = AlertHandler.get(event, "id", null);
+        final String message = AlertHandler.get(event, "message", null);
+        final String severity = AlertHandler.get(event, "severity", "SEVERE");
         alert = build(id, start, end, message, severity);
         alert.state = AlertState.NEW;
         if (end != null) {
           alert.state = AlertState.CLOSED;
         }
-        for (final String key : AlertHandler.METADATA) {
-          final String val = get(event, key, null);
+        for (final Map.Entry<String, JsonElement> entry : event.entrySet()) {
+          final String key = entry.getKey();
+          if (!AlertHandler.SKIP_DATA.contains(key)) {
+            final JsonElement value = entry.getValue();
+            alert.tags.put(key, value.toString());
+          }
+        }
+        for (final String key : AlertHandler.QUERYDATA) {
+          final String val = AlertHandler.get(event, key, null);
           if (val != null) {
             alert.tags.put(key, val);
           }
-
         }
         alerts.add(alert);
       }
@@ -261,8 +235,8 @@ public class AlertHandler extends GenericHandler {
   }
 
   private final static Date getDate(final JsonElement event, final String name, final Date def) {
-    SimpleDateFormat ISO8601_1 = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
-    SimpleDateFormat ISO8601_2 = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXX");
+    final SimpleDateFormat ISO8601_1 = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
+    final SimpleDateFormat ISO8601_2 = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXX");
     Date result = def;
     final JsonObject o = event.getAsJsonObject();
     final JsonElement kv = (o != null) ? o.get(name) : null;
@@ -280,7 +254,9 @@ public class AlertHandler extends GenericHandler {
           catch (final ParseException e2) {
             try {
               long ts = Long.parseLong(val);
-              if (ts < 1000000000000L) ts = ts * 1000; // Seconds to ms
+              if (ts < 1000000000000L) {
+                ts = ts * 1000; // Seconds to ms
+              }
               result = new Date(ts);
             }
             catch (final NumberFormatException e3) {
@@ -293,63 +269,53 @@ public class AlertHandler extends GenericHandler {
     return result;
   }
 
-  private final static Date getDynatraceDate(final JsonElement event, final String name, final Date def) {
-    Date result = null;
-    final JsonObject o = event.getAsJsonObject();
-    final JsonElement kv = (o != null) ? o.get(name) : null;
-    if (kv != null) {
-      final String val = kv.getAsString();
-      if (val != null) {
-        try {
-          final long ts = Long.parseLong(val);
-          if (ts > 0) {
-            result = new Date(ts);
-          }
-        }
-        catch (final NumberFormatException e) {
-          CollectorManager.logger.debug("parsing error: " + o, e);
-        }
-      }
-    }
-    return result;
-  }
-
   private void flush(final Alert a) {
     CollectorManager.logger.debug("flushing: " + a);
-    if (!config.db_enabled) {
+    if (config.db_enabled) {
       exportIncidentDB(a);
     }
     if (config.log_enabled) {
       exporIncidentLog(a);
     }
-    count++;
+    count = (count + 1) & 0x7FFF_FFFF_FFFF_FFFFL;
+  }
+
+  private String getTextFromAlert(final Alert a) {
+    String msg = null;
+    final String templateName = config.template;
+    if (templateName != null) {
+      CollectorManager.logger.debug("Applying transformation: " + templateName);
+      final Template t = getTemplate(templateName);
+      if (t != null) {
+        try {
+          @SuppressWarnings("unchecked")
+          final Map<String, Object> model = mapper.readValue(a.toString(), Map.class);
+          final StringWriter dstOut = new StringWriter();
+          t.process(model, dstOut);
+          msg = dstOut.getBuffer().toString();
+          if (config.prettyJson) {
+            final JsonObject json = getJson(msg);
+            if (json == null) { return null; }
+            msg = json.toString();
+          }
+          CollectorManager.logger.debug("Transformed alert: " + msg);
+        }
+        catch (IOException | TemplateException e) {
+          CollectorManager.logger.info("Invalid alert output transformation: " + e.getMessage());
+          CollectorManager.logger.debug("Invalid alert output transformation: " + a);
+        }
+      }
+    }
+    if (msg == null) {
+      msg = a.toString();
+    }
+    CollectorManager.logger.trace("getTextFromAlert: " + msg);
+    return msg;
   }
 
   private void exporIncidentLog(final Alert a) {
-    String fmt = null;
-    switch (a.state) {
-      case NEW:
-        fmt = config.log_newFormat;
-        break;
-      case INPROGRESS:
-        fmt = config.log_inprogressFormat;
-        break;
-      case CLOSED:
-        fmt = config.log_closedFormat;
-        break;
-    }
-    if (fmt != null) {
-      final String msg = MessageFormat.format(fmt, //
-          a.id, // 0
-          a.state, // 1
-          a.start, // 2
-          a.end, // 3
-          a.message, // 4
-          a.tags.get(AlertHandler.METADATA[0]), // 5 "application"
-          a.tags.get(AlertHandler.METADATA[1]), // 6 "module"
-          a.tags.get(AlertHandler.METADATA[2]), // 7 "component"
-          a.tags.get(AlertHandler.METADATA[3]) //  8 "host"
-      );
+    final String msg = getTextFromAlert(a);
+    if (msg != null) {
       switch (a.severity) {
         case CRITICAL:
           AlertHandler.alertLogger.error(msg);
@@ -370,7 +336,6 @@ public class AlertHandler extends GenericHandler {
 
   private void exportIncidentDB(final Alert a) {
     if ((config.db_tableName == null) || (config.db_tableFields == null)) { return; }
-
     final List<Object> vals = new ArrayList<>();
     vals.clear();
     vals.add(System.currentTimeMillis() + "." + count);

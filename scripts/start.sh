@@ -2,8 +2,8 @@
 
 ME=eSysAdm
 CONFIG=config
-ETL_DIR=/opt/SP/app/ETL/$ME
-ETL_TMP=/opt/SP/app/ETL/$ME/tmp
+ETL_DIR=/app/ETL/$ME
+ETL_TMP=/app/ETL/tmp
 
 cd $ETL_DIR
 mkdir -p $ETL_TMP

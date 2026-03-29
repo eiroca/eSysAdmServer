@@ -40,7 +40,7 @@ public class AlertAction extends GenericAction {
       result.setMessage("No data");
     }
     else {
-      final int cnt = SystemContext.alertHandler.addAlertFormJson(namespace, request, data);
+      final int cnt = SystemContext.alertHandler.processAlertsFormJson(namespace, request, data);
       if (cnt > 0) {
         sb.append(cnt + " event(s) processed.");
         result.setResult(sb.toString());
@@ -49,7 +49,7 @@ public class AlertAction extends GenericAction {
       }
       else {
         result.setStatus(-3);
-        result.setMessage("Invalid Alert");
+        result.setMessage("Invalid event(s)");
       }
 
     }
