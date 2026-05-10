@@ -74,7 +74,11 @@ public class UserRoleHandler extends GenericRuleBasedHandler<UserRoleConfig> {
       if ((network == null) || (network.contains(req_ip))) {
         if ((token == null) || (token.equals(req_token))) {
           final String role = rule.getRole();
-          return rules.get(role);
+          UserRoleConfig userRule = rules.get(role);
+          CollectorManager.logger.debug(MessageFormat.format("{0}/{1} -> {2}", req_ip, req_token, role));
+          CollectorManager.logger.debug("Rule: " + userRule);
+          return userRule;
+
         }
       }
     }

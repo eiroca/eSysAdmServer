@@ -21,6 +21,7 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
+import org.apache.http.HttpHost;
 import net.eiroca.ext.library.gson.GsonUtil;
 import net.eiroca.library.config.parameter.BooleanParameter;
 import net.eiroca.library.config.parameter.IntegerParameter;
@@ -40,13 +41,16 @@ public class AlertConfig {
 
   private static final String PREFIX_ALERT_DB = "DB.";
   private static final String PREFIX_ALERT_LOG = "LOG.";
+  private static final String PREFIX_ALERT_HOOK = "HOOK.";
 
   private static final String VAR_DB_PREFIX = "db_";
   private static final String VAR_LOG_PREFIX = "log_";
+  private static final String VAR_HOOK_PREFIX = "hook_";
 
   protected static transient ContextParameters config = new ContextParameters();
   protected static transient ContextParameters configDB = new ContextParameters();
   protected static transient ContextParameters configLog = new ContextParameters();
+  protected static transient ContextParameters configHook = new ContextParameters();
   //
   protected static transient IntegerParameter _validationLevel = new IntegerParameter(AlertConfig.config, "validationLevel", -1);
   protected static transient LocalPathParameter _defaultTagPath = new LocalPathParameter(AlertConfig.config, "defaultTagPath", null);
@@ -60,6 +64,14 @@ public class AlertConfig {
   protected static transient BooleanParameter _logEnabled = new BooleanParameter(AlertConfig.configLog, "enabled", true);
   protected static transient StringParameter _outputTemplate = new StringParameter(AlertConfig.configLog, "template", null);
   protected static transient BooleanParameter _prettyJson = new BooleanParameter(AlertConfig.configLog, "prettyJson", false);
+  //
+  protected static transient BooleanParameter _hookEnabled = new BooleanParameter(AlertConfig.configHook, "enabled", true);
+  protected static transient StringParameter _hookTemplate = new StringParameter(AlertConfig.configHook, "template", null);
+  protected static transient StringParameter _hookUrl = new StringParameter(AlertConfig.configHook, "url", null);
+  protected static transient StringParameter _hookToken = new StringParameter(AlertConfig.configHook, "token", null);
+  protected static transient StringParameter _hookHeader = new StringParameter(AlertConfig.configHook, "header", "Authorization");
+  protected static transient StringParameter _hookProxyHost = new StringParameter(AlertConfig.configHook, "proxyhost", null);
+  protected static transient IntegerParameter _hookProxyPort = new IntegerParameter(AlertConfig.configHook, "proxypost", 8080);
 
   public static final char KEY_SEP = '#';
 
@@ -77,8 +89,18 @@ public class AlertConfig {
 
   // Log Export
   public Boolean log_enabled;
-  public transient String template;
-  public Boolean prettyJson;
+  public transient String log_template;
+  public Boolean log_prettyJson;
+
+  // WebHook Export
+  public Boolean hook_enabled;
+  public String hook_template;
+  public String hook_url;
+  public String hook_token;
+  public String hook_header;
+  public transient String hook_proxyhost;
+  public transient int hook_proxyport;
+  public HttpHost hookProxy = null;
 
   public Map<String, String> def = new HashMap<>();
   public Map<String, String> mapping = new HashMap<>();
@@ -100,6 +122,15 @@ public class AlertConfig {
     //
     AlertConfig.configLog.loadConfig(params, AlertConfig.PREFIX_ALERT_EXPORT + AlertConfig.PREFIX_ALERT_LOG);
     AlertConfig.configLog.saveConfig(this, AlertConfig.VAR_LOG_PREFIX, true, true);
+    // WebHook
+    AlertConfig.configLog.loadConfig(params, AlertConfig.PREFIX_ALERT_EXPORT + AlertConfig.PREFIX_ALERT_HOOK);
+    AlertConfig.configLog.saveConfig(this, AlertConfig.VAR_HOOK_PREFIX, true, true);
+    if (hook_proxyhost != null) {
+      hookProxy = new HttpHost(hook_proxyhost, hook_proxyport);
+    }
+    else {
+      hookProxy = null;
+    }
     //
     def.clear();
     if ((defaultTagPath != null) && (Files.exists(defaultTagPath))) {

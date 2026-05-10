@@ -25,6 +25,7 @@ import java.text.MessageFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -33,6 +34,10 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Set;
+import org.apache.http.Header;
+import org.apache.http.entity.ContentType;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.message.BasicHeader;
 import org.slf4j.Logger;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.JsonArray;
@@ -42,6 +47,7 @@ import com.google.gson.JsonParser;
 import freemarker.template.Configuration;
 import freemarker.template.Template;
 import freemarker.template.TemplateException;
+import net.eiroca.ext.library.http.HttpClientHelper;
 import net.eiroca.library.core.Helper;
 import net.eiroca.library.core.LibStr;
 import net.eiroca.library.db.LibDB;
@@ -277,12 +283,15 @@ public class AlertHandler extends GenericHandler {
     if (config.log_enabled) {
       exporIncidentLog(a);
     }
+    if (config.hook_enabled) {
+      exporIncidentHook(a);
+    }
     count = (count + 1) & 0x7FFF_FFFF_FFFF_FFFFL;
   }
 
-  private String getTextFromAlert(final Alert a) {
+  private String getTextFromAlert(final Alert a, final String templateName, final boolean prettyPrint) {
     String msg = null;
-    final String templateName = config.template;
+
     if (templateName != null) {
       CollectorManager.logger.debug("Applying transformation: " + templateName);
       final Template t = getTemplate(templateName);
@@ -293,7 +302,7 @@ public class AlertHandler extends GenericHandler {
           final StringWriter dstOut = new StringWriter();
           t.process(model, dstOut);
           msg = dstOut.getBuffer().toString();
-          if (config.prettyJson) {
+          if (prettyPrint) {
             final JsonObject json = getJson(msg);
             if (json == null) { return null; }
             msg = json.toString();
@@ -314,7 +323,7 @@ public class AlertHandler extends GenericHandler {
   }
 
   private void exporIncidentLog(final Alert a) {
-    final String msg = getTextFromAlert(a);
+    final String msg = getTextFromAlert(a, config.log_template, config.log_prettyJson);
     if (msg != null) {
       switch (a.severity) {
         case CRITICAL:
@@ -398,6 +407,22 @@ public class AlertHandler extends GenericHandler {
         conn = null;
       }
     }
+  }
+
+  private void exporIncidentHook(final Alert a) {
+    final String msg = getTextFromAlert(a, config.hook_template, false);
+    Collection<Header> headers = null;
+    if (config.hook_token != null) {
+      headers = new ArrayList<>();
+      headers.add(new BasicHeader(config.hook_header, config.hook_token));
+    }
+    final CloseableHttpClient client = HttpClientHelper.getHttpClient(config.hookProxy, headers);
+    CollectorManager.logger.debug("alert webhook()");
+    final String _doc = msg;
+    final String url = config.hook_url;
+    final String r = HttpClientHelper.POST(client, url, _doc, ContentType.APPLICATION_JSON);
+    CollectorManager.logger.debug("POST " + url + " " + _doc + " --> " + r);
+    Helper.close(client);
   }
 
   @Override
