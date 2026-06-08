@@ -33,11 +33,21 @@ public class eSysAdmServer {
   private static final int SLEEPTIME = 5 * 1000;
 
   public static void main(final String[] args) {
+    boolean inited = false;
     try {
       eSysAdmServer.listClassPath();
-      final Path confPath = eSysAdmServer.getConfigPath(args);
+      Path confPath = eSysAdmServer.getConfigPath(args);
+      if (confPath == null) {
+        confPath = Paths.get("eSysAdmServer.config");
+        if (!Files.exists(confPath)) confPath = null;
+      }
+      if (confPath == null) {
+        confPath = Paths.get("config", "eSysAdmServer.config");
+        if (!Files.exists(confPath)) confPath = null;
+      }
       if (confPath == null) { throw new IOException("Configuration File Missing"); }
       SystemContext.init(confPath);
+      inited = true;
       while (true) {
         SystemContext.scheduler.logStat();
         Helper.sleep(eSysAdmServer.SLEEPTIME);
@@ -50,7 +60,7 @@ public class eSysAdmServer {
       SystemContext.logger.error(Helper.getExceptionAsString("Fatal error: ", e, false), e);
     }
     finally {
-      SystemContext.done();
+      if (inited) SystemContext.done();
     }
   }
 
@@ -58,7 +68,7 @@ public class eSysAdmServer {
     final List<URI> filesList = new ArrayList<>();
     LibFile.getClassPathFiles(filesList);
     for (final URI file : filesList) {
-      SystemContext.logger.debug(file.toString());
+      SystemContext.logger.trace(file.toString());
     }
   }
 

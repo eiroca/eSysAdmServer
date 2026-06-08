@@ -16,13 +16,12 @@
  **/
 package net.eiroca.sysadm.tools.sysadmserver.collector.action;
 
+import io.javalin.http.Context;
 import net.eiroca.ext.library.gson.GsonCursor;
 import net.eiroca.ext.library.gson.SimpleGson;
 import net.eiroca.library.server.ResultResponse;
 import net.eiroca.sysadm.tools.sysadmserver.SystemContext;
 import net.eiroca.sysadm.tools.sysadmserver.collector.GenericAction;
-import spark.Request;
-import spark.Response;
 
 public class TraceAction extends GenericAction {
 
@@ -33,22 +32,22 @@ public class TraceAction extends GenericAction {
   }
 
   @Override
-  public Object execute(final String namespace, final Request request, final Response response) throws Exception {
+  public Object execute(final String namespace, final Context ctx) throws Exception {
     final ResultResponse<Object> result = new ResultResponse<>(0);
     String body;
-    if ("GET".equals(request.requestMethod())) {
-      SimpleGson data = new SimpleGson(true);
-      GsonCursor json = new GsonCursor(data);
-      for (final String a : request.queryParams()) {
-        final String v = request.queryParams(a);
+    if ("GET".equals(ctx.req().getMethod())) {
+      final SimpleGson data = new SimpleGson(true);
+      final GsonCursor json = new GsonCursor(data);
+      for (final String a : ctx.queryParamMap().keySet()) {
+        final String v = ctx.queryParam(a);
         json.addProperty(a, v);
       }
       body = json.toString();
     }
     else {
-      body = request.body();
+      body = ctx.body();
     }
-    boolean ok = SystemContext.traceHandler.process(namespace, body);
+    final boolean ok = SystemContext.traceHandler.process(namespace, body);
     if (!ok) {
       result.setMessage("KO");
       result.setStatus(1);

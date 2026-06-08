@@ -17,12 +17,11 @@
 package net.eiroca.sysadm.tools.sysadmserver.collector.action;
 
 import java.text.MessageFormat;
+import io.javalin.http.Context;
 import net.eiroca.library.server.ResultResponse;
 import net.eiroca.sysadm.tools.sysadmserver.SystemContext;
 import net.eiroca.sysadm.tools.sysadmserver.collector.GenericAction;
 import net.eiroca.sysadm.tools.sysadmserver.collector.util.RestUtils;
-import spark.Request;
-import spark.Response;
 
 public class MetricAction extends GenericAction {
 
@@ -33,7 +32,7 @@ public class MetricAction extends GenericAction {
   }
 
   @Override
-  public Object execute(final String namespace, final Request request, final Response response) throws Exception {
+  public Object execute(final String namespace, final Context ctx) throws Exception {
     final ResultResponse<Object> result = new ResultResponse<>(0);
     result.message = MessageFormat.format("Namespace: {0}", namespace);
     final StringBuilder sb = new StringBuilder(1024);

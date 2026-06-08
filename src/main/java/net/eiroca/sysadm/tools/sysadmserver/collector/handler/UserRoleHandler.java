@@ -21,13 +21,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 import inet.ipaddr.IPAddressString;
+import io.javalin.http.Context;
 import net.eiroca.library.core.LibStr;
 import net.eiroca.library.csv.CSV;
 import net.eiroca.library.csv.CSVData;
 import net.eiroca.sysadm.tools.sysadmserver.SystemContext;
 import net.eiroca.sysadm.tools.sysadmserver.collector.GenericRuleBasedHandler;
 import net.eiroca.sysadm.tools.sysadmserver.manager.CollectorManager;
-import spark.Request;
 
 public class UserRoleHandler extends GenericRuleBasedHandler<UserRoleConfig> {
 
@@ -37,8 +37,9 @@ public class UserRoleHandler extends GenericRuleBasedHandler<UserRoleConfig> {
 
   private final List<UserRoleMapping> mapping = new ArrayList<>();
 
-  public void init(Properties config) throws Exception {
-    loadRules(RULE_FILEEXT, SystemContext.config.user_roles_path);
+  @Override
+  public void init(final Properties config) throws Exception {
+    loadRules(SystemContext.config.user_roles_path);
     readMapping();
   }
 
@@ -58,15 +59,15 @@ public class UserRoleHandler extends GenericRuleBasedHandler<UserRoleConfig> {
         token = str;
       }
       final String role = data[2];
-      UserRoleMapping rule = new UserRoleMapping(network, token, role);
+      final UserRoleMapping rule = new UserRoleMapping(network, token, role);
       mapping.add(rule);
       CollectorManager.logger.debug(rule.toString());
     }
   }
 
-  public UserRoleConfig getRole(final Request request) {
-    final IPAddressString req_ip = new IPAddressString(request.ip());
-    final String req_token = request.headers(UserRoleHandler.ESYSADM_TOKEN_HEADER);
+  public UserRoleConfig getRole(final Context ctx) {
+    final IPAddressString req_ip = new IPAddressString(ctx.ip());
+    final String req_token = ctx.req().getHeader(UserRoleHandler.ESYSADM_TOKEN_HEADER);
     for (final UserRoleMapping rule : mapping) {
       final IPAddressString network = rule.getNetwork();
       final String token = rule.getToken();
@@ -74,7 +75,7 @@ public class UserRoleHandler extends GenericRuleBasedHandler<UserRoleConfig> {
       if ((network == null) || (network.contains(req_ip))) {
         if ((token == null) || (token.equals(req_token))) {
           final String role = rule.getRole();
-          UserRoleConfig userRule = rules.get(role);
+          final UserRoleConfig userRule = rules.get(role);
           CollectorManager.logger.debug(MessageFormat.format("{0}/{1} -> {2}", req_ip, req_token, role));
           CollectorManager.logger.debug("Rule: " + userRule);
           return userRule;
@@ -86,7 +87,7 @@ public class UserRoleHandler extends GenericRuleBasedHandler<UserRoleConfig> {
   }
 
   @Override
-  protected UserRoleConfig createRule(final String name, Properties config) {
+  protected UserRoleConfig createRule(final String name, final Properties config) {
     return new UserRoleConfig(name, config);
   }
 

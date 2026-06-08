@@ -16,11 +16,10 @@
  **/
 package net.eiroca.sysadm.tools.sysadmserver.collector.action;
 
+import io.javalin.http.Context;
 import net.eiroca.library.server.ResultResponse;
 import net.eiroca.sysadm.tools.sysadmserver.SystemContext;
 import net.eiroca.sysadm.tools.sysadmserver.collector.GenericAction;
-import spark.Request;
-import spark.Response;
 
 public class AlertAction extends GenericAction {
 
@@ -31,16 +30,16 @@ public class AlertAction extends GenericAction {
   }
 
   @Override
-  public Object execute(final String namespace, final Request request, final Response response) throws Exception {
+  public Object execute(final String namespace, final Context ctx) throws Exception {
     final ResultResponse<Object> result = new ResultResponse<>(-1, "Generic Error");
     final StringBuilder sb = new StringBuilder(1024);
-    final String data = request.body();
+    final String data = ctx.body();
     if (data == null) {
       result.setStatus(-2);
       result.setMessage("No data");
     }
     else {
-      final int cnt = SystemContext.alertHandler.processAlertsFormJson(namespace, request, data);
+      final int cnt = SystemContext.alertHandler.processAlertsFormJson(namespace, ctx, data);
       if (cnt > 0) {
         sb.append(cnt + " event(s) processed.");
         result.setResult(sb.toString());

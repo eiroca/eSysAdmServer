@@ -27,8 +27,8 @@ public class TraceHandler extends GenericRuleBasedHandler<TraceRule> {
   public static final Logger traceLogger = Logs.getLogger("Traces");
 
   @Override
-  public void init(Properties config) throws Exception {
-    loadRules(RULE_FILEEXT, SystemContext.config.trace_rules_path);
+  public void init(final Properties config) throws Exception {
+    loadRules(SystemContext.config.trace_rules_path);
   }
 
   @Override
@@ -37,7 +37,7 @@ public class TraceHandler extends GenericRuleBasedHandler<TraceRule> {
   }
 
   public boolean process(final String namespace, final String body) {
-    TraceRule rule = getRule(namespace);
+    final TraceRule rule = getRule(namespace);
     if (rule != null) { return rule.process(body); }
     return true;
   }

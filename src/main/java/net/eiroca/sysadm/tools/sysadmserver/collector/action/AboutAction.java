@@ -16,11 +16,10 @@
  **/
 package net.eiroca.sysadm.tools.sysadmserver.collector.action;
 
+import io.javalin.http.Context;
 import net.eiroca.library.server.ServerResponse;
 import net.eiroca.sysadm.tools.sysadmserver.collector.GenericAction;
 import net.eiroca.sysadm.tools.sysadmserver.manager.CollectorManager;
-import spark.Request;
-import spark.Response;
 
 public class AboutAction extends GenericAction {
 
@@ -33,7 +32,7 @@ public class AboutAction extends GenericAction {
   }
 
   @Override
-  public Object execute(final String namespace, final Request request, final Response response) throws Exception {
+  public Object execute(final String namespace, final Context ctx) throws Exception {
     return AboutAction.ABOUT;
   }
 

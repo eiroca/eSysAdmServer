@@ -79,10 +79,10 @@
       <logger name="eSysAdmServer.scheduler" additivity="false" level="debug">
          <appender-ref ref="Scheduler" />
       </logger>
-      <logger name="eSysAdmServer.collector" additivity="false" level="debug">
-         <appender-ref ref="Collector" />
+      <logger name="org.eclipse.jetty" additivity="false" level="info">
+         <appender-ref ref="System" />
       </logger>
-      <Root level="info">
+      <Root level="debug">
          <appender-ref ref="System" />
       </Root>
    </Loggers>

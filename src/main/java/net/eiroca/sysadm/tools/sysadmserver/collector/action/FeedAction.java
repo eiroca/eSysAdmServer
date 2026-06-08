@@ -16,10 +16,10 @@
  **/
 package net.eiroca.sysadm.tools.sysadmserver.collector.action;
 
-import static net.eiroca.sysadm.tools.sysadmserver.SystemContext.measureHandler;
 import java.text.MessageFormat;
 import java.util.SortedMap;
 import java.util.TreeMap;
+import io.javalin.http.Context;
 import net.eiroca.library.core.LibFormat;
 import net.eiroca.library.core.LibStr;
 import net.eiroca.library.metrics.Statistic;
@@ -31,8 +31,6 @@ import net.eiroca.sysadm.tools.sysadmserver.SystemConfig;
 import net.eiroca.sysadm.tools.sysadmserver.SystemContext;
 import net.eiroca.sysadm.tools.sysadmserver.collector.GenericAction;
 import net.eiroca.sysadm.tools.sysadmserver.manager.CollectorManager;
-import spark.Request;
-import spark.Response;
 
 /**
  * Send Metric(s) to the controller
@@ -96,18 +94,18 @@ public class FeedAction extends GenericAction {
   }
 
   @Override
-  public Object execute(final String namespace, final Request request, final Response response) throws Exception {
+  public Object execute(final String namespace, final Context ctx) throws Exception {
     final ServerResponse result = new ServerResponse(0);
     String[] data = null;
-    if (FeedAction.POST.equalsIgnoreCase(request.requestMethod())) {
-      final String body = request.body();
+    if (FeedAction.POST.equalsIgnoreCase(ctx.req().getMethod())) {
+      final String body = ctx.body();
       CollectorManager.logger.trace("Body: " + body);
       if (body != null) {
         data = body.split(FeedAction.REGEX_NL);
       }
     }
     else {
-      final String queryParams = request.queryString();
+      final String queryParams = ctx.queryString();
       CollectorManager.logger.trace("Query: " + queryParams);
       if (queryParams != null) {
         data = queryParams.split(";");
@@ -116,7 +114,7 @@ public class FeedAction extends GenericAction {
     // process the request string
     final SortedMap<String, Object> meta = new TreeMap<>();
     meta.put(MeasureFields.FLD_SOURCE, SystemConfig.ME);
-    String ip = request.ip();
+    String ip = ctx.ip();
     if (ip == null) {
       ip = SystemContext.config.hostname;
     }
@@ -171,7 +169,7 @@ public class FeedAction extends GenericAction {
         else {
           metric = subMeasureName;
         }
-        Statistic m = measureHandler.getMetric(namespace, metric);
+        Statistic m = SystemContext.measureHandler.getMetric(namespace, metric);
         m.addValue(doubleValue);
         if (splitName != null) {
           m = (Statistic)m.getSplitting(splitName);

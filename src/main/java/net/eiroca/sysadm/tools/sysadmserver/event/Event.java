@@ -39,7 +39,7 @@ public class Event implements Comparable<Event> {
     start = new Date();
   }
 
-  public Event(String id, Date start) {
+  public Event(final String id, final Date start) {
     this.id = id;
     this.start = start;
   }

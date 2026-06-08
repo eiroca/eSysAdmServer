@@ -17,16 +17,15 @@
 package net.eiroca.sysadm.tools.sysadmserver.collector;
 
 import java.text.MessageFormat;
+import io.javalin.http.Context;
+import io.javalin.http.Handler;
 import net.eiroca.library.core.Helper;
 import net.eiroca.library.server.ServerResponse;
 import net.eiroca.sysadm.tools.sysadmserver.SystemContext;
 import net.eiroca.sysadm.tools.sysadmserver.collector.handler.UserRoleConfig;
 import net.eiroca.sysadm.tools.sysadmserver.manager.CollectorManager;
-import spark.Request;
-import spark.Response;
-import spark.Route;
 
-public abstract class GenericAction implements Route {
+public abstract class GenericAction implements Handler {
 
   private static final ServerResponse LICENCE_ERROR = new ServerResponse(-9999, "License is expired, no action is taken");
   private static final ServerResponse PERMISSION_ERROR = new ServerResponse(-9998, "No permission to execute the action");
@@ -39,26 +38,45 @@ public abstract class GenericAction implements Route {
     name = getClass().getSimpleName();
   }
 
+  public static final String getNamespace(final Context ctx) {
+    String namespace = ctx.pathParam(GenericHandler.PARAM_NAMESPACE);
+    if (namespace == null) {
+      namespace = GenericHandler.DEFALT_NAMESPACE;
+    }
+    return namespace;
+  }
+
+  final public void response(final Context ctx, final Object res) throws Exception {
+    ctx.status(200);
+    ctx.json(res);
+  }
+
   @Override
-  final public Object handle(final Request request, final Response response) throws Exception {
-    if (!SystemContext.isLicenseValid()) { return GenericAction.LICENCE_ERROR; }
-    UserRoleConfig role = canRun(request);
-    String ip = request.ip();
-    if (ip == null) ip = "-";
+  final public void handle(final Context ctx) throws Exception {
+    if (!SystemContext.isLicenseValid()) {
+      response(ctx, GenericAction.LICENCE_ERROR);
+      return;
+    }
+    final UserRoleConfig role = canRun(ctx);
+    String ip = ctx.ip();
+    if (ip == null) {
+      ip = "-";
+    }
     if (role == null) {
       CollectorManager.logger.warn(MessageFormat.format("{0}|{1}|-|-|-|PERMISSION_ERROR", name, ip));
-      return GenericAction.PERMISSION_ERROR;
+      response(ctx, GenericAction.PERMISSION_ERROR);
+      return;
     }
-    String roleName = role.getName();
-    String thread = Thread.currentThread().getName();
+    final String roleName = role.getName();
+    final String thread = Thread.currentThread().getName();
     CollectorManager.logger.debug(MessageFormat.format("{0}|{1}|{2}|START", name, roleName, thread));
     long t = System.currentTimeMillis();
     String err = "-";
     Object o = null;
     String namespace = null;
     try {
-      namespace = GenericHandler.getNamespace(request);
-      o = execute(namespace, request, response);
+      namespace = GenericHandler.getNamespace(ctx);
+      o = execute(namespace, ctx);
     }
     catch (final Exception e) {
       err = Helper.getExceptionAsString(e);
@@ -69,14 +87,14 @@ public abstract class GenericAction implements Route {
       CollectorManager.logger.info(MessageFormat.format("{0}|{1}|{2}|{3}|{4,number,#}|{5}", name, ip, roleName, namespace, t, err));
       CollectorManager.logger.debug(MessageFormat.format("{0}|{1}|{2}|END", name, roleName, thread));
     }
-    return o;
+    response(ctx, o);
   }
 
-  abstract public Object execute(String namespace, final Request request, final Response response) throws Exception;
+  abstract public Object execute(String namespace, final Context ctx) throws Exception;
 
-  protected UserRoleConfig canRun(final Request request) {
+  protected UserRoleConfig canRun(final Context ctx) {
     if (permission == null) { return null; }
-    UserRoleConfig role = SystemContext.userRoleHandler.getRole(request);
+    UserRoleConfig role = SystemContext.userRoleHandler.getRole(ctx);
     if (role != null) {
       if (!role.isAllowed(permission)) {
         role = null;

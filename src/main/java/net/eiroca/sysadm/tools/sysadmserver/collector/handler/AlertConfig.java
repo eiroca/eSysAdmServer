@@ -26,13 +26,14 @@ import net.eiroca.ext.library.gson.GsonUtil;
 import net.eiroca.library.config.parameter.BooleanParameter;
 import net.eiroca.library.config.parameter.IntegerParameter;
 import net.eiroca.library.config.parameter.ListParameter;
+import net.eiroca.library.config.parameter.LocalPathParameter;
 import net.eiroca.library.config.parameter.StringParameter;
 import net.eiroca.library.csv.CSVData;
 import net.eiroca.library.db.DBConfig;
 import net.eiroca.library.sysadm.monitoring.sdk.ServerContext;
 import net.eiroca.library.system.ContextParameters;
+import net.eiroca.sysadm.tools.sysadmserver.SystemConfig;
 import net.eiroca.sysadm.tools.sysadmserver.SystemContext;
-import net.eiroca.sysadm.tools.sysadmserver.util.params.LocalPathParameter;
 
 public class AlertConfig {
 
@@ -53,8 +54,8 @@ public class AlertConfig {
   protected static transient ContextParameters configHook = new ContextParameters();
   //
   protected static transient IntegerParameter _validationLevel = new IntegerParameter(AlertConfig.config, "validationLevel", -1);
-  protected static transient LocalPathParameter _defaultTagPath = new LocalPathParameter(AlertConfig.config, "defaultTagPath", null);
-  protected static transient LocalPathParameter _templatesPath = new LocalPathParameter(AlertConfig.config, "templatesPath", "&templates");
+  protected static transient LocalPathParameter _defaultTagPath = new LocalPathParameter(AlertConfig.config, "defaultTagPath", null, SystemConfig.pathGetter);
+  protected static transient LocalPathParameter _templatesPath = new LocalPathParameter(AlertConfig.config, "templatesPath", "&templates", SystemConfig.pathGetter);
   //
   protected static transient BooleanParameter _dbEnabled = new BooleanParameter(AlertConfig.configDB, "enabled", false);
   protected static transient IntegerParameter _maxSize = new IntegerParameter(AlertConfig.configDB, "maxSize", 250);

@@ -21,10 +21,11 @@ import java.util.Properties;
 import net.eiroca.library.config.parameter.BooleanParameter;
 import net.eiroca.library.config.parameter.HostnameParameter;
 import net.eiroca.library.config.parameter.IntegerParameter;
+import net.eiroca.library.config.parameter.LocalPathGetter;
+import net.eiroca.library.config.parameter.LocalPathParameter;
 import net.eiroca.library.config.parameter.PathParameter;
 import net.eiroca.library.config.parameter.StringParameter;
 import net.eiroca.library.system.ContextParameters;
-import net.eiroca.sysadm.tools.sysadmserver.util.params.LocalPathParameter;
 
 public final class SystemConfig {
 
@@ -35,8 +36,18 @@ public final class SystemConfig {
   protected static final String VAR_PREFIX = null;
   protected static final ContextParameters config = new ContextParameters();
 
+  public static Path configPath = null;
+
+  public  static final LocalPathGetter pathGetter = new LocalPathGetter() {
+
+    @Override
+    public Path getPath() {
+      return configPath;
+    }
+  };
+
   // Global
-  protected static PathParameter _lockfile = new LocalPathParameter(SystemConfig.config, "lockfile", SystemConfig.ME + ".lock");
+  protected static PathParameter _lockfile = new LocalPathParameter(SystemConfig.config, "lockfile", SystemConfig.ME + ".lock", pathGetter);
   protected static StringParameter _hostname = new HostnameParameter(SystemConfig.config, "hostname", "locahost");
   protected static BooleanParameter _dryrun = new BooleanParameter(SystemConfig.config, "dryrun", false);
   // Scheduler
@@ -45,29 +56,27 @@ public final class SystemConfig {
   protected static BooleanParameter _collector_enabled = new BooleanParameter(SystemConfig.config, "collector.enabled", true);
   protected static IntegerParameter _collector_port = new IntegerParameter(SystemConfig.config, "collector.port", 1972);
   // HostGroup
-  protected static PathParameter _hostgroup_path = new LocalPathParameter(SystemConfig.config, "hostgroups.path", "hostgroups.config");
+  protected static PathParameter _hostgroup_path = new LocalPathParameter(SystemConfig.config, "hostgroups.path", "hostgroups.config", pathGetter);
   protected static StringParameter _hostgroup_tag_prefix = new StringParameter(SystemConfig.config, "hostgroups.tag-prefix", "#");
   // KeyStore
-  protected static PathParameter _keystore_path = new LocalPathParameter(SystemConfig.config, "keystore.path", "keystore.config");
+  protected static PathParameter _keystore_path = new LocalPathParameter(SystemConfig.config, "keystore.path", "keystore.config", pathGetter);
   // Alias
-  protected static PathParameter _alias_path = new LocalPathParameter(SystemConfig.config, "alias.path", "alias.config");
+  protected static PathParameter _alias_path = new LocalPathParameter(SystemConfig.config, "alias.path", "alias.config", pathGetter);
   // Rule Engine
-  protected static PathParameter _rule_engine_path = new LocalPathParameter(SystemConfig.config, "rule-engine.path", "rule-engine.config");
+  protected static PathParameter _rule_engine_path = new LocalPathParameter(SystemConfig.config, "rule-engine.path", "rule-engine.config", pathGetter);
   // User Roles
-  protected static PathParameter _user_roles_path = new LocalPathParameter(SystemConfig.config, "user-roles.path", "roles");
+  protected static PathParameter _user_roles_path = new LocalPathParameter(SystemConfig.config, "user-roles.path", "roles", pathGetter);
   protected static StringParameter _user_roles_default = new StringParameter(SystemConfig.config, "user-roles.default", "guest");
-  protected static PathParameter _user_roles_mapping_path = new LocalPathParameter(SystemConfig.config, "user-roles.mapping.path", "user-role.mapping");
+  protected static PathParameter _user_roles_mapping_path = new LocalPathParameter(SystemConfig.config, "user-roles.mapping.path", "user-role.mapping", pathGetter);
   // Monitors
-  protected static PathParameter _monitors_path = new LocalPathParameter(SystemConfig.config, "monitors.path", "monitors");
-  protected static PathParameter _monitors_default_path = new LocalPathParameter(SystemConfig.config, "monitors.default.path", "monitor-default.config");
+  protected static PathParameter _monitors_path = new LocalPathParameter(SystemConfig.config, "monitors.path", "monitors", pathGetter);
+  protected static PathParameter _monitors_default_path = new LocalPathParameter(SystemConfig.config, "monitors.default.path", "monitor-default.config", pathGetter);
   // Consumers
   protected static IntegerParameter _consumers_sleeptime = new IntegerParameter(SystemConfig.config, "consumers.sleeptime", 10);
   // Traces
-  protected static PathParameter _trace_rules_path = new LocalPathParameter(SystemConfig.config, "trace-rules.path", "traces");
+  protected static PathParameter _trace_rules_path = new LocalPathParameter(SystemConfig.config, "trace-rules.path", "traces", pathGetter);
   // Tasks
-  protected static PathParameter _task_rules_path = new LocalPathParameter(SystemConfig.config, "task-rules.path", "tasks");
-
-  public String configPath = "";
+  protected static PathParameter _task_rules_path = new LocalPathParameter(SystemConfig.config, "task-rules.path", "tasks", pathGetter);
 
   public Path lockfile;
   public String hostname;

@@ -33,15 +33,15 @@ abstract public class GenericRuleBasedHandler<RuleType> extends GenericHandler {
 
   public static final Logger logger = Logs.getLogger();
 
-  protected static final String RULE_FILEEXT = ".rule";
   protected static final String CONFIG_FILEEXT = ".config";
+  protected static final String RULE_FILEEXT = ".rule";
 
   protected final Map<String, RuleType> rules = new HashMap<>();
 
-  protected void loadRules(final String ext, final Path rules_path) throws IOException {
+  protected void loadRules(final Path rules_path) throws IOException {
     rules.clear();
     final Stream<Path> roleConfigs = Files.find(rules_path, 1, (filePath, fileAttr) -> {
-      final boolean ok = fileAttr.isRegularFile() && filePath.toString().endsWith(ext);
+      final boolean ok = fileAttr.isRegularFile() && filePath.toString().endsWith(RULE_FILEEXT);
       return ok;
     });
     roleConfigs.forEach(path -> loadRule(path));
@@ -55,7 +55,7 @@ abstract public class GenericRuleBasedHandler<RuleType> extends GenericHandler {
   protected void loadRule(final Path confPath) {
     try {
       String name = confPath.getFileName().toString();
-      name = name.substring(0, name.length() - GenericRuleBasedHandler.RULE_FILEEXT.length());
+      name = name.substring(0, name.length() - RULE_FILEEXT.length());
       if (LibStr.isNotEmptyOrNull(name)) {
         final Properties config = Helper.loadProperties(confPath.toString(), false);
         final RuleType rule = createRule(name, config);

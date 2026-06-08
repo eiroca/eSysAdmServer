@@ -28,11 +28,11 @@ import net.eiroca.sysadm.tools.sysadmserver.collector.Tasks;
 public class TaskHandler extends GenericRuleBasedHandler<GenericTask> {
 
   private static final String PROP_TYPE = "type";
-  public static final String PARAM_ID = ":id";
+  public static final String PARAM_ID = "id";
 
   @Override
   public void init(final Properties config) throws Exception {
-    loadRules(GenericRuleBasedHandler.RULE_FILEEXT, SystemContext.config.task_rules_path);
+    loadRules(SystemContext.config.task_rules_path);
   }
 
   @Override
@@ -42,7 +42,7 @@ public class TaskHandler extends GenericRuleBasedHandler<GenericTask> {
     final String className = Tasks.registry.get(type);
     if (className == null) { return null; }
     try {
-      final GenericTask task = (GenericTask)Class.forName(className).newInstance();
+      final GenericTask task = (GenericTask)Class.forName(className).getDeclaredConstructor().newInstance();
       task.init(config);
       return task;
     }

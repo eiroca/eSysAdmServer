@@ -17,15 +17,15 @@
 package net.eiroca.sysadm.tools.sysadmserver.collector;
 
 import java.util.Properties;
-import spark.Request;
+import io.javalin.http.Context;
 
 abstract public class GenericHandler {
 
-  public static final String PARAM_NAMESPACE = ":namespace";
+  public static final String PARAM_NAMESPACE = "namespace";
   public static final String DEFALT_NAMESPACE = "unknown";
 
-  public static final String getNamespace(final Request request) {
-    String namespace = request.params(GenericHandler.PARAM_NAMESPACE);
+  public static final String getNamespace(final Context ctx) {
+    String namespace = ctx.pathParamMap().get(GenericHandler.PARAM_NAMESPACE);
     if (namespace == null) {
       namespace = GenericHandler.DEFALT_NAMESPACE;
     }

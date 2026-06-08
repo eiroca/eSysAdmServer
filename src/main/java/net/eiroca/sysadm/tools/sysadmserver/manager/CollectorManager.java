@@ -16,20 +16,27 @@
  **/
 package net.eiroca.sysadm.tools.sysadmserver.manager;
 
+import java.util.function.Consumer;
 import org.slf4j.Logger;
-import net.eiroca.library.core.Helper;
+import io.javalin.Javalin;
+import io.javalin.config.JavalinConfig;
+import io.javalin.http.Context;
+import io.javalin.http.ExceptionHandler;
 import net.eiroca.library.system.Logs;
 import net.eiroca.sysadm.tools.sysadmserver.SystemConfig;
 import net.eiroca.sysadm.tools.sysadmserver.SystemContext;
-import net.eiroca.sysadm.tools.sysadmserver.collector.ActionDef;
-import net.eiroca.sysadm.tools.sysadmserver.collector.Actions;
-import net.eiroca.sysadm.tools.sysadmserver.collector.GenericAction;
-import net.eiroca.sysadm.tools.sysadmserver.collector.util.JsonTransformer;
-import net.eiroca.sysadm.tools.sysadmserver.collector.util.ResultTransformer;
-import spark.ResponseTransformer;
-import spark.Spark;
+import net.eiroca.sysadm.tools.sysadmserver.collector.GenericHandler;
+import net.eiroca.sysadm.tools.sysadmserver.collector.action.AboutAction;
+import net.eiroca.sysadm.tools.sysadmserver.collector.action.AlertAction;
+import net.eiroca.sysadm.tools.sysadmserver.collector.action.ExportAction;
+import net.eiroca.sysadm.tools.sysadmserver.collector.action.FeedAction;
+import net.eiroca.sysadm.tools.sysadmserver.collector.action.IngestAction;
+import net.eiroca.sysadm.tools.sysadmserver.collector.action.MetricAction;
+import net.eiroca.sysadm.tools.sysadmserver.collector.action.TaskAction;
+import net.eiroca.sysadm.tools.sysadmserver.collector.action.TraceAction;
+import net.eiroca.sysadm.tools.sysadmserver.collector.handler.TaskHandler;
 
-public class CollectorManager extends GenericManager {
+public class CollectorManager extends GenericManager implements Consumer<JavalinConfig>, ExceptionHandler<Exception> {
 
   private static final String COLLECTORNAME = SystemConfig.ME + ".collector";
 
@@ -37,6 +44,8 @@ public class CollectorManager extends GenericManager {
 
   public static final String SERVER_APINAME = "Measure Collector";
   public static final String SERVER_APIVERS = "0.0.4";
+
+  private static Javalin server;
 
   @Override
   public void start() throws Exception {
@@ -49,61 +58,71 @@ public class CollectorManager extends GenericManager {
   @Override
   public void stop() throws Exception {
     super.stop();
-    Spark.stop();
-  }
-
-  public static GenericAction buildAction(final ActionDef def) {
-    GenericAction obj = null;
-    if (def != null) {
-      try {
-        obj = (GenericAction)Class.forName(def.getClassName()).newInstance();
-      }
-      catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
-        CollectorManager.logger.error(Helper.getExceptionAsString("Unable to create class " + def.getClassName(), e, false));
-      }
-    }
-    return obj;
+    CollectorManager.server.stop();
   }
 
   public void initServer() {
-    Spark.port(getServerPort());
-    //
-    final ResponseTransformer jSonRender = new JsonTransformer();
-    final ResponseTransformer resultRender = new ResultTransformer(false);
-    //
-    for (final String actionName : Actions.getActionNames()) {
-      if (actionName == null) {
-        continue;
-      }
-      final ActionDef def = Actions.registry.get(actionName);
-      final GenericAction action = CollectorManager.buildAction(def);
-      ResponseTransformer t;
-      switch (def.getMode()) {
-        case JSON: {
-          t = jSonRender;
-          break;
-        }
-        default: {
-          t = resultRender;
-          break;
-        }
-      }
-      switch (def.getMethod()) {
-        case POST: {
-          Spark.post(actionName, action, t);
-        }
-        default: {
-          Spark.get(actionName, action, t);
-        }
-      }
-    }
-    Spark.exception(Exception.class, (e, request, response) -> {
-      SystemContext.logger.error("Collector Error:" + e.getMessage(), e);
-    });
+    CollectorManager.server = Javalin.create(this);
+    CollectorManager.server.start(getServerPort());
   }
 
   private int getServerPort() {
     return SystemContext.config.collector_port;
+  }
+
+  @Override
+  public void accept(final JavalinConfig serverConfig) {
+    final AboutAction aboutAction = new AboutAction();
+    serverConfig.routes.get("/about", aboutAction);
+    serverConfig.routes.get("/rest/about", aboutAction);
+
+    final AlertAction alertAction = new AlertAction();
+    serverConfig.routes.post(String.format("/api/v1/alert/{%s}", GenericHandler.PARAM_NAMESPACE), alertAction);
+    serverConfig.routes.post(String.format("/rest/alert/{%s}", GenericHandler.PARAM_NAMESPACE), alertAction);
+    serverConfig.routes.post("/rest/alert", alertAction);
+
+    final ExportAction exportAction = new ExportAction();
+    serverConfig.routes.get(String.format("/api/v1/export/{%s}", GenericHandler.PARAM_NAMESPACE), exportAction);
+    serverConfig.routes.get(String.format("/rest/export/{%s}", GenericHandler.PARAM_NAMESPACE), exportAction);
+    serverConfig.routes.get("/api/v1/export", exportAction);
+    serverConfig.routes.get("/rest/export", exportAction);
+
+    final FeedAction feedAction = new FeedAction();
+    serverConfig.routes.post(String.format("/api/v1/feed/{%s}", GenericHandler.PARAM_NAMESPACE), feedAction);
+    serverConfig.routes.get(String.format("/rest/feed/{%s}", GenericHandler.PARAM_NAMESPACE), feedAction);
+    serverConfig.routes.post(String.format("/rest/feed/{%s}", GenericHandler.PARAM_NAMESPACE), feedAction);
+    serverConfig.routes.get("/rest/feed", feedAction);
+    serverConfig.routes.post("/rest/feed", feedAction);
+
+    final MetricAction metricAction = new MetricAction();
+    serverConfig.routes.get(String.format("/api/v1/metric/{%s}", GenericHandler.PARAM_NAMESPACE), metricAction);
+    serverConfig.routes.get(String.format("/rest/metric/{%s}", GenericHandler.PARAM_NAMESPACE), metricAction);
+    serverConfig.routes.get("/rest/metric", metricAction);
+
+    final IngestAction ingestAction = new IngestAction();
+    serverConfig.routes.post("/api/v1/ingest", ingestAction);
+    serverConfig.routes.post("/rest/ingest", ingestAction);
+
+    final TraceAction traceAction = new TraceAction();
+    serverConfig.routes.get(String.format("/api/v1/log/{%s}", GenericHandler.PARAM_NAMESPACE), traceAction);
+    serverConfig.routes.get(String.format("/rest/log/{%s}", GenericHandler.PARAM_NAMESPACE), traceAction);
+    serverConfig.routes.post(String.format("/api/v1/log/{%s}", GenericHandler.PARAM_NAMESPACE), traceAction);
+    serverConfig.routes.post(String.format("/rest/log/{%s}", GenericHandler.PARAM_NAMESPACE), traceAction);
+
+    final TaskAction taskAction = new TaskAction();
+    serverConfig.routes.get(String.format("/api/v1/task/{%s}/{%s}", GenericHandler.PARAM_NAMESPACE, TaskHandler.PARAM_ID), taskAction);
+    serverConfig.routes.get(String.format("/rest/task/{%s}/{%s}", GenericHandler.PARAM_NAMESPACE, TaskHandler.PARAM_ID), taskAction);
+    serverConfig.routes.get(String.format("/api/v1/task/{%s}", TaskHandler.PARAM_ID), taskAction);
+    serverConfig.routes.get(String.format("/rest/task/{%s}", TaskHandler.PARAM_ID), taskAction);
+
+    serverConfig.routes.exception(Exception.class, this);
+  }
+
+  @Override
+  public void handle(final Exception e, final Context ctx) {
+    SystemContext.logger.error("Collector Error:" + e.getMessage(), e);
+    ctx.status(600);
+    ctx.result("Internal error");
   }
 
 }

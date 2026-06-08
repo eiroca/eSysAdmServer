@@ -19,13 +19,13 @@ package net.eiroca.sysadm.tools.sysadmserver;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import net.eiroca.library.core.Helper;
-import net.eiroca.library.core.LibStr;
 import net.eiroca.library.license.api.License;
 import net.eiroca.library.license.api.LicenseManager;
 import net.eiroca.library.scheduler.DelayPolicy;
@@ -108,7 +108,7 @@ public final class SystemContext {
     }
   }
 
-  private static void initHandlers(Properties config) throws Exception {
+  private static void initHandlers(final Properties config) throws Exception {
     SystemContext.logger.info("Init handlers");
     for (final GenericHandler handler : SystemContext.handlers) {
       handler.init(config);
@@ -119,16 +119,13 @@ public final class SystemContext {
     SystemContext.initLicense();
     // Configuration
     SystemContext.properties = LibFile.loadConfiguration(configPath.toString());
-    SystemContext.config.configPath = configPath.getParent().toString();
-    if (LibStr.isEmptyOrNull(SystemContext.config.configPath)) {
-      SystemContext.config.configPath = "";
+    Path parentPath = configPath.getParent();
+    if (parentPath == null) {
+      parentPath = Paths.get("");
     }
-    else {
-      if (!SystemContext.config.configPath.endsWith(Helper.FS)) {
-        SystemContext.config.configPath += Helper.FS;
-      }
-    }
-    SystemContext.logger.debug("path: " + SystemContext.config.configPath + " config:" + SystemContext.properties);
+    SystemConfig.configPath = parentPath;
+    SystemContext.logger.debug("Config Path: " + SystemConfig.configPath);
+    SystemContext.logger.debug("Config: " + SystemContext.properties);
     SystemContext.config.setup(SystemContext.properties);
     // Lock file
     SystemContext.logger.info("lockFile: " + SystemContext.config.lockfile.toString());

@@ -23,6 +23,7 @@ import java.util.TreeMap;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import io.javalin.http.Context;
 import net.eiroca.ext.library.gson.GsonUtil;
 import net.eiroca.library.core.Helper;
 import net.eiroca.library.core.LibDate;
@@ -37,8 +38,6 @@ import net.eiroca.sysadm.tools.sysadmserver.SystemContext;
 import net.eiroca.sysadm.tools.sysadmserver.collector.GenericAction;
 import net.eiroca.sysadm.tools.sysadmserver.collector.handler.MeasureHandler;
 import net.eiroca.sysadm.tools.sysadmserver.manager.CollectorManager;
-import spark.Request;
-import spark.Response;
 
 /**
  * Bulk Ingest Metrics to the controller
@@ -53,13 +52,13 @@ public class IngestAction extends GenericAction {
   }
 
   @Override
-  public Object execute(final String namespace, final Request request, final Response response) throws Exception {
+  public Object execute(final String namespace, final Context ctx) throws Exception {
     final ServerResponse result = new ServerResponse(0);
-    final String body = request.body();
+    final String body = ctx.body();
     CollectorManager.logger.trace("Body: " + body);
     int rows = 0;
     if (body != null) {
-      String ip = request.ip();
+      String ip = ctx.ip();
       if (ip == null) {
         ip = SystemContext.config.hostname;
       }

@@ -47,6 +47,7 @@ import com.google.gson.JsonParser;
 import freemarker.template.Configuration;
 import freemarker.template.Template;
 import freemarker.template.TemplateException;
+import io.javalin.http.Context;
 import net.eiroca.ext.library.http.HttpClientHelper;
 import net.eiroca.library.core.Helper;
 import net.eiroca.library.core.LibStr;
@@ -59,7 +60,6 @@ import net.eiroca.sysadm.tools.sysadmserver.event.Alert;
 import net.eiroca.sysadm.tools.sysadmserver.event.AlertState;
 import net.eiroca.sysadm.tools.sysadmserver.event.EventSeverity;
 import net.eiroca.sysadm.tools.sysadmserver.manager.CollectorManager;
-import spark.Request;
 
 public class AlertHandler extends GenericHandler {
 
@@ -88,7 +88,7 @@ public class AlertHandler extends GenericHandler {
     CollectorManager.logger.info("Invalid alert json: " + data);
   }
 
-  public synchronized int processAlertsFormJson(final String namespace, final Request request, String data) {
+  public synchronized int processAlertsFormJson(final String namespace, final Context ctx, String data) {
     final List<Alert> alerts = new ArrayList<>();
     int cnt = 0;
     CollectorManager.logger.debug("alert json: " + data);
@@ -116,7 +116,7 @@ public class AlertHandler extends GenericHandler {
         continue;
       }
       for (final String key : AlertHandler.QUERYDATA) {
-        final String val = request.queryParams(key);
+        final String val = ctx.queryParam(key);
         if (val != null) {
           alert.tags.put(key, val);
         }

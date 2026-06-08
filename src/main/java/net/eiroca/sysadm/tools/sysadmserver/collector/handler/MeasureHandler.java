@@ -61,7 +61,7 @@ public class MeasureHandler extends GenericHandler {
   }
 
   @Override
-  public void init(Properties config) throws Exception {
+  public void init(final Properties config) throws Exception {
     // TODO Auto-generated method stub
   }
 
