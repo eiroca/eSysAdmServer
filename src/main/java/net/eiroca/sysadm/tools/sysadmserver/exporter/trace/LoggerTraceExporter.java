@@ -1,6 +1,6 @@
 /**
  *
- * Copyright (C) 1999-2021 Enrico Croce - AGPL >= 3.0
+ * Copyright (C) 1999-2026 Enrico Croce - AGPL >= 3.0
  *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
@@ -14,17 +14,23 @@
  * If not, see <http://www.gnu.org/licenses/>.
  *
  **/
-package net.eiroca.sysadm.tools.sysadmserver.trace.exporter;
+package net.eiroca.sysadm.tools.sysadmserver.exporter.trace;
 
 import org.slf4j.Logger;
 import net.eiroca.library.config.parameter.StringParameter;
 import net.eiroca.library.core.LibStr;
 import net.eiroca.library.system.IContext;
 import net.eiroca.library.system.Logs;
+import net.eiroca.sysadm.tools.sysadmserver.exporter.GenericExporter;
 
 public class LoggerTraceExporter extends GenericTraceExporter {
 
-  public static final String ID = "logger".toLowerCase();
+  public LoggerTraceExporter(String param_prefix) {
+    super(param_prefix);
+    // TODO Auto-generated constructor stub
+  }
+
+  public static final String ID = "log".toLowerCase();
   //
   public static StringParameter _logger = new StringParameter(LoggerTraceExporter.config, "logger", "Traces");
   // Dynamic mapped to parameters
@@ -32,14 +38,15 @@ public class LoggerTraceExporter extends GenericTraceExporter {
   //
   protected Logger traceLog = null;
 
-  public LoggerTraceExporter() {
-    super();
+  @Override
+  public String getId() {
+    return LoggerTraceExporter.ID;
   }
 
   @Override
   public void setup(final IContext context) throws Exception {
     super.setup(context);
-    GenericTraceExporter.config.convert(context, GenericTraceExporter.CONFIG_PREFIX, this, "config_");
+    GenericExporter.config.convert(context, GenericExporter.CONFIG_PREFIX, this, "config_");
     traceLog = LibStr.isNotEmptyOrNull(config_logger) ? Logs.getLogger(config_logger) : null;
   }
 
@@ -51,11 +58,6 @@ public class LoggerTraceExporter extends GenericTraceExporter {
   @Override
   public boolean beginBulk() {
     return (traceLog != null);
-  }
-
-  @Override
-  public String getId() {
-    return LoggerTraceExporter.ID;
   }
 
 }

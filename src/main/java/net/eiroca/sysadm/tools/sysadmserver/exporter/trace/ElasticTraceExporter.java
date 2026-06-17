@@ -1,6 +1,6 @@
 /**
  *
- * Copyright (C) 1999-2021 Enrico Croce - AGPL >= 3.0
+ * Copyright (C) 1999-2026 Enrico Croce - AGPL >= 3.0
  *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
@@ -14,7 +14,7 @@
  * If not, see <http://www.gnu.org/licenses/>.
  *
  **/
-package net.eiroca.sysadm.tools.sysadmserver.trace.exporter;
+package net.eiroca.sysadm.tools.sysadmserver.exporter.trace;
 
 import java.text.SimpleDateFormat;
 import java.util.Base64;
@@ -27,8 +27,14 @@ import net.eiroca.library.config.parameter.StringParameter;
 import net.eiroca.library.core.Helper;
 import net.eiroca.library.core.LibStr;
 import net.eiroca.library.system.IContext;
+import net.eiroca.sysadm.tools.sysadmserver.exporter.GenericExporter;
 
 public class ElasticTraceExporter extends GenericTraceExporter {
+
+  public ElasticTraceExporter(String param_prefix) {
+    super(param_prefix);
+    // TODO Auto-generated constructor stub
+  }
 
   private static final Encoder BASE64ENCODER = Base64.getEncoder();
 
@@ -55,14 +61,17 @@ public class ElasticTraceExporter extends GenericTraceExporter {
   protected ElasticBulk elasticServer = null;
   protected SimpleDateFormat indexDateFormat;
 
-  public ElasticTraceExporter() {
-    super();
+
+
+  @Override
+  public String getId() {
+    return ElasticTraceExporter.ID;
   }
 
   @Override
   public void setup(final IContext context) throws Exception {
     super.setup(context);
-    GenericTraceExporter.config.convert(context, GenericTraceExporter.CONFIG_PREFIX, this, "config_");
+    GenericExporter.config.convert(context, GenericExporter.CONFIG_PREFIX, this, "config_");
     indexDateFormat = new SimpleDateFormat(config_indexDateFormat);
     elasticServer = LibStr.isNotEmptyOrNull(config_elasticURL) ? new ElasticBulk(config_elasticURL, config_elasticVersion) : null;
     if (elasticServer != null) {
@@ -120,11 +129,6 @@ public class ElasticTraceExporter extends GenericTraceExporter {
 
   private String getEventID() {
     return UUID.randomUUID().toString();
-  }
-
-  @Override
-  public String getId() {
-    return ElasticTraceExporter.ID;
   }
 
 }

@@ -14,14 +14,19 @@
  * If not, see <http://www.gnu.org/licenses/>.
  *
  **/
-package net.eiroca.sysadm.tools.sysadmserver.manager;
+package net.eiroca.sysadm.tools.sysadmserver.exporter.trace;
 
-public interface ISysAdmManager {
+import net.eiroca.library.system.IContext;
+import net.eiroca.sysadm.tools.sysadmserver.exporter.GenericExporter;
 
-  public void start() throws Exception;
+public abstract class GenericTraceExporter extends GenericExporter<String, IContext> {
 
-  public void stop() throws Exception;
+  public GenericTraceExporter(String param_prefix) {
+    super(param_prefix);
+  }
 
-  public boolean isStarted();
+  @Override
+  public void process(final String trace) {
+  }
 
 }

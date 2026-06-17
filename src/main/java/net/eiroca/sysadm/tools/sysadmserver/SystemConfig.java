@@ -1,6 +1,6 @@
 /**
  *
- * Copyright (C) 1999-2021 Enrico Croce - AGPL >= 3.0
+ * Copyright (C) 1999-2026 Enrico Croce - AGPL >= 3.0
  *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
@@ -31,7 +31,7 @@ public final class SystemConfig {
 
   public static final String ME = "eSysAdmServer";
 
-  public static final String EXPORTER_PREFIX = "exporter.";
+  public static final String METRIC_EXPORTER_PREFIX = "exporter.";
 
   protected static final String VAR_PREFIX = null;
   protected static final ContextParameters config = new ContextParameters();

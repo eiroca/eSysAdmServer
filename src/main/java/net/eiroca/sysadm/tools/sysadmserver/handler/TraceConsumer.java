@@ -1,6 +1,6 @@
 /**
  *
- * Copyright (C) 1999-2021 Enrico Croce - AGPL >= 3.0
+ * Copyright (C) 1999-2026 Enrico Croce - AGPL >= 3.0
  *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
@@ -14,7 +14,7 @@
  * If not, see <http://www.gnu.org/licenses/>.
  *
  **/
-package net.eiroca.sysadm.tools.sysadmserver.trace;
+package net.eiroca.sysadm.tools.sysadmserver.handler;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,6 +24,8 @@ import net.eiroca.library.core.Helper;
 import net.eiroca.library.sysadm.monitoring.api.IContextEnabled;
 import net.eiroca.library.system.ContextParameters;
 import net.eiroca.library.system.IContext;
+import net.eiroca.sysadm.tools.sysadmserver.exporter.trace.ITraceExporter;
+import net.eiroca.sysadm.tools.sysadmserver.exporter.trace.TraceExporters;
 
 public class TraceConsumer implements IContextEnabled, Runnable {
 
@@ -43,6 +45,7 @@ public class TraceConsumer implements IContextEnabled, Runnable {
   protected Map<String, String> alias;
 
   private static List<ITraceExporter> exporters = new ArrayList<>();
+  
   static {
     for (final String name : TraceExporters.registry.getNames()) {
       TraceConsumer.exporters.add(TraceExporters.newInstance(name));
@@ -121,7 +124,7 @@ public class TraceConsumer implements IContextEnabled, Runnable {
     for (final ITraceExporter connector : validConnectors) {
       connector.endBulk();
     }
-    context.info("Exported traces(s): " + traces.size());
+    context.info("Exported trace(s): " + traces.size());
   }
 
   public boolean exportTrace(final String trace) {

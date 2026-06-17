@@ -14,62 +14,42 @@
  * If not, see <http://www.gnu.org/licenses/>.
  *
  **/
-package net.eiroca.sysadm.tools.sysadmserver.collector.handler;
+package net.eiroca.sysadm.tools.sysadmserver.handler;
 
 import java.io.IOException;
 import java.io.StringWriter;
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.sql.SQLIntegrityConstraintViolationException;
-import java.text.MessageFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Set;
-import org.apache.http.Header;
-import org.apache.http.entity.ContentType;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.message.BasicHeader;
-import org.slf4j.Logger;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-import freemarker.template.Configuration;
 import freemarker.template.Template;
 import freemarker.template.TemplateException;
 import io.javalin.http.Context;
-import net.eiroca.ext.library.http.HttpClientHelper;
-import net.eiroca.library.core.Helper;
 import net.eiroca.library.core.LibStr;
-import net.eiroca.library.db.LibDB;
-import net.eiroca.library.system.LibFile;
-import net.eiroca.library.system.Logs;
-import net.eiroca.sysadm.tools.sysadmserver.SystemContext;
 import net.eiroca.sysadm.tools.sysadmserver.collector.GenericHandler;
 import net.eiroca.sysadm.tools.sysadmserver.event.Alert;
 import net.eiroca.sysadm.tools.sysadmserver.event.AlertState;
 import net.eiroca.sysadm.tools.sysadmserver.event.EventSeverity;
+import net.eiroca.sysadm.tools.sysadmserver.exporter.alert.DBAlertExporter;
+import net.eiroca.sysadm.tools.sysadmserver.exporter.alert.GenericAlertExporter;
+import net.eiroca.sysadm.tools.sysadmserver.exporter.alert.HookAlertExporter;
+import net.eiroca.sysadm.tools.sysadmserver.exporter.alert.LoggerAlertExporter;
 import net.eiroca.sysadm.tools.sysadmserver.manager.CollectorManager;
 
 public class AlertHandler extends GenericHandler {
 
-  private static final Logger alertLogger = Logs.getLogger("Alerts");
-
-  private final AlertConfig config = new AlertConfig();
+  private AlertHandlerContext context;
   private final ObjectMapper mapper = new ObjectMapper();
-
-  private long count = 0;
-  private Connection conn = null;
 
   private static final String[] QUERYDATA = {
       "application", "module", "component", "host"
@@ -83,9 +63,16 @@ public class AlertHandler extends GenericHandler {
     AlertHandler.SKIP_DATA.add("message");
   }
 
-  private static void logInvalidJSon(final String data, final Exception e) {
-    CollectorManager.logger.warn("Invalid alert json: " + e.getMessage());
-    CollectorManager.logger.info("Invalid alert json: " + data);
+  public synchronized int processAlertsFormMessage(final String namespace, final Context ctx, String msg) {
+    int cnt = 0;
+    if (LibStr.isNotEmptyOrNull(msg)) {
+      cnt = 1;
+      Alert a = new Alert();
+      a.message = msg;
+      a.severity = EventSeverity.ERROR;
+      flush(a);
+    }
+    return cnt;
   }
 
   public synchronized int processAlertsFormJson(final String namespace, final Context ctx, String data) {
@@ -96,7 +83,7 @@ public class AlertHandler extends GenericHandler {
     // Input transformation via Freemaker Template
     final String templateName = namespace + "_format.ftl";
     Template srcTemplate = null;
-    srcTemplate = getTemplate(templateName);
+    srcTemplate = context.getTemplate(templateName);
     if (srcTemplate != null) {
       try {
         @SuppressWarnings("unchecked")
@@ -106,7 +93,7 @@ public class AlertHandler extends GenericHandler {
         data = out.getBuffer().toString();
       }
       catch (IOException | TemplateException e) {
-        AlertHandler.logInvalidJSon(data, e);
+        AlertHandlerContext.logInvalidJSon(data, e);
         return 0;
       }
     }
@@ -121,8 +108,8 @@ public class AlertHandler extends GenericHandler {
           alert.tags.put(key, val);
         }
       }
-      if (config.validationLevel >= 0) {
-        for (int i = 0; i < (config.validationLevel + 1); i++) {
+      if (context.config_validationLevel >= 0) {
+        for (int i = 0; i < (context.config_validationLevel + 1); i++) {
           if (alert.tags.get(AlertHandler.QUERYDATA[i]) == null) {
             alert = null;
             break;
@@ -143,39 +130,8 @@ public class AlertHandler extends GenericHandler {
     return cnt;
   }
 
-  private final Map<String, Template> templates = new HashMap<>();
-  Configuration cfg = new Configuration(Configuration.VERSION_2_3_34);
-
-  private Template getTemplate(final String templateName) {
-    Template t = null;
-    synchronized (templates) {
-      if (templates.containsKey(templateName)) { return templates.get(templateName); }
-      final String template = LibFile.readString(config.templatesPath + Helper.FS + templateName);
-      if (LibStr.isNotEmptyOrNull(template)) {
-        try {
-          t = new Template(templateName, template, cfg);
-        }
-        catch (final IOException e) {
-        }
-      }
-      templates.put(templateName, t);
-    }
-    return t;
-  }
-
-  private JsonObject getJson(final String data) {
-    JsonObject json = null;
-    try {
-      json = JsonParser.parseString(data).getAsJsonObject();
-    }
-    catch (final Exception e) {
-      AlertHandler.logInvalidJSon(data, e);
-    }
-    return json;
-  }
-
   public void readAlerts(final List<Alert> alerts, final String data) {
-    final JsonObject json = getJson(data);
+    final JsonObject json = context.getJson(data);
     if (json == null) { return; }
     final JsonElement events = json.get("events");
     CollectorManager.logger.debug("events: " + events);
@@ -227,7 +183,7 @@ public class AlertHandler extends GenericHandler {
     catch (final IllegalArgumentException e) {
       alert.severity = EventSeverity.WARN;
     }
-    for (final Entry<String, String> x : config.def.entrySet()) {
+    for (final Entry<String, String> x : context.def.entrySet()) {
       alert.tags.put(x.getKey(), x.getValue());
     }
     CollectorManager.logger.debug("base alert: " + alert);
@@ -277,157 +233,27 @@ public class AlertHandler extends GenericHandler {
 
   private void flush(final Alert a) {
     CollectorManager.logger.debug("flushing: " + a);
-    if (config.db_enabled) {
-      exportIncidentDB(a);
-    }
-    if (config.log_enabled) {
-      exporIncidentLog(a);
-    }
-    if (config.hook_enabled) {
-      exporIncidentHook(a);
-    }
-    count = (count + 1) & 0x7FFF_FFFF_FFFF_FFFFL;
-  }
-
-  private String getTextFromAlert(final Alert a, final String templateName, final boolean prettyPrint) {
-    String msg = null;
-
-    if (templateName != null) {
-      CollectorManager.logger.debug("Applying transformation: " + templateName);
-      final Template t = getTemplate(templateName);
-      if (t != null) {
-        try {
-          @SuppressWarnings("unchecked")
-          final Map<String, Object> model = mapper.readValue(a.toString(), Map.class);
-          final StringWriter dstOut = new StringWriter();
-          t.process(model, dstOut);
-          msg = dstOut.getBuffer().toString();
-          if (prettyPrint) {
-            final JsonObject json = getJson(msg);
-            if (json == null) { return null; }
-            msg = json.toString();
-          }
-          CollectorManager.logger.debug("Transformed alert: " + msg);
-        }
-        catch (IOException | TemplateException e) {
-          CollectorManager.logger.info("Invalid alert output transformation: " + e.getMessage());
-          CollectorManager.logger.debug("Invalid alert output transformation: " + a);
-        }
-      }
-    }
-    if (msg == null) {
-      msg = a.toString();
-    }
-    CollectorManager.logger.trace("getTextFromAlert: " + msg);
-    return msg;
-  }
-
-  private void exporIncidentLog(final Alert a) {
-    final String msg = getTextFromAlert(a, config.log_template, config.log_prettyJson);
-    if (msg != null) {
-      switch (a.severity) {
-        case CRITICAL:
-          AlertHandler.alertLogger.error(msg);
-          break;
-        case SEVERE:
-        case ERROR:
-          AlertHandler.alertLogger.error(msg);
-          break;
-        case WARN:
-          AlertHandler.alertLogger.warn(msg);
-          break;
-        case INFO:
-          AlertHandler.alertLogger.info(msg);
-          break;
+    for (final GenericAlertExporter exporter : exporters) {
+      if (exporter.beginBulk()) {
+        exporter.process(a);
+        exporter.endBulk();
       }
     }
   }
 
-  private void exportIncidentDB(final Alert a) {
-    if ((config.db_tableName == null) || (config.db_tableFields == null)) { return; }
-    final List<Object> vals = new ArrayList<>();
-    vals.clear();
-    vals.add(System.currentTimeMillis() + "." + count);
-    final String state = (a.end != null) ? "CLOSED" : "OPEN";
-    vals.add(state);
-    vals.add(a.start);
-    vals.add(a.end);
-    vals.add(a.message);
-    switch (a.severity) {
-      case CRITICAL:
-        vals.add(1);
-        break;
-      case SEVERE:
-        vals.add(2);
-        break;
-      case WARN:
-        vals.add(3);
-        break;
-      default:
-        vals.add(4);
-        break;
-    }
-    vals.add(a.tags.get("host"));
-    final String[] fields = config.db_tableFields;
-    if (vals.size() != fields.length) {
-      final StringBuilder sb = new StringBuilder();
-      Helper.writeList(sb, vals);
-      CollectorManager.logger.error("Invalid data: " + sb);
-      CollectorManager.logger.debug("fields: " + fields.length);
-    }
-    else {
-      final StringBuilder sb = new StringBuilder();
-      Helper.writeList(sb, vals);
-      try {
-        if (SystemContext.config.dryrun) {
-          CollectorManager.logger.info(sb.toString());
-        }
-        else {
-          if (conn == null) {
-            CollectorManager.logger.debug("Getting a new connection to DB");
-            conn = config.dbConfig.getConnection();
-            CollectorManager.logger.debug((conn != null) ? "Connection: OK" : "Connection error: " + config.dbConfig.getLastError());
-          }
-          if (conn != null) {
-            CollectorManager.logger.debug(MessageFormat.format("Inserting {0}: {1} ", config.db_tableName, sb.toString()));
-            LibDB.insertRecord(conn, config.db_tableName, fields, vals.toArray(), config.db_maxSize);
-          }
-          else {
-            CollectorManager.logger.debug("No connection for inserting");
-          }
-        }
-      }
-      catch (final SQLIntegrityConstraintViolationException e) {
-        CollectorManager.logger.warn("SQLIntegrityConstraintViolationException");
-        CollectorManager.logger.debug("SQLException", e);
-      }
-      catch (final SQLException e) {
-        CollectorManager.logger.error("SQLException", e);
-        Helper.close(conn);
-        conn = null;
-      }
-    }
-  }
-
-  private void exporIncidentHook(final Alert a) {
-    final String msg = getTextFromAlert(a, config.hook_template, false);
-    Collection<Header> headers = null;
-    if (config.hook_token != null) {
-      headers = new ArrayList<>();
-      headers.add(new BasicHeader(config.hook_header, config.hook_token));
-    }
-    final CloseableHttpClient client = HttpClientHelper.getHttpClient(config.hookProxy, headers);
-    CollectorManager.logger.debug("alert webhook()");
-    final String _doc = msg;
-    final String url = config.hook_url;
-    final String r = HttpClientHelper.POST(client, url, _doc, ContentType.APPLICATION_JSON);
-    CollectorManager.logger.debug("POST " + url + " " + _doc + " --> " + r);
-    Helper.close(client);
-  }
+  protected List<GenericAlertExporter> exporters = new ArrayList<>();
 
   @Override
   public void init(final Properties conf) throws Exception {
-    config.setup(conf);
+    context = new AlertHandlerContext(conf);
+    context.setup(conf);
+    exporters.clear();
+    exporters.add(new LoggerAlertExporter("alert.export.LOG."));
+    exporters.add(new DBAlertExporter("alert.export.DB."));
+    exporters.add(new HookAlertExporter("alert.export.HOOK."));
+    for (final GenericAlertExporter exporter : exporters) {
+      exporter.setup(context);
+    }
   }
 
 }

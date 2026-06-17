@@ -1,6 +1,6 @@
 /**
  *
- * Copyright (C) 1999-2021 Enrico Croce - AGPL >= 3.0
+ * Copyright (C) 1999-2026 Enrico Croce - AGPL >= 3.0
  *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
@@ -14,24 +14,12 @@
  * If not, see <http://www.gnu.org/licenses/>.
  *
  **/
-package net.eiroca.sysadm.tools.sysadmserver.collector.task;
+package net.eiroca.sysadm.tools.sysadmserver.exporter.alert;
 
-import java.util.Properties;
-import com.google.gson.JsonObject;
-import net.eiroca.sysadm.tools.sysadmserver.collector.GenericTask;
+import net.eiroca.sysadm.tools.sysadmserver.event.Alert;
+import net.eiroca.sysadm.tools.sysadmserver.exporter.IExporter;
+import net.eiroca.sysadm.tools.sysadmserver.handler.AlertHandlerContext;
 
-public class HttpTask extends GenericTask {
-
-  public HttpTask() {
-  }
-
-  @Override
-  public JsonObject run(final JsonObject request) {
-    return request;
-  }
-
-  @Override
-  public void init(final Properties config) throws Exception {
-  }
+public interface IAlertExporter extends IExporter<Alert, AlertHandlerContext> {
 
 }

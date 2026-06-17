@@ -1,6 +1,6 @@
 /**
  *
- * Copyright (C) 1999-2025 Enrico Croce - AGPL >= 3.0
+ * Copyright (C) 1999-2026 Enrico Croce - AGPL >= 3.0
  *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
@@ -36,7 +36,7 @@ import net.eiroca.library.sysadm.monitoring.sdk.MeasureProducer;
 import net.eiroca.sysadm.tools.sysadmserver.SystemConfig;
 import net.eiroca.sysadm.tools.sysadmserver.SystemContext;
 import net.eiroca.sysadm.tools.sysadmserver.collector.GenericAction;
-import net.eiroca.sysadm.tools.sysadmserver.collector.handler.MeasureHandler;
+import net.eiroca.sysadm.tools.sysadmserver.handler.MeasureHandler;
 import net.eiroca.sysadm.tools.sysadmserver.manager.CollectorManager;
 
 /**

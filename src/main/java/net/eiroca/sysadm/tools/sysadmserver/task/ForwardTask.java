@@ -1,6 +1,6 @@
 /**
  *
- * Copyright (C) 1999-2021 Enrico Croce - AGPL >= 3.0
+ * Copyright (C) 1999-2026 Enrico Croce - AGPL >= 3.0
  *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
@@ -14,18 +14,23 @@
  * If not, see <http://www.gnu.org/licenses/>.
  *
  **/
-package net.eiroca.sysadm.tools.sysadmserver.trace;
+package net.eiroca.sysadm.tools.sysadmserver.task;
 
-import net.eiroca.library.sysadm.monitoring.api.IContextEnabled;
+import java.util.Properties;
+import com.google.gson.JsonObject;
 
-public interface ITraceExporter extends IContextEnabled {
+public class ForwardTask extends HttpTask {
 
-  public String getId();
+  public ForwardTask() {
+  }
 
-  public boolean beginBulk();
+  @Override
+  public JsonObject run(final JsonObject request) {
+    return request;
+  }
 
-  public void process(final String trace);
-
-  public void endBulk();
+  @Override
+  public void init(final Properties config) throws Exception {
+  }
 
 }

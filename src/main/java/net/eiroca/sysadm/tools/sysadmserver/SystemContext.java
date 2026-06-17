@@ -1,6 +1,6 @@
 /**
  *
- * Copyright (C) 1999-2021 Enrico Croce - AGPL >= 3.0
+ * Copyright (C) 1999-2026 Enrico Croce - AGPL >= 3.0
  *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
@@ -40,11 +40,11 @@ import net.eiroca.library.system.IContext;
 import net.eiroca.library.system.LibFile;
 import net.eiroca.library.system.Logs;
 import net.eiroca.sysadm.tools.sysadmserver.collector.GenericHandler;
-import net.eiroca.sysadm.tools.sysadmserver.collector.handler.AlertHandler;
-import net.eiroca.sysadm.tools.sysadmserver.collector.handler.MeasureHandler;
-import net.eiroca.sysadm.tools.sysadmserver.collector.handler.TaskHandler;
-import net.eiroca.sysadm.tools.sysadmserver.collector.handler.TraceHandler;
-import net.eiroca.sysadm.tools.sysadmserver.collector.handler.UserRoleHandler;
+import net.eiroca.sysadm.tools.sysadmserver.handler.AlertHandler;
+import net.eiroca.sysadm.tools.sysadmserver.handler.MeasureHandler;
+import net.eiroca.sysadm.tools.sysadmserver.handler.TaskHandler;
+import net.eiroca.sysadm.tools.sysadmserver.handler.TraceHandler;
+import net.eiroca.sysadm.tools.sysadmserver.handler.UserRoleHandler;
 import net.eiroca.sysadm.tools.sysadmserver.manager.CollectorManager;
 import net.eiroca.sysadm.tools.sysadmserver.manager.ISysAdmManager;
 import net.eiroca.sysadm.tools.sysadmserver.manager.MonitorManager;
@@ -147,7 +147,7 @@ public final class SystemContext {
     }
     // consumers
     // Metrics
-    final Properties exporterConfig = SystemContext.getSubConfig(SystemContext.properties, SystemConfig.EXPORTER_PREFIX);
+    final Properties exporterConfig = Helper.getSubConfig(SystemContext.properties, SystemConfig.METRIC_EXPORTER_PREFIX);
     final IContext context = new Context("Exporter", exporterConfig);
     SystemContext.consumer_metrics = new MeasureConsumer(engine, alias);
     SystemContext.consumer_metrics.setup(context);
@@ -161,18 +161,6 @@ public final class SystemContext {
     // Init Managers & handlers
     SystemContext.startManagers();
     SystemContext.initHandlers(SystemContext.properties);
-  }
-
-  public static Properties getSubConfig(final Properties config, final String prefix) {
-    final Properties exporterConfig = new Properties();
-    final int len = prefix.length();
-    for (final String propName : config.stringPropertyNames()) {
-      if (propName.startsWith(prefix)) {
-        final String val = config.getProperty(propName);
-        exporterConfig.setProperty(propName.substring(len), val);
-      }
-    }
-    return exporterConfig;
   }
 
   public static void initLicense() {

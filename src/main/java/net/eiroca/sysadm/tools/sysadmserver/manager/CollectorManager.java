@@ -1,6 +1,6 @@
 /**
  *
- * Copyright (C) 1999-2021 Enrico Croce - AGPL >= 3.0
+ * Copyright (C) 1999-2026 Enrico Croce - AGPL >= 3.0
  *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
@@ -34,7 +34,7 @@ import net.eiroca.sysadm.tools.sysadmserver.collector.action.IngestAction;
 import net.eiroca.sysadm.tools.sysadmserver.collector.action.MetricAction;
 import net.eiroca.sysadm.tools.sysadmserver.collector.action.TaskAction;
 import net.eiroca.sysadm.tools.sysadmserver.collector.action.TraceAction;
-import net.eiroca.sysadm.tools.sysadmserver.collector.handler.TaskHandler;
+import net.eiroca.sysadm.tools.sysadmserver.handler.TaskHandler;
 
 public class CollectorManager extends GenericManager implements Consumer<JavalinConfig>, ExceptionHandler<Exception> {
 
@@ -79,6 +79,8 @@ public class CollectorManager extends GenericManager implements Consumer<Javalin
     final AlertAction alertAction = new AlertAction();
     serverConfig.routes.post(String.format("/api/v1/alert/{%s}", GenericHandler.PARAM_NAMESPACE), alertAction);
     serverConfig.routes.post(String.format("/rest/alert/{%s}", GenericHandler.PARAM_NAMESPACE), alertAction);
+    serverConfig.routes.get(String.format("/api/v1/alert/{%s}", GenericHandler.PARAM_NAMESPACE), alertAction);
+    serverConfig.routes.get(String.format("/rest/alert/{%s}", GenericHandler.PARAM_NAMESPACE), alertAction);
     serverConfig.routes.post("/rest/alert", alertAction);
 
     final ExportAction exportAction = new ExportAction();

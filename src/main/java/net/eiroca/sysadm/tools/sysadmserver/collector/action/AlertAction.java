@@ -17,6 +17,7 @@
 package net.eiroca.sysadm.tools.sysadmserver.collector.action;
 
 import io.javalin.http.Context;
+import net.eiroca.library.core.LibStr;
 import net.eiroca.library.server.ResultResponse;
 import net.eiroca.sysadm.tools.sysadmserver.SystemContext;
 import net.eiroca.sysadm.tools.sysadmserver.collector.GenericAction;
@@ -32,25 +33,29 @@ public class AlertAction extends GenericAction {
   @Override
   public Object execute(final String namespace, final Context ctx) throws Exception {
     final ResultResponse<Object> result = new ResultResponse<>(-1, "Generic Error");
-    final StringBuilder sb = new StringBuilder(1024);
     final String data = ctx.body();
-    if (data == null) {
+    int cnt = -1;
+    if (LibStr.isEmptyOrNull(data)) {
+      String msg = ctx.queryParam("message");
+      cnt = SystemContext.alertHandler.processAlertsFormMessage(namespace, ctx, msg);
+    }
+    else {
+      cnt = SystemContext.alertHandler.processAlertsFormJson(namespace, ctx, data);
+    }
+    if (cnt < 0) {
       result.setStatus(-2);
       result.setMessage("No data");
     }
+    else if (cnt == 0) {
+      result.setStatus(-3);
+      result.setMessage("Invalid event(s)");
+    }
     else {
-      final int cnt = SystemContext.alertHandler.processAlertsFormJson(namespace, ctx, data);
-      if (cnt > 0) {
-        sb.append(cnt + " event(s) processed.");
-        result.setResult(sb.toString());
-        result.setStatus(0);
-        result.setMessage("OK");
-      }
-      else {
-        result.setStatus(-3);
-        result.setMessage("Invalid event(s)");
-      }
-
+      final StringBuilder sb = new StringBuilder();
+      sb.append(cnt).append(" event(s) processed.");
+      result.setResult(sb.toString());
+      result.setStatus(0);
+      result.setMessage("OK");
     }
     return result;
   }

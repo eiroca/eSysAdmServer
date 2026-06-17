@@ -1,6 +1,6 @@
 /**
  *
- * Copyright (C) 1999-2021 Enrico Croce - AGPL >= 3.0
+ * Copyright (C) 1999-2026 Enrico Croce - AGPL >= 3.0
  *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
@@ -14,14 +14,14 @@
  * If not, see <http://www.gnu.org/licenses/>.
  *
  **/
-package net.eiroca.sysadm.tools.sysadmserver.trace;
+package net.eiroca.sysadm.tools.sysadmserver.exporter.trace;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
 import net.eiroca.library.core.Registry;
 import net.eiroca.library.system.Logs;
-import net.eiroca.sysadm.tools.sysadmserver.trace.exporter.ElasticTraceExporter;
-import net.eiroca.sysadm.tools.sysadmserver.trace.exporter.LoggerTraceExporter;
 
 public class TraceExporters {
 
@@ -30,20 +30,25 @@ public class TraceExporters {
   public static final List<String> defaultExporters = new ArrayList<>();
 
   static {
-    TraceExporters.defaultExporters.add(LoggerTraceExporter.ID);
+    TraceExporters.registry.addEntry(LoggerTraceExporter.ID, LoggerTraceExporter.class.getName());
+    TraceExporters.registry.addEntry(ElasticTraceExporter.ID, ElasticTraceExporter.class.getName());
   }
 
   static {
-    TraceExporters.registry.addEntry(ElasticTraceExporter.ID, ElasticTraceExporter.class.getName());
-    TraceExporters.registry.addEntry(LoggerTraceExporter.ID, LoggerTraceExporter.class.getName());
+    TraceExporters.defaultExporters.add(LoggerTraceExporter.ID);
   }
 
   public static ITraceExporter newInstance(final String name) {
     ITraceExporter obj = null;
     try {
-      obj = (ITraceExporter)Class.forName(TraceExporters.registry.value(name)).newInstance();
+      String clazzName = TraceExporters.registry.value(name);
+      if (clazzName != null) {
+        Class<?> clazz = Class.forName(clazzName);
+        Constructor<?> constructor = clazz.getConstructor();
+        obj = (ITraceExporter)constructor.newInstance();
+      }
     }
-    catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
+    catch (InvocationTargetException | ClassNotFoundException | NoSuchMethodException | SecurityException | InstantiationException | IllegalAccessException | IllegalArgumentException e) {
       Logs.ignore(e);
     }
     return obj;
